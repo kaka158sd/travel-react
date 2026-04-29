@@ -1,0 +1,123 @@
+//out : false
+@color-org: #d97706;
+@footer-bg: #1e293b; // 深色背景
+@text-color: #e2e8f0; // 主文本色-白
+@light-text: #94a3b8; // 次要文本色-浅灰
+
+// 按钮样式1，如登陆按钮
+.btn1 {
+  width: 100%;
+  height: 100%;
+  padding: 0px 10px;
+  color: white;
+  text-align: center;
+  cursor: pointer;
+  background-color: @color-org;
+  transition: all 0.3s ease;
+  border-radius: 10px;
+
+  &:hover {
+    opacity: 0.9;
+    background: linear-gradient(to right, #d5741f, #d97706); // 橙色渐变
+    transform: translateY(-2px);
+  }
+}
+
+.btn2 {
+  width: 100%;
+  padding: 12px 10px;
+  color: white;
+  text-align: center;
+  cursor: pointer;
+  background-color: @color-org;
+  border-radius: 50vh;
+
+  &:hover {
+    opacity: 0.9;
+    background: linear-gradient(to right, #d5741f, #d97706); // 橙色渐变
+    transform: translateY(-2px);
+  }
+}
+
+// 文字颜色-主图橙色
+.text-color1 {
+  color: @color-org;
+}
+
+// 背景颜色-主图橙色
+.bgColor-org {
+  background-color: @color-org;
+}
+
+.btn-hover1 {
+  &:hover {
+    color: @color-org;
+    border-color: @color-org;
+  }
+}
+
+// 标题样式1，如“荣昌核心亮点”
+.titie1 {
+  font-size: 20px;
+  text-align: center;
+  margin: 50px 0;
+  font-weight: 550;
+  opacity: 0.8;
+  letter-spacing: 3px;
+}
+
+// 卡片标题样式，如首页卡片的“古镇人文”
+.titie-card {
+  font-size: 18px;
+  font-weight: 550;
+  opacity: 0.8;
+}
+
+// h3标签样式
+.title2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+// 圆角为50%
+.rounded {
+  border-radius: 50%;
+}
+
+// 不显示
+.visibility {
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+// 边框阴影（给卡片组件中的图片添加）
+.border-img {
+  border: 1px solid #d7d7db;
+}
+
+// 卡片圆角 + 阴影 + 鼠标悬停
+.card-border {
+  border: 1px solid #eeeeef;
+  border-radius: 6%;
+  box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.1s;
+  &:hover {
+    cursor: pointer;
+    box-shadow: 0 0 12px 2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px) scale(1.06);
+    .visibility {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
+
+// 卡片圆角 + 阴影
+.card-border2 {
+  border: 1px solid #eeeeef;
+  border-radius: 10px;
+  box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+  cursor: pointer;
+}

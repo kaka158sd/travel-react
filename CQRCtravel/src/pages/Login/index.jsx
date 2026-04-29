@@ -1,0 +1,133 @@
+import { DataField } from '@/components';
+import { rulesParse } from '@/utils';
+import { Carousel, Typography, Button, Form } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { HomeOutlined } from '@ant-design/icons';
+
+const { Title } = Typography;
+
+const images = [
+  'https://tse1-mm.cn.bing.net/th/id/OIP-C.zkLkGz4XDWorphyFth9_4QHaEC?w=317&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
+  'https://tse3-mm.cn.bing.net/th/id/OIP-C.SFW1VcS8gueERFbtdZCFvwHaE7?w=249&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
+  'https://tse2-mm.cn.bing.net/th/id/OIP-C.HP4mZ_N_N-mkMZaLxK3YdwHaD4?w=315&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
+  'https://tse2-mm.cn.bing.net/th/id/OIP-C.kxPmGPAptXNSrorcJTrDkAHaE8?w=288&h=192&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
+  'https://tse1-mm.cn.bing.net/th/id/OIP-C.-3Lnln93IaevT4Iwua7BzQHaEK?w=269&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
+  'https://tse2-mm.cn.bing.net/th/id/OIP-C.BhYWGMA4Kcy51HC9NeypeAHaD2?w=328&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
+];
+
+// 表单配置
+const loginFormFields = {
+  size: 'medium',
+  formItems: [
+    {
+      label: '手机号',
+      name: 'phone',
+      rules: 'required phone',
+      type: 'textInput',
+      formConfig: {
+        width: 260,
+        placeholder: '请输入手机号',
+        prefix: 'icon-user1',
+        isDisabled: false,
+      },
+    },
+    {
+      label: '密码',
+      name: 'password',
+      rules: 'required password',
+      type: 'password',
+      formConfig: {
+        width: 260,
+        placeholder: '请输入密码',
+        isDisabled: false,
+        prefix: 'icon-yinsibaohu',
+      },
+    },
+  ],
+};
+
+const Login = () => {
+  const [loginForm] = Form.useForm();
+
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    console.log('登陆成功');
+    navigate('/touristCenter');
+  };
+
+  const handleBack = () => {
+    navigate('/');
+  };
+
+  return (
+    <div className="w-full h-screen flex items-center justify-center relative">
+      {/* 返回首页按钮 */}
+      <div className="w-32 absolute top-5 left-5">
+        <button className="btn2" onClick={handleBack}>
+          <HomeOutlined className="mr-1" />
+          返回首页
+        </button>
+      </div>
+
+      <div className="w-300 h-120 border border-orange-400 rounded-2xl shadow-lg shadow-orange-100 flex items-center">
+        {/* 轮播图区域 */}
+        <Carousel
+          arrows
+          autoplay="true"
+          infinite="true"
+          className="w-180 h-120 rounded-2xl overflow-hidden"
+        >
+          {images.map((item, index) => (
+            <div key={index}>
+              <img src={item} className="w-180 h-120" />
+            </div>
+          ))}
+        </Carousel>
+
+        {/* 用户登陆区域 */}
+        <div className="flex flex-col flex-1 items-center">
+          <Title level={3} style={{ color: '#d97706', marginBottom: 36 }}>
+            用户登陆
+          </Title>
+
+          {/* 登陆表单 */}
+          <div>
+            <Form
+              form={loginForm}
+              size={loginFormFields.size}
+              layout="horizontal"
+              labelAlign="right"
+              labelCol={{ span: 6 }} // 设置label的宽度
+            >
+              {loginFormFields.formItems.map((item) => (
+                <Form.Item
+                  key={item.name}
+                  label={item.label}
+                  name={item.name}
+                  rules={rulesParse(item.rules)}
+                >
+                  <DataField type={item.type} formConfig={item.formConfig} />
+                </Form.Item>
+              ))}
+            </Form>
+          </div>
+
+          {/* 登陆按钮 */}
+          <div className="w-40 mt-7 mb-2">
+            <button className="btn2" onClick={handleLogin}>
+              登陆
+            </button>
+          </div>
+
+          {/* 跳转至注册 */}
+          <Button type="link" href="/register">
+            还没有账号？立即注册
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;

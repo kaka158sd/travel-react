@@ -1,0 +1,85 @@
+// out:false
+
+.text-hover {
+  transition: all 0.3s;
+  &:hover {
+    cursor: pointer;
+    color: #d97706;
+    font-size: 16px;
+  }
+}
+
+/* 卡片容器通用样式 */
+.guide-card {
+  width: 640px;
+  box-shadow: 4px 6px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* 标题样式 */
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #383838;
+}
+
+.guide-list li {
+  padding-left: 24px;
+  position: relative;
+}
+
+.guide-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  background-color: #f5a623;
+  border-radius: 50%;
+}
+
+/* 注意事项大卡片样式 */
+.notice-card {
+  border: 1px solid #f5a623;
+  border-radius: 12px;
+  padding: 28px;
+}
+
+/* 注意事项分栏样式 */
+.notice-content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.notice-column h3 {
+  font-size: 14px;
+  color: #d97706;
+  margin: 12px 0;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.notice-column ul {
+  list-style: none;
+  padding-left: 20px;
+}
+
+.notice-column li {
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.notice-column li::before {
+  content: '›';
+  position: absolute;
+  left: -15px;
+  color: #f5a623;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .notice-content {
+    grid-template-columns: 1fr;
+  }
+}

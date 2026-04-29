@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+body {
+  font-family:
+    'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+}
+
+/* 全局样式 / App.css */
+#root {
+  min-width: 320px; /* 最小支持手机宽度，不会再无限缩小 */
+  width: 100%;
+}
