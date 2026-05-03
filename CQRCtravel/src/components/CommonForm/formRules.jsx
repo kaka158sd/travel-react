@@ -3,7 +3,27 @@ export const formRules = {
   optional: [],
 
   // 必填校验
-  required: [{ required: true, message: '此项不能为空', trigger: 'blur' }],
+  required: [
+    {
+      validator: (_, value) => {
+        // null/undefined,字符串空值,数组空值  → 不通过
+        if (
+          value === null ||
+          value === undefined ||
+          (typeof value === 'string' && value.trim() === '') ||
+          (Array.isArray(value) && value.length === 0) ||
+          value === '' ||
+          (value && typeof value.isValid === 'function' && !value.isValid())
+        ) {
+          return Promise.reject('此项不能为空');
+        }
+
+        // 其他情况通过
+        return Promise.resolve();
+      },
+      trigger: ['blur', 'change'],
+    },
+  ],
 
   // 类型校验
   type: {
@@ -26,14 +46,16 @@ export const formRules = {
     number: [
       {
         validator: (_, value) => {
-          if (!value) return Promise.resolve();
-          // 不是纯数字 → 报错
-          if (!/^\d+$/.test(value)) {
+          if (value === null || value === undefined || value === '') {
+            return Promise.resolve();
+          }
+          const strValue = String(value);
+          if (!/^\d+(\.\d+)?$/.test(strValue)) {
             return Promise.reject('请仅输入数字');
           }
           return Promise.resolve();
         },
-        trigger: 'blur',
+        trigger: ['blur', 'change'], // 加上 change 触发
       },
     ],
   },
@@ -64,8 +86,6 @@ export const formRules = {
   date: [
     // 必填校验：用 trigger: 'change'，并且兼容 dayjs 对象
     {
-      required: true,
-      message: '请选择日期',
       trigger: 'change',
       transform: (value) => value?.format('YYYY-MM-DD'), // 转成字符串
     },

@@ -1,9 +1,9 @@
-import { DataField } from '@/components';
 import { rulesParse } from '@/utils';
-import { Form } from 'antd';
+import { Form, Radio, Input } from 'antd';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BorderBox11 from '@jiaminghi/data-view-react/es/borderBox11';
+import './index.less';
 
 // 三种身份的图标、文字样式
 const userStyle = [
@@ -24,29 +24,6 @@ const userStyle = [
   },
 ];
 
-// 单选框配置
-const formConfig = {
-  name: 'identity-radio',
-  isVertical: true,
-  optionsItem: userStyle.map((item) => ({
-    value: item.identity,
-    label: (
-      <div className="flex items-center gap-4 p-4 w-115">
-        <i
-          className={`iconfont ${item.icon} text-color1`}
-          style={{ fontSize: 30 }}
-        />
-        <div>
-          <div className="text-lg font-semibold opacity-85">
-            {item.identity}
-          </div>
-          <p className="text-gray-600">{item.desc}</p>
-        </div>
-      </div>
-    ),
-  })),
-};
-
 // 表单配置
 const registerFormFields = {
   size: 'large',
@@ -55,44 +32,36 @@ const registerFormFields = {
       label: '用户名',
       name: 'username',
       rules: 'required string',
-      type: 'textInput',
       formConfig: {
         width: 350,
         placeholder: '请输入用户名',
-        isDisabled: false,
       },
     },
     {
       label: '手机号',
       name: 'phone',
       rules: 'required phone',
-      type: 'textInput',
       formConfig: {
         width: 350,
         placeholder: '请输入手机号',
-        isDisabled: false,
       },
     },
     {
       label: '密码',
       name: 'password',
       rules: 'required password',
-      type: 'password',
       formConfig: {
         width: 350,
         placeholder: '请输入密码',
-        isDisabled: false,
       },
     },
     {
       label: '确认密码',
       name: 'confirmPaw',
       rules: 'required password',
-      type: 'password',
       formConfig: {
         width: 350,
         placeholder: '请确认密码',
-        isDisabled: false,
       },
     },
   ],
@@ -154,7 +123,27 @@ const Register = () => {
 
             {/* 三种身份选择 */}
             <div className="w-3/4">
-              <DataField type="radio" formConfig={formConfig} />
+              <Radio.Group
+                name="identity-radio"
+                vertical="true"
+                options={userStyle.map((item) => ({
+                  value: item.identity,
+                  label: (
+                    <div className="flex items-center gap-4 p-4 w-115">
+                      <i
+                        className={`iconfont ${item.icon} text-color1`}
+                        style={{ fontSize: 30 }}
+                      />
+                      <div>
+                        <div className="text-lg font-semibold opacity-85">
+                          {item.identity}
+                        </div>
+                        <p className="text-gray-600">{item.desc}</p>
+                      </div>
+                    </div>
+                  ),
+                }))}
+              />
             </div>
 
             {/* 下一步 */}
@@ -183,21 +172,33 @@ const Register = () => {
                   labelAlign="right"
                   labelCol={{ span: 8 }}
                 >
-                  {registerFormFields.formItems.map((item) => (
+                  {registerFormFields.formItems.map((item, index) => (
                     <Form.Item
                       key={item.name}
                       label={item.label}
                       name={item.name}
                       rules={rulesParse(item.rules)}
                     >
-                      <DataField
-                        type={item.type}
-                        formConfig={item.formConfig}
-                      />
+                      {index <= 1 ? (
+                        <Input
+                          placeholder={item.formConfig.placeholder || ''}
+                          style={{
+                            width: item.formConfig.width,
+                          }}
+                        />
+                      ) : (
+                        <Input.Password
+                          placeholder={item.formConfig.placeholder || ''}
+                          style={{
+                            width: item.formConfig.width,
+                          }}
+                        />
+                      )}
                     </Form.Item>
                   ))}
                 </Form>
               </div>
+
               <div className="w-100 h-50">
                 <BorderBox11
                   color={['#89b863', '#ff8800']}
@@ -237,17 +238,6 @@ const Register = () => {
           </div>
         )}
       </div>
-
-      <style jsx global>{`
-        @keyframes gradientFlow {
-          0% {
-            background-position: 0% 50%;
-          }
-          100% {
-            background-position: 100% 50%;
-          }
-        }
-      `}</style>
     </div>
   );
 };

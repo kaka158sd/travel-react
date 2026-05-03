@@ -13,17 +13,19 @@ import {
   Select,
   DatePicker,
   Rate,
+  Popconfirm,
+  TimePicker,
 } from 'antd';
 import { runes } from 'runes2';
 import { useState } from 'react';
 import { UserOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
+import { supabase } from '@/lib/supabase';
 
 const { TextArea, Search } = Input;
 
 // 定义主题色
 const THEME_COLOR = '#d97706';
-const DEEP_COLOR = '#ce7106';
 const LIGHT_COLOR = '#faeedd';
 
 // 默认label样式
@@ -33,11 +35,6 @@ const labelStyleCommon = {
 };
 
 // 上传框配置
-const getBase64 = (img, callback) => {
-  const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result));
-  reader.readAsDataURL(img);
-};
 const beforeUpload = (file) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
   if (!isJpgOrPng) {
@@ -50,10 +47,20 @@ const beforeUpload = (file) => {
   return isJpgOrPng && isLt2M;
 };
 
-const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
+// 时间选择器的format
+const format = 'HH:mm';
+
+const DataField = ({
+  type,
+  formConfig,
+  onSearch,
+  form,
+  handleOpenDialogClick,
+  ...rest
+}) => {
   // 单选框群、多选框、下拉菜单/选择器的options由传递的参数中的选项遍历而来
   let options = [];
-  if (['radio', 'checkbox', 'select'].includes(type)) {
+  if (['radio', 'checkbox'].includes(type)) {
     options =
       formConfig.optionsItem?.map((item) => ({
         value: item.value,
@@ -88,7 +95,7 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
     }
   };
 
-  // 处理「其他」输入框变化
+  // 处理单选框「其他」输入框变化
   const handleOtherInputChange = (e) => {
     const val = e.target.value;
     setOtherInput(val);
@@ -99,77 +106,23 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
   // 上传图片
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState();
-  const handleChange = (info) => {
-    if (info.file.status === 'uploading') {
-      setLoading(true);
-      return;
-    }
-    if (info.file.status === 'done') {
-      getBase64(info.file.originFileObj, (url) => {
-        setLoading(false);
-        setImageUrl(url);
-      });
-    }
-  };
   const uploadButton = (
     <button style={{ border: 0, background: 'none' }} type="button">
       {loading ? <LoadingOutlined /> : <PlusOutlined />}
     </button>
   );
 
+  if (!formConfig) return null;
+
   return (
     <ConfigProvider
       theme={{
         components: {
-          Input: {
-            activeBorderColor: THEME_COLOR, // 换成你的主题色
-            hoverBorderColor: THEME_COLOR, // 同时修改 hover 态边框色，保持一致
-            activeShadow: '0 0 0 2px rgba(217, 119, 6, 0.1)', // 修改激活态阴影，避免默认蓝色阴影
-          },
-          InputNumber: {
-            activeBorderColor: THEME_COLOR,
-            hoverBorderColor: THEME_COLOR,
-            handleHoverColor: THEME_COLOR,
-            activeShadow: '0 0 0 2px rgba(217, 119, 6, 0.1)',
-          },
-          Radio: {
-            colorPrimary: THEME_COLOR,
-            colorPrimaryActive: DEEP_COLOR,
-            colorPrimaryBorder: LIGHT_COLOR,
-            colorPrimaryHover: THEME_COLOR,
-          },
-          Checkbox: {
-            colorPrimary: THEME_COLOR,
-            colorPrimaryBorder: LIGHT_COLOR,
-            colorPrimaryHover: THEME_COLOR,
-          },
           Upload: {
             colorPrimary: THEME_COLOR,
             colorPrimaryHover: THEME_COLOR,
             colorPrimaryBorder: LIGHT_COLOR,
-            pictureCardSize: formConfig.width,
-          },
-          Image: { colorPrimaryBorder: LIGHT_COLOR },
-          Switch: {
-            colorPrimary: THEME_COLOR,
-            colorPrimaryBorder: LIGHT_COLOR,
-            colorPrimaryHover: THEME_COLOR,
-          },
-          Select: {
-            activeBorderColor: THEME_COLOR,
-            activeOutlineColor: LIGHT_COLOR,
-            hoverBorderColor: THEME_COLOR,
-            optionSelectedBg: LIGHT_COLOR,
-            colorPrimary: THEME_COLOR,
-          },
-          DatePicker: {
-            activeBorderColor: THEME_COLOR,
-            cellActiveWithRangeBg: LIGHT_COLOR,
-            cellHoverWithRangeBg: LIGHT_COLOR,
-            cellRangeBorderColor: LIGHT_COLOR,
-            hoverBorderColor: THEME_COLOR,
-            colorPrimary: THEME_COLOR,
-            colorPrimaryBorder: LIGHT_COLOR,
+            pictureCardSize: formConfig.width || 200,
           },
         },
       }}
@@ -180,7 +133,7 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
         {type === 'textInput' && (
           <Input
             {...rest}
-            placeholder={formConfig.placeholder || undefined}
+            placeholder={formConfig.placeholder || ''}
             prefix={
               formConfig.prefix ? (
                 <i className={`iconfont ${formConfig.prefix}`} />
@@ -207,7 +160,7 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
                   }
                 : undefined
             }
-            style={{ width: formConfig.width }}
+            style={{ width: formConfig.width || 400 }}
           />
         )}
 
@@ -216,8 +169,8 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
           <TextArea
             {...rest}
             rows={4}
-            style={{ width: formConfig.width }}
-            placeholder={formConfig.placeholder || undefined}
+            style={{ width: formConfig.width || 400 }}
+            placeholder={formConfig.placeholder || ''}
             count={
               formConfig.maxCount
                 ? {
@@ -236,14 +189,14 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
         {type === 'password' && (
           <Input.Password
             {...rest}
-            placeholder={formConfig.placeholder || undefined}
+            placeholder={formConfig.placeholder || ''}
             disabled={formConfig.isDisabled || false}
             prefix={
               formConfig.prefix ? (
                 <i className={`iconfont ${formConfig.prefix}`} />
               ) : undefined
             }
-            style={{ width: formConfig.width }}
+            style={{ width: formConfig.width || 400 }}
           />
         )}
 
@@ -252,9 +205,9 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
           <Search
             {...rest}
             size={formConfig.size || 'medium'}
-            placeholder={formConfig.placeholder || undefined}
+            placeholder={formConfig.placeholder || ''}
             allowClear
-            style={{ width: formConfig.width }}
+            style={{ width: formConfig.width || 400 }}
           />
         )}
 
@@ -262,13 +215,15 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
         {type === 'number' && (
           <InputNumber
             {...rest}
-            controls={formConfig.controls || true}
+            controls={formConfig.controls || true} //是否显示增减按钮
             min={formConfig.min || 0}
             max={formConfig.max || undefined}
-            defaultValue={formConfig.defaultValue || undefined}
-            disabled={formConfig.isDisabled}
-            prefix={formConfig.prefix}
-            style={{ width: formConfig.width }}
+            defaultValue={formConfig.defaultValue || null}
+            disabled={formConfig.isDisabled || false}
+            prefix={formConfig.prefix || undefined}
+            suffix={formConfig.suffix || undefined}
+            style={{ width: formConfig.width || 400 }}
+            placeholder={formConfig.placeholder || ''}
           />
         )}
 
@@ -297,7 +252,7 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
                               value={otherInput}
                               onChange={handleOtherInputChange}
                               style={{
-                                width: formConfig.input.inputWidth,
+                                width: formConfig.input.inputWidth || 200,
                                 marginInlineStart: 12,
                               }}
                             />
@@ -332,14 +287,71 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
             listType={
               formConfig.listType === 1 ? 'picture-card' : 'picture-circle'
             }
+            fileList={
+              form?.getFieldValue(formConfig.name)
+                ? [
+                    {
+                      uid: '-1',
+                      name: 'image.png',
+                      status: 'done',
+                      url: form?.getFieldValue(formConfig.name),
+                    },
+                  ]
+                : []
+            }
             className="avatar-uploader"
             showUploadList={false}
-            action={formConfig.action} //真实的后端接口
+            customRequest={async ({ file, onSuccess, onError }) => {
+              try {
+                setLoading(true);
+
+                // 1. 生成唯一文件名，避免重名覆盖
+                const fileName = `${Date.now()}_${file.name}`;
+                const bucketName = 'tour-images'; // 替换为你的 bucket 名称
+                const uploadPath = `images/${fileName}`;
+
+                // console.log('开始上传到路径：', uploadPath);
+                // console.log('Bucket 名称：', bucketName);
+
+                // 2. 上传到 Supabase Storage
+                const { data, error } = await supabase.storage
+                  .from(bucketName)
+                  .upload(uploadPath, file);
+
+                // console.log('上传返回：', { data, error });
+
+                if (error) throw error;
+
+                // 3. 获取公开访问 URL
+                const { data: urlData } = supabase.storage
+                  .from(bucketName)
+                  .getPublicUrl(uploadPath);
+
+                const publicUrl = urlData.publicUrl;
+                // console.log('生成的 URL：', publicUrl);
+
+                // 4. 更新预览图 & 通知组件上传成功
+                setImageUrl(publicUrl);
+                form.setFieldsValue({ [formConfig.name]: publicUrl });
+
+                // 通知 antd 上传完成
+                onSuccess(publicUrl);
+              } catch (err) {
+                console.error('上传失败详情：', err);
+                message.error('图片上传失败，请重试' + err.message);
+                onError(err);
+              } finally {
+                setLoading(false);
+              }
+            }}
             beforeUpload={beforeUpload}
-            onChange={handleChange}
           >
-            {imageUrl ? (
-              <img draggable={false} src={imageUrl} style={{ width: '100%' }} />
+            {form?.getFieldValue(formConfig.name) ? (
+              <img
+                draggable={false}
+                src={form?.getFieldValue(formConfig.name)}
+                style={{ width: '100%', objectFit: 'cover', height: '100%' }}
+              />
             ) : (
               uploadButton
             )}
@@ -380,8 +392,8 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
                 ? { optionFilterProp: 'label', onSearch }
                 : undefined
             }
-            style={{ width: formConfig.width }}
-            options={options}
+            style={{ width: formConfig.width || 400 }}
+            options={formConfig.options}
           />
         )}
 
@@ -390,13 +402,63 @@ const DataField = ({ type, formConfig, onSearch, form, ...rest }) => {
           <DatePicker
             {...rest}
             placeholder="选择日期"
-            style={{ width: formConfig.width }}
-            locale={zhCN}
+            style={{ width: formConfig.width || 400 }}
+            locale={zhCN.DatePicker}
           />
         )}
 
         {/* 评分 */}
         {type === 'rate' && <Rate {...rest} allowHalf />}
+
+        {/* 弹窗框(填写和修改都需要弹窗) */}
+        {type === 'dialog' && (
+          <div
+            className="input-style flex justify-between relative cursor-default"
+            {...rest}
+          >
+            {/* 拿到值后渲染页面 */}
+            <p className={`${rest.value ? 'text-black' : ''}`}>
+              {rest.value ? rest.value : `请选择你的${formConfig.labelText}`}
+            </p>
+
+            {/* 当第一次点击按钮时直接打开弹窗，之后都需要经过气泡确认框才能打开弹窗 */}
+            {rest.value ? (
+              <Popconfirm
+                title="确认要修改吗？"
+                description={`请慎重选择是否要修改你的${formConfig.labelText}！`}
+                onConfirm={handleOpenDialogClick}
+                okText="是"
+                cancelText="否"
+              >
+                <i className="iconfont icon-chuangzuo absolute top-0.5 right-3 cursor-pointer hover:text-[#d97706]" />
+              </Popconfirm>
+            ) : (
+              <i
+                onClick={handleOpenDialogClick}
+                className="iconfont icon-chuangzuo text-color1 hover:scale-110 absolute top-0.5 right-3 cursor-pointer"
+              />
+            )}
+          </div>
+        )}
+
+        {/* 时间选择器-单个 */}
+        {type === 'timePicker' && (
+          <TimePicker
+            allowClear={formConfig.isAllowClear || false}
+            format={format}
+            placeholder={formConfig.placeholder || ''}
+            style={{ width: formConfig.width || 200 }}
+          />
+        )}
+
+        {/* 时间选择器-连着两个 */}
+        {/* {type === 'rangePicker' && (
+          <TimePicker.RangePicker
+            allowClear={formConfig.isAllowClear || false}
+            format={format}
+            placeholder={formConfig.placeholder || ''}
+          />
+        )} */}
       </div>
     </ConfigProvider>
   );

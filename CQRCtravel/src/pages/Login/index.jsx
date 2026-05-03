@@ -1,6 +1,5 @@
-import { DataField } from '@/components';
 import { rulesParse } from '@/utils';
-import { Carousel, Typography, Button, Form } from 'antd';
+import { Carousel, Typography, Button, Form, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { HomeOutlined } from '@ant-design/icons';
 
@@ -23,7 +22,6 @@ const loginFormFields = {
       label: '手机号',
       name: 'phone',
       rules: 'required phone',
-      type: 'textInput',
       formConfig: {
         width: 260,
         placeholder: '请输入手机号',
@@ -35,7 +33,6 @@ const loginFormFields = {
       label: '密码',
       name: 'password',
       rules: 'required password',
-      type: 'password',
       formConfig: {
         width: 260,
         placeholder: '请输入密码',
@@ -100,16 +97,56 @@ const Login = () => {
               labelAlign="right"
               labelCol={{ span: 6 }} // 设置label的宽度
             >
-              {loginFormFields.formItems.map((item) => (
-                <Form.Item
-                  key={item.name}
-                  label={item.label}
-                  name={item.name}
-                  rules={rulesParse(item.rules)}
-                >
-                  <DataField type={item.type} formConfig={item.formConfig} />
-                </Form.Item>
-              ))}
+              <Form.Item
+                key={loginFormFields.formItems[0].name}
+                label={loginFormFields.formItems[0].label}
+                name={loginFormFields.formItems[0].name}
+                rules={rulesParse(loginFormFields.formItems[0].rules)}
+              >
+                <Input
+                  placeholder={
+                    loginFormFields.formItems[0].formConfig.placeholder || ''
+                  }
+                  prefix={
+                    loginFormFields.formItems[0].formConfig.prefix ? (
+                      <i
+                        className={`iconfont ${loginFormFields.formItems[0].formConfig.prefix}`}
+                      />
+                    ) : undefined
+                  }
+                  disabled={
+                    loginFormFields.formItems[0].formConfig.isDisabled || false
+                  }
+                  style={{
+                    width: loginFormFields.formItems[0].formConfig.width,
+                  }}
+                />
+              </Form.Item>
+              <Form.Item
+                key={loginFormFields.formItems[1].name}
+                label={loginFormFields.formItems[1].label}
+                name={loginFormFields.formItems[1].name}
+                rules={rulesParse(loginFormFields.formItems[1].rules)}
+              >
+                <Input.Password
+                  placeholder={
+                    loginFormFields.formItems[1].formConfig.placeholder || ''
+                  }
+                  prefix={
+                    loginFormFields.formItems[1].formConfig.prefix ? (
+                      <i
+                        className={`iconfont ${loginFormFields.formItems[1].formConfig.prefix}`}
+                      />
+                    ) : undefined
+                  }
+                  disabled={
+                    loginFormFields.formItems[1].formConfig.isDisabled || false
+                  }
+                  style={{
+                    width: loginFormFields.formItems[1].formConfig.width,
+                  }}
+                />
+              </Form.Item>
             </Form>
           </div>
 

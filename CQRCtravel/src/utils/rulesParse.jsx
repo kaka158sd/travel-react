@@ -10,15 +10,18 @@ export const rulesParse = (ruleStr) => {
   return ruleStr
     .split(' ')
     .map((key) => {
-      // 优先匹配嵌套的规则
+      // 优先匹配根层规则
+      if (formRules[key]) {
+        return formRules[key];
+      }
+      // 匹配嵌套的规则
       if (formRules.type?.[key]) {
         return formRules.type[key];
       } else if (formRules.length?.[key]) {
         return formRules.length[key];
       }
 
-      // 其次匹配根规则
-      return formRules[key] || [];
+      return [];
     })
     .flat(); // 拍平数组
 };

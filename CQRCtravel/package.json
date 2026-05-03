@@ -12,6 +12,7 @@
   "dependencies": {
     "@jiaminghi/data-view-react": "^1.2.5",
     "@reduxjs/toolkit": "^2.11.2",
+    "@supabase/supabase-js": "^2.105.1",
     "antd": "^6.3.6",
     "axios": "^1.15.1",
     "dayjs": "^1.11.20",
