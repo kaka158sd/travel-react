@@ -93,7 +93,12 @@ const ScenicSpotsPage = () => {
 
           // 给每个Card传递对象并添加key
           return (
-            <Card key={item.spot_id} boxStyle={boxStyle} cardData={cardData} />
+            <Card
+              key={item.spot_id}
+              boxStyle={boxStyle}
+              cardData={cardData}
+              reservationForm={item}
+            />
           );
         })}
       </div>

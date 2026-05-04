@@ -7,7 +7,8 @@ import axios from 'axios';
 
 const request = axios.create({
   baseURL: 'https://cjjcirgfuyytugwdyslf.supabase.co/rest/v1',
-  timeout: 5000,
+  timeout: 10000,
+  withCredentials: false, // 解决预检请求超时
 });
 
 // 添加请求拦截器（在请求发送之前做拦截，插入一些自定义的配置）
@@ -28,14 +29,24 @@ request.interceptors.request.use(
 
 // 添加响应拦截器（在响应返回到客户端之前做拦截，重点处理返回的数据）
 request.interceptors.response.use(
-  function (response) {
-    // 2xx 范围内的状态码都会触发该函数。
-    // 对响应数据做点什么
-    return response;
-  },
-  function (error) {
-    // 超出 2xx 范围的状态码都会触发该函数。
-    // 对响应错误做点什么
+  (response) => response,
+  async (error) => {
+    const { config, response } = error;
+    // 只对超时请求重试
+    if (error.code === 'ECONNABORTED' && !config.__retryCount) {
+      config.__retryCount = 0;
+    }
+
+    // 最多重试 3 次
+    const maxRetries = 3;
+    if (config.__retryCount < maxRetries) {
+      config.__retryCount += 1;
+      console.log(`请求超时，第 ${config.__retryCount} 次重试`);
+      // 等待 1 秒后重试
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return request(config);
+    }
+
     return Promise.reject(error);
   },
 );

@@ -1,0 +1,30 @@
+//out:false
+.backgroundImage {
+  background-image: linear-gradient(
+    to right top,
+    #d47807,
+    #d89019,
+    #dca72e,
+    #dfbe44,
+    #e1d45c,
+    #d5d760,
+    #c9da65,
+    #bcdc6b,
+    #9ecc5d,
+    #7fbc50,
+    #5fab45,
+    #3b9b3b
+  );
+  background-size: 200% 200%;
+  background-repeat: no-repeat;
+  animation: gradientFlow 8s linear infinite alternate;
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 100% 0%;
+  }
+}

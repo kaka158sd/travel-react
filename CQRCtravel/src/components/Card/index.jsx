@@ -7,6 +7,9 @@ import {
 } from '@ant-design/icons';
 import CardIcon from './CardIcon';
 import CardScore from './CardScore';
+import { useState } from 'react';
+import { DialogCommon } from '@/components';
+import { useReservationForm } from '@/hook/formFields/useReservationForm';
 
 // 设置卡片的宽高、背景色、图片高度
 // const boxStyle = {
@@ -58,7 +61,8 @@ import CardScore from './CardScore';
 //   data: 1,
 // };
 
-const Card = ({ boxStyle, cardData, onClick }) => {
+// 传递的reservationForm需要时一个订单的空表单 + 点击的相关数据，一旦提交则生成一个新的order并存入这个用户的订单中
+const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
   const iconfont = [
     {
       icon: cardData.icon, //图标名称
@@ -76,6 +80,25 @@ const Card = ({ boxStyle, cardData, onClick }) => {
     score: cardData.score,
     type: cardData.category, //1：价格-number；2：价格-string；3：已体验人数-number
     rate: cardData.rate, //可放数字-20或者字符串-'20元/碗'
+  };
+
+  // 控制弹窗的开关
+  const [isShowReservationDialog, setIsShowReservationDialog] = useState(false);
+
+  // 弹窗传参数据
+  const { form, formFields, initialValues } =
+    useReservationForm(reservationForm);
+  const dialogData = {
+    type: 1,
+    title: `预约-${cardData.title}`,
+    data: {
+      formType: 'reservation',
+      form,
+      maxWidth: 500,
+      initialValues,
+      formFields,
+    },
+    width: 750,
   };
 
   return (
@@ -175,7 +198,10 @@ const Card = ({ boxStyle, cardData, onClick }) => {
                   )}
 
                   {cardData.btn.includes(2) && (
-                    <button className="btn2">
+                    <button
+                      className="btn2"
+                      onClick={() => setIsShowReservationDialog(true)}
+                    >
                       <BookOutlined className="mr-2" />
                       立即预约
                     </button>
@@ -215,19 +241,29 @@ const Card = ({ boxStyle, cardData, onClick }) => {
               <br />
             )}
           </div>
+
+          {/* 立即预约弹窗 */}
+          <DialogCommon
+            isShowDialog={isShowReservationDialog}
+            onCancel={() => {
+              setIsShowReservationDialog(false);
+            }}
+            dialogData={dialogData}
+            onOk={() => setIsShowReservationDialog(false)}
+          />
         </div>
       )}
 
       {/* 模版3：图标、标题、数据（游客的卡片数据为0时不显示data） */}
       {cardData.mode === 3 && (
         <div
-          className={`w-full ${boxStyle.bgColor} px-5 py-6 card-border flex items-center ${cardData.iconType === 1 ? 'flex-col' : 'flex-row-reverse justify-between'}`}
+          className={`w-full ${boxStyle.bgColor} px-5 py-2 card-border flex items-center ${cardData.iconType === 1 ? 'flex-col' : 'flex-row-reverse justify-between'}`}
         >
           <CardIcon iconfont={iconfont[1]} />
           <div
             className={`flex flex-col ${cardData.iconType === 1 && 'items-center'}`}
           >
-            <h3 className="titie-card my-2 line-clamp-1">{cardData.title}</h3>
+            <h3 className="titie-card my-1 line-clamp-1">{cardData.title}</h3>
             {cardData.iconType === 1 && cardData.data <= 0 ? (
               <></>
             ) : (

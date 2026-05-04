@@ -1,7 +1,10 @@
 import { Descriptions, Modal, Select } from 'antd';
 import './index.less';
 import { useEffect, useState } from 'react';
+import { CommonForm } from '..';
 
+// 详情弹窗配置
+// 新闻详情弹窗配置
 // const label = ['新闻图片', '发布者', '发布单位', '新闻内容', '发布时间'];
 // const news = {
 //   news_id: 1,
@@ -15,7 +18,7 @@ import { useEffect, useState } from 'react';
 //   publish_time: '2026-04-19T11:51:42.195248+00:00',
 // };
 
-// // 订单的状态通用样式项列表
+// 订单的状态通用样式项列表
 // const statusStyle = [
 //   { status: 0, color: 'cyan', text: '待支付' },
 //   { status: 1, color: 'blue', text: '待核销' },
@@ -24,6 +27,7 @@ import { useEffect, useState } from 'react';
 //   { status: 4, color: 'orange', text: '已过期' },
 //   { status: 5, color: 'red', text: '已退款' },
 // ];
+// 订单详情弹窗配置
 // const label1 = [
 //   '非遗ID',
 //   '非遗名称',
@@ -62,6 +66,7 @@ import { useEffect, useState } from 'react';
 //   (item) => item.status === orders.order_status,
 // );
 
+// 活动详情弹窗配置
 // const activities = {
 //   activity_id: 1,
 //   activity_name: '万灵古镇汉服巡游',
@@ -91,6 +96,7 @@ import { useEffect, useState } from 'react';
 //   '创建时间',
 // ];
 
+// 用户详情弹窗配置
 // const users = {
 //   user_id: 1,
 //   identity_type: 1,
@@ -273,6 +279,8 @@ import { useEffect, useState } from 'react';
 //   width: 1000,
 // };
 
+//
+
 const DialogCommon = ({
   dialogData,
   isShowDialog,
@@ -301,6 +309,30 @@ const DialogCommon = ({
 
   return (
     <div>
+      {/* 有表单的弹窗 */}
+      {dialogData.type === 1 && (
+        <Modal
+          title={dialogData.title}
+          open={isShowDialog}
+          onCancel={onCancel}
+          onOk={onOk}
+          width={dialogData.width || 500}
+          cancelText="取消"
+          okText="提交"
+          className="dialogStyle"
+        >
+          <div className="border border-amber-500 py-4 rounded-lg">
+            <CommonForm
+              formType={dialogData.data.formType}
+              form={dialogData.data.form}
+              maxWidth={dialogData.data.maxWidth}
+              initialValues={dialogData.data.initialValues}
+              formFields={dialogData.data.formFields}
+            />
+          </div>
+        </Modal>
+      )}
+
       {/* 无表单但需修改数据弹窗 */}
       {dialogData?.type === 2 && (
         <Modal
@@ -339,7 +371,7 @@ const DialogCommon = ({
           open={isShowDialog}
           onCancel={onCancel}
           footer={<></>}
-          width={dialogData.width}
+          width={dialogData.width || 1000}
           className="dialogStyle"
         >
           <Descriptions

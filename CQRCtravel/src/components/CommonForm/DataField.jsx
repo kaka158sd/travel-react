@@ -15,9 +15,11 @@ import {
   Rate,
   Popconfirm,
   TimePicker,
+  Spin,
 } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
 import { runes } from 'runes2';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { UserOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import { supabase } from '@/lib/supabase';
@@ -34,7 +36,7 @@ const labelStyleCommon = {
   lineHeight: '32px',
 };
 
-// 上传框配置
+// 上传框配置:只能上传格式为JPG/PNG的图片,图片必须小于2MB
 const beforeUpload = (file) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
   if (!isJpgOrPng) {
@@ -58,61 +60,88 @@ const DataField = ({
   handleOpenDialogClick,
   ...rest
 }) => {
-  // 单选框群、多选框、下拉菜单/选择器的options由传递的参数中的选项遍历而来
-  let options = [];
-  if (['radio', 'checkbox'].includes(type)) {
-    options =
-      formConfig.optionsItem?.map((item) => ({
-        value: item.value,
-        style: formConfig.labelStyle ? formConfig.labelStyle : undefined,
-        label: item.label,
-      })) || []; // 加 ?. 和 || [] 双重保险
-  }
+  // 组件销毁后setImageUrl还会存在需要清除
+  const isMounted = useRef(true);
+  useEffect(() => {
+    return () => (isMounted.current = false);
+  }, []);
 
   // 单选框中点击“其他”显示输入框，selectedValue - 控制输入框的显隐
-  const [selectedValue, setSelectedValue] = useState();
-
+  // const [selectedValue, setSelectedValue] = useState();
   // 拿到单选框中的输入框的值
   const [otherInput, setOtherInput] = useState('');
-
-  // 处理单选框变化
-  const handleRadioChange = (e) => {
-    const val = e.target.value;
-    setSelectedValue(val);
-    rest.onChange?.(val); // 不覆盖表单默认onChange
-
-    // 统一使用 options 变量，而不是直接访问 formConfig
-    const otherValue = (options?.length || 0) + 1;
-
-    // 切换到非「其他」选项时，清空输入框并同步到表单
-    if (val !== otherValue) {
-      setOtherInput('');
-      // 非「其他」选项，同步单选框值到表单
-      form?.setFieldValue(rest.name, val);
-    } else {
-      // 切换到「其他」选项时，把输入框的值同步到表单
-      form?.setFieldValue(rest.name, otherInput);
-    }
-  };
-
-  // 处理单选框「其他」输入框变化
-  const handleOtherInputChange = (e) => {
-    const val = e.target.value;
-    setOtherInput(val);
-    // 同步输入框的值到表单，和单选框使用同一个name
-    form.setFieldValue(rest.name, val);
-  };
 
   // 上传图片
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState();
+
+  // 用useRef存住form实例，以防customRequest 函数执行时，form 实例已经丢失 / 未定义了
+  const formRef = useRef(form);
+  // formConfig.src 后续不会变化，或者不想每次更新都触发，可以用 useRef 存值，避免依赖警告
+  const srcRef = useRef(formConfig?.src);
+  srcRef.current = formConfig?.src;
+  // 将头像的初始值同步给imageUrl
+  useEffect(() => {
+    // 每次form更新时，同步到ref中
+    formRef.current = form;
+    if (type === 'upload' && srcRef.current) setImageUrl(srcRef.current);
+  }, [form, type]); //补全依赖
+
+  // 防止空项渲染
+  if (!formConfig || !type) return <div style={{ display: 'none' }} />;
+
+  // 单选框群、多选框、下拉菜单/选择器的options由传递的参数中的选项遍历而来
+  // let options = [];
+  // if (['radio', 'checkbox'].includes(type)) {
+  //   options =
+  //     formConfig.optionsItem?.map((item) => ({
+  //       value: item.value,
+  //       style: formConfig.labelStyle ? formConfig.labelStyle : undefined,
+  //       label: item.label,
+  //     })) || []; // 加 ?. 和 || [] 双重保险
+  // }
+
+  // 处理单选框变化
+  // const handleRadioChange = (e) => {
+  //   const val = e.target.value;
+  //   setSelectedValue(val);
+  //   rest.onChange?.(val); // 不覆盖表单默认onChange
+
+  //   // 统一使用 options 变量，而不是直接访问 formConfig
+  //   const otherValue = (options?.length || 0) + 1;
+
+  //   // 切换到非「其他」选项时，清空输入框并同步到表单
+  //   if (val !== otherValue) {
+  //     setOtherInput('');
+  //     // 非「其他」选项，同步单选框值到表单
+  //     if (val !== otherValue) {
+  //       setOtherInput('');
+  //       // 判断：form存在时才调用
+  //       if (form && rest.name) {
+  //         form.setFieldValue(rest.name, val);
+  //       }
+  //     }
+  //   } else {
+  //     if (form && rest.name)
+  //       // 切换到「其他」选项时，把输入框的值同步到表单
+  //       form.setFieldValue(rest.name, otherInput);
+  //   }
+  // };
+  // 处理单选框「其他」输入框变化
+  const handleOtherInputChange = (e) => {
+    const val = e.target.value;
+    setOtherInput(val);
+    if (form && rest.name)
+      // 同步输入框的值到表单，和单选框使用同一个name
+      form.setFieldValue(rest.name, val);
+  };
+
+  // 上传图片
   const uploadButton = (
     <button style={{ border: 0, background: 'none' }} type="button">
       {loading ? <LoadingOutlined /> : <PlusOutlined />}
     </button>
   );
-
-  if (!formConfig) return null;
 
   return (
     <ConfigProvider
@@ -152,7 +181,6 @@ const DataField = ({
               formConfig.count
                 ? {
                     show: true,
-                    min: formConfig.count.min || 0,
                     max: formConfig.count.max || 20,
                     strategy: (txt) => runes(txt).length,
                     exceedFormatter: (txt, { max }) =>
@@ -231,21 +259,21 @@ const DataField = ({
         {type === 'radio' && (
           <Radio.Group
             {...rest}
-            name={formConfig.name || undefined}
             vertical={formConfig.isVertical || false}
-            value={selectedValue}
-            onChange={handleRadioChange}
+            // value={selectedValue}
+            // onChange={handleRadioChange}
             options={[
-              ...options,
+              ...formConfig.options,
               ...(formConfig.input
                 ? [
                     {
-                      value: options?.length + 1,
+                      value: formConfig.options?.length + 1,
                       style: formConfig.labelStyle || labelStyleCommon,
                       label: (
                         <>
                           其他
-                          {selectedValue === (options?.length || 0) + 1 && (
+                          {rest.value ===
+                            (formConfig.options?.length || 0) + 1 && (
                             <Input
                               variant="filled"
                               placeholder="请输入"
@@ -267,7 +295,9 @@ const DataField = ({
         )}
 
         {/* 多选框 */}
-        {type === 'checkbox' && <Checkbox.Group {...rest} options={options} />}
+        {type === 'checkbox' && (
+          <Checkbox.Group {...rest} options={formConfig.options} />
+        )}
 
         {/* 头像框 */}
         {type === 'avatar' && (
@@ -283,18 +313,19 @@ const DataField = ({
         {type === 'upload' && (
           <Upload
             {...rest}
-            name={formConfig.name}
+            // formConfig.name 不存在时，传空字符串或固定值，避免 undefined
+            name={formConfig.name || 'avatar'}
             listType={
               formConfig.listType === 1 ? 'picture-card' : 'picture-circle'
             }
             fileList={
-              form?.getFieldValue(formConfig.name)
+              imageUrl
                 ? [
                     {
                       uid: '-1',
                       name: 'image.png',
                       status: 'done',
-                      url: form?.getFieldValue(formConfig.name),
+                      url: imageUrl,
                     },
                   ]
                 : []
@@ -310,15 +341,10 @@ const DataField = ({
                 const bucketName = 'tour-images'; // 替换为你的 bucket 名称
                 const uploadPath = `images/${fileName}`;
 
-                // console.log('开始上传到路径：', uploadPath);
-                // console.log('Bucket 名称：', bucketName);
-
                 // 2. 上传到 Supabase Storage
                 const { data, error } = await supabase.storage
                   .from(bucketName)
                   .upload(uploadPath, file);
-
-                // console.log('上传返回：', { data, error });
 
                 if (error) throw error;
 
@@ -331,8 +357,14 @@ const DataField = ({
                 // console.log('生成的 URL：', publicUrl);
 
                 // 4. 更新预览图 & 通知组件上传成功
-                setImageUrl(publicUrl);
-                form.setFieldsValue({ [formConfig.name]: publicUrl });
+                if (isMounted.current) setImageUrl(publicUrl);
+
+                // 只有form存在才赋值
+                const formInstance = formRef.current;
+                if (formInstance && formConfig?.name)
+                  formInstance.setFieldValue({
+                    [formConfig.name]: publicUrl,
+                  });
 
                 // 通知 antd 上传完成
                 onSuccess(publicUrl);
@@ -346,12 +378,29 @@ const DataField = ({
             }}
             beforeUpload={beforeUpload}
           >
-            {form?.getFieldValue(formConfig.name) ? (
-              <img
-                draggable={false}
-                src={form?.getFieldValue(formConfig.name)}
-                style={{ width: '100%', objectFit: 'cover', height: '100%' }}
-              />
+            {imageUrl ? (
+              <div
+                className="relative w-full h-full overflow-hidden"
+                style={{ paddingTop: '100%' }}
+              >
+                {loading ? (
+                  <Spin className="absolute bottom-20 left-0" />
+                ) : (
+                  <img
+                    draggable={false}
+                    src={imageUrl}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      objectFit: 'cover',
+                      height: '100%',
+                      borderRadius: `${formConfig.listType === 2 ? '50%' : ''}`,
+                    }}
+                  />
+                )}
+              </div>
             ) : (
               uploadButton
             )}
@@ -383,9 +432,7 @@ const DataField = ({
           <Select
             {...rest}
             mode={formConfig.mode === 2 ? 'multiple' : undefined}
-            allowClear={
-              (formConfig.isAllowClear && formConfig.mode === 2) || false
-            }
+            allowClear={formConfig.isAllowClear && formConfig.mode === 2}
             placeholder={formConfig.placeholder || ''}
             showSearch={
               formConfig.isShowSearch
@@ -393,7 +440,18 @@ const DataField = ({
                 : undefined
             }
             style={{ width: formConfig.width || 400 }}
-            options={formConfig.options}
+            options={formConfig.options || []}
+            notFoundContent={
+              <div className="flex flex-col items-center py-8">
+                <InboxOutlined className="text-5xl" />
+                <p>无数据</p>
+                {formConfig.notFoundContent && (
+                  <p className="text-orange-500 py-4">
+                    {formConfig.notFoundContent}
+                  </p>
+                )}
+              </div>
+            }
           />
         )}
 

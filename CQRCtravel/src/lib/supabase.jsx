@@ -1,4 +1,5 @@
 //Supabase 项目 URL、API Key，以及初始化好的 supabase 客户端
+// 用于上传图片到数据库
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://cjjcirgfuyytugwdyslf.supabase.co';

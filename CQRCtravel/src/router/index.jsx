@@ -49,6 +49,10 @@ const router = createBrowserRouter([
         path: '/practical-tips',
         element: <PracticalTips />,
       },
+      {
+        path: '/touristCenter',
+        element: <TouristCenter />,
+      },
     ],
   },
   {
@@ -78,10 +82,6 @@ const router = createBrowserRouter([
   {
     path: '/register',
     element: <Register />,
-  },
-  {
-    path: '/touristCenter',
-    element: <TouristCenter />,
   },
   {
     path: '/adminCenter',

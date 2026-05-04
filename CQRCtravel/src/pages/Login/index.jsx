@@ -49,7 +49,6 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    console.log('登陆成功');
     navigate('/touristCenter');
   };
 

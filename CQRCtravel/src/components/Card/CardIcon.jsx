@@ -21,7 +21,7 @@ const CardIcon = ({ iconfont }) => {
         <div className="w-12.5 h-12.5 rounded flex items-center justify-center">
           <i
             className={`iconfont ${iconfont.icon}`}
-            style={{ fontSize: 28 + 'px', color: color[iconfont.color] }}
+            style={{ fontSize: 34 + 'px', color: color[iconfont.color] }}
           />
         </div>
       )}

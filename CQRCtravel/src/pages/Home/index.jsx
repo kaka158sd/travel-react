@@ -52,10 +52,14 @@ const Home = () => {
           </p>
           <div className="mt-10 flex gap-6">
             <button className="px-16 py-4 bg-amber-600 text-white font-medium text-lg rounded-2xl shadow-lg transition-all duration-300 transform hover:-translate-y-2 cursor-pointer">
-              <a href="/itinerary-planning">行程规划</a>
+              <a href="/itinerary-planning" style={{ color: 'white' }}>
+                行程规划
+              </a>
             </button>
             <button className="px-16 py-4 bg-white/90 text-amber-600 border-2 border-amber-600 font-medium text-lg rounded-2xl shadow-lg transition-all duration-300 transform hover:-translate-y-2 cursor-pointer">
-              <a href="/practical-tips">实用贴士</a>
+              <a href="/practical-tips" style={{ color: '#d97706' }}>
+                实用贴士
+              </a>
             </button>
           </div>
         </div>

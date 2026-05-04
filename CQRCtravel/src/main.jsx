@@ -103,6 +103,9 @@ createRoot(document.getElementById('root')).render(
             controlOutline: LIGHT_COLOR,
           },
         },
+        token: {
+          colorPrimary: THEME_COLOR,
+        },
       }}
     >
       <Provider store={store}>

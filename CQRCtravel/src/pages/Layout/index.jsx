@@ -2,6 +2,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import './index.less';
 import '@/assets/fonts/iconfont.css';
 import { useState, useEffect, useRef } from 'react';
+import { DataField } from '@/components';
 
 // 顶部导航列表
 const tabs = [
@@ -69,10 +70,6 @@ const Layout = () => {
     navigate(tab.path);
   };
 
-  const handleNavToHome = () => {
-    navigate('/');
-  };
-
   return (
     <div>
       {/* 顶部导航 */}
@@ -81,7 +78,7 @@ const Layout = () => {
           src="./logo.svg"
           title="荣昌深度游"
           className="w-20 h-20 cursor-pointer"
-          onClick={handleNavToHome}
+          onClick={() => navigate('/')}
         />
         <div className="flex">
           {tabs.map((item) => (
@@ -100,6 +97,13 @@ const Layout = () => {
             <i className="iconfont icon-user1 mr-2 text-2xl"></i>
             登陆
           </button>
+
+          {/* 登陆后则显示头像 */}
+          {/* <DataField
+            type="avatar"
+            formConfig={{ src: '', size: 50 }}
+            className="cursor-pointer"
+          /> */}
         </div>
       </header>
 
@@ -108,7 +112,7 @@ const Layout = () => {
         <Outlet />
       </div>
 
-      {/* 底部栏 */}
+      {/* 底部栏:登陆后不显示 */}
       <footer className="footer">
         <div className="footer-container">
           {/* 第一栏：品牌介绍 */}
