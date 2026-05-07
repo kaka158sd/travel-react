@@ -1,4 +1,4 @@
-import { Descriptions, Modal, Select } from 'antd';
+import { Descriptions, Input, Modal, Select } from 'antd';
 import './index.less';
 import { useEffect, useState } from 'react';
 import { CommonForm } from '..';
@@ -289,7 +289,7 @@ const DialogCommon = ({
   initialValue,
 }) => {
   // 绑定无表单需要修改数据的弹窗的内部值
-  const [selectedValue, setSelectedValue] = useState(initialValue || null);
+  const [formValue, setFormValue] = useState(initialValue || null);
 
   // 每一次弹窗打开时，同步表单中选择的表单项数据最新值给弹窗
   useEffect(() => {
@@ -297,7 +297,7 @@ const DialogCommon = ({
     if (isShowDialog) {
       // 使用定时器延迟执行setState，以免状态更新循环
       timer = setTimeout(() => {
-        setSelectedValue(initialValue ?? null);
+        setFormValue(initialValue ?? null);
       }, 0);
     }
 
@@ -339,10 +339,10 @@ const DialogCommon = ({
           title={dialogData?.data.title || ''}
           open={isShowDialog}
           onCancel={onCancel}
-          onOk={() => onOk?.(selectedValue)} //把值暴露出去
+          onOk={() => onOk?.(formValue)} //把值暴露出去
           style={{
             width: dialogData?.width || 500,
-            height: dialogData?.height || 500,
+            height: dialogData?.height || 191,
           }}
           cancelText="取消"
           okText="确认"
@@ -353,14 +353,24 @@ const DialogCommon = ({
             >
               {dialogData?.data.label || ''} :
             </div>
-            <Select
-              placeholder={dialogData?.data.placeholder || ''}
-              showSearch={{ optionFilterProp: 'label' }}
-              style={{ width: '100%' }}
-              options={dialogData?.data.options}
-              value={selectedValue}
-              onChange={(value) => setSelectedValue(value)}
-            />
+
+            {dialogData?.data.options ? (
+              <Select
+                placeholder={dialogData?.data.placeholder || ''}
+                showSearch={{ optionFilterProp: 'label' }}
+                style={{ width: '100%' }}
+                options={dialogData?.data.options || []}
+                value={formValue}
+                onChange={(value) => setFormValue(value)}
+              />
+            ) : (
+              <Input
+                placeholder={dialogData?.data.placeholder || ''}
+                style={{ width: '100%' }}
+                value={formValue}
+                onChange={(value) => setFormValue(value)}
+              />
+            )}
           </div>
         </Modal>
       )}

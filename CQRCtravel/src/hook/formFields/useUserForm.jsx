@@ -76,6 +76,7 @@ export const useUserForm = (params = {}) => {
           type: 'password',
           formConfig: {
             placeholder: '',
+            isDisabled: true,
           },
         },
         {
@@ -85,7 +86,7 @@ export const useUserForm = (params = {}) => {
           type: 'textInput',
           formConfig: {
             placeholder: '',
-            allowClear: true,
+            isDisabled: true,
           },
         },
         // 将name写成数组形式以便form表单组件爱你识别

@@ -18,15 +18,20 @@ import Test from '@/pages/test';
 import AdminCenter from '@/pages/userCenter/Admins';
 import InheritorCenter from '@/pages/userCenter/Inheritors';
 import TouristCenter from '@/pages/userCenter/Tourists';
-import { createBrowserRouter } from 'react-router-dom';
+import HelpCenter from '@/pages/userCenter/Tourists/HelpCenter';
+import MyComments from '@/pages/userCenter/Tourists/MyComments';
+import MyFavorites from '@/pages/userCenter/Tourists/MyFavorites';
+import MyOrders from '@/pages/userCenter/Tourists/MyOrders';
+import MyTrips from '@/pages/userCenter/Tourists/MyTrips';
+import Setting from '@/pages/userCenter/Tourists/Setting';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
 
 const router = createBrowserRouter([
   {
-    path: '/',
     element: <Layout />,
     children: [
       {
-        index: true,
+        path: '/',
         element: <Home />,
       },
       {
@@ -51,7 +56,31 @@ const router = createBrowserRouter([
       },
       {
         path: '/touristCenter',
-        element: <TouristCenter />,
+        element: <Outlet />,
+        children: [
+          { index: true, element: <TouristCenter /> },
+          { path: '/touristCenter/setting', element: <Setting /> },
+          {
+            path: '/touristCenter/helpCenter',
+            element: <HelpCenter />,
+          },
+          {
+            path: '/touristCenter/myComments',
+            element: <MyComments />,
+          },
+          {
+            path: '/touristCenter/myOrders',
+            element: <MyOrders />,
+          },
+          {
+            path: '/touristCenter/myTrips',
+            element: <MyTrips />,
+          },
+          {
+            path: '/touristCenter/myFavorites',
+            element: <MyFavorites />,
+          },
+        ],
       },
     ],
   },

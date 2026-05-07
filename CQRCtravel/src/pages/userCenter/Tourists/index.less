@@ -1,23 +1,26 @@
 //out:false
 .backgroundImage {
-  background-image: linear-gradient(
-    to right top,
-    #d47807,
-    #d89019,
-    #dca72e,
-    #dfbe44,
-    #e1d45c,
-    #d5d760,
-    #c9da65,
-    #bcdc6b,
-    #9ecc5d,
-    #7fbc50,
-    #5fab45,
-    #3b9b3b
+  background-image: radial-gradient(
+    circle,
+    #b66706,
+    #be7c13,
+    #c59122,
+    #cba633,
+    #d0bb45,
+    #c3bc46,
+    #b6bd48,
+    #a8be4b,
+    #87ac3d,
+    #669930,
+    #448725,
+    #1b741b
   );
   background-size: 200% 200%;
   background-repeat: no-repeat;
-  animation: gradientFlow 8s linear infinite alternate;
+  animation: gradientFlow 6s linear infinite alternate;
+  box-shadow:
+    1px 1px 4px 0 #f5b958,
+    -1px 2px 4px -1px #448725;
 }
 
 @keyframes gradientFlow {
@@ -27,4 +30,24 @@
   100% {
     background-position: 100% 0%;
   }
+}
+
+.ant-collapse-body {
+  font-size: 14px;
+  color: gray;
+}
+
+// 景点订单背景图
+.order-bgimage1 {
+  background-image: url('https://tse3-mm.cn.bing.net/th/id/OIP-C.GD-Mx5wzKFYaxr08wvP-KgHaEJ?w=270&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3');
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+// 非遗订单背景图
+.order-bgimage2 {
+  background-image: url('https://bpic.588ku.com/back_list_pic/24/04/29/2b08ed080b1c6f1a8f928bd1e572cbda.jpg!/fw/329/quality/90/unsharp/true/compress/true');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 0% 20%;
 }

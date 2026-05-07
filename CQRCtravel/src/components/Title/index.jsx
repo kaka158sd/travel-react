@@ -1,6 +1,8 @@
 const Title = ({ titleData }) => {
   return (
-    <div className="w-full py-12 text-center">
+    <div
+      className={`w-full ${!titleData.desc || titleData.desc.trim() === '' ? 'py-4' : 'py-12'} text-center`}
+    >
       <div className="text-5xl font-semibold text-gray-900 tracking-widest">
         {titleData.title}
       </div>

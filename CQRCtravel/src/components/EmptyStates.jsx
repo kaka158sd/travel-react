@@ -20,8 +20,10 @@ export const Loading = () => {
 };
 
 // 2. 无数据组件
-export const NoData = () => {
-  return <Empty description="暂无数据" className="my-75" />;
+export const NoData = ({ width }) => {
+  return (
+    <Empty description="暂无数据" className={`${width ? width : 'my-75'}`} />
+  );
 };
 
 // 3. 加载失败组件

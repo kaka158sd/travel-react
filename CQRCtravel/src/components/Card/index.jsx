@@ -106,7 +106,7 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
       {/* 模版1：图标、标题、描述（交通卡片有一个具体内容数组） */}
       {cardData.mode === 1 && (
         <div
-          className={`w-full px-5 py-6 card-border ${boxStyle.bgColor} ${cardData.iconType === 3 && 'flex justify-between items-center gap-4'}`}
+          className={`w-full px-5 card-border ${boxStyle.bgColor} ${cardData.iconType === 3 ? 'flex justify-center items-center gap-4 py-2' : 'py-6'}`}
         >
           <CardIcon iconfont={iconfont[0]} />
           <div
@@ -136,7 +136,7 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
           className={`w-full h-full ${boxStyle.bgColor} card-border relative`}
         >
           {/* 图片（类型） */}
-          <div className="w-full h-fit min-h-50">
+          <div className="w-full h-fit">
             <img
               src={cardData.img ? cardData.img : '@/assets/withoutImage.png'}
               className={`w-full ${boxStyle.imgHeight} object-cover rounded-lg border-img`}

@@ -1,4 +1,4 @@
-import { rulesParse } from '@/utils';
+import { getNavActiveKey, rulesParse, setNavActiveKey } from '@/utils';
 import { Form, Radio, Input } from 'antd';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -68,11 +68,11 @@ const registerFormFields = {
 };
 
 // 读取本地存储页面布局变量的函数
-const getInitialPageLayout = () => {
-  const saved = localStorage.getItem('pageLayout');
-  // 如果本地存储中有值则返回值，否则默认是1
-  return saved ? parseInt(saved, 10) : 1;
-};
+// const getInitialPageLayout = () => {
+//   const saved = localStorage.getItem('pageLayout');
+//   // 如果本地存储中有值则返回值，否则默认是1
+//   return saved ? parseInt(saved, 10) : 1;
+// };
 
 const Register = () => {
   const navigate = useNavigate();
@@ -81,12 +81,14 @@ const Register = () => {
   const [registerForm] = Form.useForm();
 
   // 控制选择身份 / 注册信息填写的显隐;初始化，从本地获取
-  const [pageLayout, setpageLayout] = useState(getInitialPageLayout);
+  const [pageLayout, setpageLayout] = useState(() =>
+    getNavActiveKey('registerPageLayout', 1),
+  );
 
   // pageLayout每次更新都同步到本地中
   const setPageLayoutLocation = (value) => {
     setpageLayout(value);
-    localStorage.setItem('pageLayout', value.toString());
+    setNavActiveKey('registerPageLayout', value);
   };
 
   // 每次进入页面（即页面开始渲染）时，重置pageLayout为1

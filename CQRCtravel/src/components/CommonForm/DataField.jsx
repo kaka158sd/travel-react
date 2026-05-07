@@ -260,8 +260,6 @@ const DataField = ({
           <Radio.Group
             {...rest}
             vertical={formConfig.isVertical || false}
-            // value={selectedValue}
-            // onChange={handleRadioChange}
             options={[
               ...formConfig.options,
               ...(formConfig.input
@@ -455,7 +453,7 @@ const DataField = ({
           />
         )}
 
-        {/* 时间选择器 */}
+        {/* 日期选择器 */}
         {type === 'date' && (
           <DatePicker
             {...rest}

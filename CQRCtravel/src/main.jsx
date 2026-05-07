@@ -37,21 +37,10 @@ createRoot(document.getElementById('root')).render(
             activeShadow: '0 0 0 2px rgba(217, 119, 6, 0.1)',
           },
           Radio: {
-            colorPrimary: THEME_COLOR,
             colorPrimaryActive: DEEP_COLOR,
-            colorPrimaryBorder: LIGHT_COLOR,
             colorPrimaryHover: THEME_COLOR,
           },
           Checkbox: {
-            colorPrimary: THEME_COLOR,
-            colorPrimaryBorder: LIGHT_COLOR,
-            colorPrimaryHover: THEME_COLOR,
-          },
-
-          Image: { colorPrimaryBorder: LIGHT_COLOR },
-          Switch: {
-            colorPrimary: THEME_COLOR,
-            colorPrimaryBorder: LIGHT_COLOR,
             colorPrimaryHover: THEME_COLOR,
           },
           Select: {
@@ -59,7 +48,6 @@ createRoot(document.getElementById('root')).render(
             activeOutlineColor: LIGHT_COLOR,
             hoverBorderColor: THEME_COLOR,
             optionSelectedBg: LIGHT_COLOR,
-            colorPrimary: THEME_COLOR,
           },
           DatePicker: {
             activeBorderColor: THEME_COLOR,
@@ -67,12 +55,6 @@ createRoot(document.getElementById('root')).render(
             cellHoverWithRangeBg: LIGHT_COLOR,
             cellRangeBorderColor: LIGHT_COLOR,
             hoverBorderColor: THEME_COLOR,
-            colorPrimary: THEME_COLOR,
-            colorPrimaryBorder: LIGHT_COLOR,
-            controlItemBgActive: LIGHT_COLOR,
-          },
-          Modal: {
-            colorPrimaryBorder: LIGHT_COLOR,
           },
           Button: {
             defaultActiveBorderColor: DEEP_COLOR,
@@ -80,13 +62,11 @@ createRoot(document.getElementById('root')).render(
             defaultHoverBorderColor: THEME_COLOR,
             defaultHoverColor: THEME_COLOR,
             colorLink: THEME_COLOR,
-            colorPrimary: THEME_COLOR,
             colorPrimaryHover: THEME_COLOR,
             colorLinkActive: DEEP_COLOR,
             colorPrimaryActive: DEEP_COLOR,
             colorLinkHover: LIGHT_COLOR,
             colorPrimaryBgHover: LIGHT_COLOR,
-            colorPrimaryBorder: LIGHT_COLOR,
             colorPrimaryBg: LIGHT_COLOR,
           },
           Descriptions: {
@@ -94,17 +74,32 @@ createRoot(document.getElementById('root')).render(
             labelBg: SOFT_COLOR,
           },
           Splitter: {
-            colorPrimary: THEME_COLOR,
             controlItemBgActiveHover: LIGHT_COLOR,
             controlItemBgActive: LIGHT_COLOR,
           },
           Form: {
-            colorPrimary: THEME_COLOR,
             controlOutline: LIGHT_COLOR,
+          },
+          // THEME_COLOR  DEEP_COLOR  LIGHT_COLOR  SOFT_COLOR
+          Table: {
+            borderColor: 'rgb(209 213 219 / var(--tw-text-opacity, 1))',
+            cellFontSize: 15,
+            headerBg: SOFT_COLOR,
+            rowHoverBg: '#fffdfa',
+          },
+          Tooltip: {
+            colorBgSpotlight: '#fff',
+            colorTextLightSolid: '#000',
+          },
+          Collapse: {
+            headerBg: '#fff',
           },
         },
         token: {
           colorPrimary: THEME_COLOR,
+          colorPrimaryBorder: SOFT_COLOR,
+          controlItemBgActive: SOFT_COLOR,
+          controlItemBgActiveHover: LIGHT_COLOR,
         },
       }}
     >

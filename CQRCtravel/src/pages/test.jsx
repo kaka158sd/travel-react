@@ -223,7 +223,7 @@ const Test = () => {
   // const { form, formFields, initialValues } = useEditForm(edit);
   // const dialogData = {
   //   type: 1,
-  //   title: `修改${edit.editType === 1 ? '手机号' : '密码'}`,
+  //   title: `修改${edit === 1 ? '手机号' : '密码'}`,
   //   data: {
   //     formType: 'edit',
   //     form,
