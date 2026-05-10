@@ -1,28 +1,51 @@
 import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
 import { Card, LookMore, Title } from '@/components';
 import { useEffect, useState } from 'react';
+import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
+
 const titleData = {
   title: '非遗体验 · 匠心传承',
   desc: '预约荣昌特色非遗体验，与匠人面对面交流创作',
 };
 
 const IntangibleCultural = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [intangibleHeritageList, setintangibleHeritageList] = useState([]);
 
   useEffect(() => {
+    let timer;
     const getIntangibleHeritageList = async () => {
       try {
+        setIsLoading(true);
         const res = await getIntangibleHeritageAPI();
         setintangibleHeritageList(res.data);
       } catch (error) {
         console.error('获取非遗列表失败', error);
+        setError(true);
+      } finally {
+        // 强制等待至少 200ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       }
     };
 
     getIntangibleHeritageList();
+    return () => clearTimeout(timer);
   }, []);
 
   const intangibleHeritageThreeList = intangibleHeritageList.slice(0, 3);
+
+  if (isLoading) {
+    // return <Loading />;
+    return <LoadingSkeleton />;
+  }
+
+  // 错误状态
+  if (error) {
+    return <LoadError />;
+  }
 
   return (
     <div className="max-w-350 m-auto">
@@ -61,6 +84,10 @@ const IntangibleCultural = () => {
               key={item.heritage_id}
               boxStyle={boxStyle}
               cardData={cardData}
+              reservationForm={{
+                item_name: item.heritage_name,
+                single_price: item.price,
+              }}
             />
           );
         })}

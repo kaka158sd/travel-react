@@ -21,12 +21,20 @@ export const useReservationForm = (orders = {}) => {
       name: 'single_price',
       label: '项目单价',
       rules: 'required',
-      type: 'textInput',
-      formConfig: {
-        placeholder: orders.single_price || '',
-        defaultValue: orders.single_price || '',
-        isDisabled: true,
-      },
+      type: 'number',
+      formConfig:
+        orders.single_price > 0
+          ? {
+              placeholder: orders.single_price,
+              defaultValue: orders.single_price,
+              isDisabled: true,
+              prefix: '￥',
+              suffix: '元',
+            }
+          : {
+              value: '免费',
+              isDisabled: true,
+            },
     },
     {
       name: 'reserve_time',

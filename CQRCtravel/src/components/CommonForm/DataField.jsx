@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from 'react';
 import { UserOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import { supabase } from '@/lib/supabase';
+import dayjs from 'dayjs';
 
 const { TextArea, Search } = Input;
 
@@ -49,14 +50,13 @@ const beforeUpload = (file) => {
   return isJpgOrPng && isLt2M;
 };
 
-// 时间选择器的format
-const format = 'HH:mm';
-
 const DataField = ({
   type,
   formConfig,
   onSearch,
   form,
+  value,
+  onChange,
   handleOpenDialogClick,
   ...rest
 }) => {
@@ -90,43 +90,6 @@ const DataField = ({
   // 防止空项渲染
   if (!formConfig || !type) return <div style={{ display: 'none' }} />;
 
-  // 单选框群、多选框、下拉菜单/选择器的options由传递的参数中的选项遍历而来
-  // let options = [];
-  // if (['radio', 'checkbox'].includes(type)) {
-  //   options =
-  //     formConfig.optionsItem?.map((item) => ({
-  //       value: item.value,
-  //       style: formConfig.labelStyle ? formConfig.labelStyle : undefined,
-  //       label: item.label,
-  //     })) || []; // 加 ?. 和 || [] 双重保险
-  // }
-
-  // 处理单选框变化
-  // const handleRadioChange = (e) => {
-  //   const val = e.target.value;
-  //   setSelectedValue(val);
-  //   rest.onChange?.(val); // 不覆盖表单默认onChange
-
-  //   // 统一使用 options 变量，而不是直接访问 formConfig
-  //   const otherValue = (options?.length || 0) + 1;
-
-  //   // 切换到非「其他」选项时，清空输入框并同步到表单
-  //   if (val !== otherValue) {
-  //     setOtherInput('');
-  //     // 非「其他」选项，同步单选框值到表单
-  //     if (val !== otherValue) {
-  //       setOtherInput('');
-  //       // 判断：form存在时才调用
-  //       if (form && rest.name) {
-  //         form.setFieldValue(rest.name, val);
-  //       }
-  //     }
-  //   } else {
-  //     if (form && rest.name)
-  //       // 切换到「其他」选项时，把输入框的值同步到表单
-  //       form.setFieldValue(rest.name, otherInput);
-  //   }
-  // };
   // 处理单选框「其他」输入框变化
   const handleOtherInputChange = (e) => {
     const val = e.target.value;
@@ -189,6 +152,8 @@ const DataField = ({
                 : undefined
             }
             style={{ width: formConfig.width || 400 }}
+            value={value}
+            onChange={onChange}
           />
         )}
 
@@ -210,6 +175,8 @@ const DataField = ({
                   }
                 : undefined
             }
+            value={value}
+            onChange={onChange}
           />
         )}
 
@@ -225,6 +192,8 @@ const DataField = ({
               ) : undefined
             }
             style={{ width: formConfig.width || 400 }}
+            value={value}
+            onChange={onChange}
           />
         )}
 
@@ -236,6 +205,8 @@ const DataField = ({
             placeholder={formConfig.placeholder || ''}
             allowClear
             style={{ width: formConfig.width || 400 }}
+            value={value}
+            onChange={onChange}
           />
         )}
 
@@ -252,6 +223,8 @@ const DataField = ({
             suffix={formConfig.suffix || undefined}
             style={{ width: formConfig.width || 400 }}
             placeholder={formConfig.placeholder || ''}
+            value={formConfig.value || value}
+            onChange={onChange}
           />
         )}
 
@@ -260,6 +233,8 @@ const DataField = ({
           <Radio.Group
             {...rest}
             vertical={formConfig.isVertical || false}
+            value={value}
+            onChange={onChange}
             options={[
               ...formConfig.options,
               ...(formConfig.input
@@ -294,7 +269,12 @@ const DataField = ({
 
         {/* 多选框 */}
         {type === 'checkbox' && (
-          <Checkbox.Group {...rest} options={formConfig.options} />
+          <Checkbox.Group
+            {...rest}
+            options={formConfig.options}
+            value={value}
+            onChange={onChange}
+          />
         )}
 
         {/* 头像框 */}
@@ -304,6 +284,8 @@ const DataField = ({
             src={formConfig.src || undefined}
             size={formConfig.size || 64}
             icon={<UserOutlined />}
+            value={value}
+            onChange={onChange}
           />
         )}
 
@@ -313,6 +295,8 @@ const DataField = ({
             {...rest}
             // formConfig.name 不存在时，传空字符串或固定值，避免 undefined
             name={formConfig.name || 'avatar'}
+            value={value}
+            onChange={onChange}
             listType={
               formConfig.listType === 1 ? 'picture-card' : 'picture-circle'
             }
@@ -410,6 +394,8 @@ const DataField = ({
           <Image
             {...rest}
             src={formConfig.src || 'error'}
+            value={value}
+            onChange={onChange}
             width={formConfig.width || 200}
             height={formConfig.height || 200}
             fallback="data:image/png;base64,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"
@@ -420,6 +406,8 @@ const DataField = ({
         {type === 'switch' && (
           <Switch
             {...rest}
+            value={value}
+            onChange={onChange}
             defaultChecked
             disabled={formConfig.isDisabled || false}
           />
@@ -429,6 +417,8 @@ const DataField = ({
         {type === 'select' && (
           <Select
             {...rest}
+            value={value}
+            onChange={onChange}
             mode={formConfig.mode === 2 ? 'multiple' : undefined}
             allowClear={formConfig.isAllowClear && formConfig.mode === 2}
             placeholder={formConfig.placeholder || ''}
@@ -460,11 +450,15 @@ const DataField = ({
             placeholder="选择日期"
             style={{ width: formConfig.width || 400 }}
             locale={zhCN.DatePicker}
+            value={value ? dayjs(value) : null} // 必须加
+            onChange={onChange}
           />
         )}
 
         {/* 评分 */}
-        {type === 'rate' && <Rate {...rest} allowHalf />}
+        {type === 'rate' && (
+          <Rate {...rest} allowHalf value={value} onChange={onChange} />
+        )}
 
         {/* 弹窗框(填写和修改都需要弹窗) */}
         {type === 'dialog' && (
@@ -473,12 +467,14 @@ const DataField = ({
             {...rest}
           >
             {/* 拿到值后渲染页面 */}
-            <p className={`${rest.value ? 'text-black' : ''}`}>
-              {rest.value ? rest.value : `请选择你的${formConfig.labelText}`}
+            <p className={`${value || rest.value ? 'text-black' : ''}`}>
+              {value || rest.value
+                ? value || rest.value
+                : `请选择你的${formConfig.labelText}`}
             </p>
 
             {/* 当第一次点击按钮时直接打开弹窗，之后都需要经过气泡确认框才能打开弹窗 */}
-            {rest.value ? (
+            {value || rest.value ? (
               <Popconfirm
                 title="确认要修改吗？"
                 description={`请慎重选择是否要修改你的${formConfig.labelText}！`}
@@ -497,13 +493,16 @@ const DataField = ({
           </div>
         )}
 
-        {/* 时间选择器-单个 */}
+        {/* 时间选择器 */}
         {type === 'timePicker' && (
           <TimePicker
             allowClear={formConfig.isAllowClear || false}
-            format={format}
+            format={'HH:mm'}
+            valueFormat="HH:mm"
             placeholder={formConfig.placeholder || ''}
             style={{ width: formConfig.width || 200 }}
+            value={value}
+            onChange={onChange}
           />
         )}
 

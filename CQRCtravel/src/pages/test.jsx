@@ -1,4 +1,4 @@
-import { DialogCommon, CommonForm } from '@/components';
+import { DialogCommon, CommonForm, Loading, LoadError } from '@/components';
 import { useState, useEffect } from 'react';
 // import { getAdminsDepartmentAPI, getAdminsPositionAPI } from '@/apis/users';
 import {
@@ -18,6 +18,7 @@ import {
   useAddActivityForm,
   // useAddSpotForm,
 } from '@/hook/formFields/useAddForm';
+import { LoadingSkeleton } from '@/components/EmptyStates';
 
 // 订单表单
 // const orders = {
@@ -55,19 +56,6 @@ import {
 //     null,
 //     null,
 //   ],
-// };
-
-// 修改表单
-// const edit = {
-//   // 手机号
-//   // oldPhone: '13800001111',
-//   // newPhone: '',
-//   // code: '', //验证码固定为111111
-//   editType: 2, //1：手机号；2：密码
-//   // 密码
-//   oldPassword: '123456aa',
-//   newPassword: '',
-//   passwordAgain: '',
 // };
 
 // 新增表单
@@ -114,6 +102,9 @@ const addActivity = {
 };
 
 const Test = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // 无表单但需要修改数据 - 从事领域
   // const [show, setShow] = useState(false);
 
@@ -127,6 +118,7 @@ const Test = () => {
   const [intangibleHeritage, setIntangibleHeritage] = useState([]);
 
   useEffect(() => {
+    let timer; // 用于最小加载时间
     // const getHeritageType = async () => {
     //   try {
     //     const res = await getHeritageTypeAPI();
@@ -181,6 +173,12 @@ const Test = () => {
         setScenicSpots(res.data);
       } catch (error) {
         console.error('获取景点失败', error);
+        setError('加载失败，请稍后重试');
+      } finally {
+        // 强制等待至少 300ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
       }
     };
     const getIntangibleHeritage = async () => {
@@ -189,6 +187,12 @@ const Test = () => {
         setIntangibleHeritage(res.data);
       } catch (error) {
         console.error('获取非遗失败', error);
+        setError('加载失败，请稍后重试');
+      } finally {
+        // 强制等待至少 300ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
       }
     };
 
@@ -200,6 +204,9 @@ const Test = () => {
     // getHumanStories();
     getScenicSpots();
     getIntangibleHeritage();
+
+    // 组件卸载时清除定时器，防止内存泄漏
+    return () => clearTimeout(timer);
   }, []);
 
   // 弹窗数据传参
@@ -274,6 +281,17 @@ const Test = () => {
     intangibleHeritageOptions,
   });
 
+  // 加载状态
+  if (isLoading) {
+    // return <Loading />;
+    return <LoadingSkeleton />;
+  }
+
+  // 错误状态
+  if (error) {
+    return <div className="error-tip">{error}</div>;
+  }
+
   return (
     <div className="p-20">
       {/* <button className="btn2" onClick={() => setShow(true)}>
@@ -297,9 +315,13 @@ const Test = () => {
           form={form}
           maxWidth={1200}
           initialValues={initialValues}
-          formFields={formFields || {}}
+          formFields={formFields || []}
         />
       </div>
+
+      {/* 加载组件测试 */}
+      {/* {loading && <LoadError />} */}
+      <LoadingSkeleton />
     </div>
   );
 };

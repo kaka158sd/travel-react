@@ -1,22 +1,29 @@
 // EmptyStates.jsx - 统一管理空状态组件
-import { Empty, Spin } from 'antd';
+import { Empty, Spin, Skeleton } from 'antd';
 
 const stylesObject = {
   indicator: {
     color: '#d97706',
-    margin: '300px 812px',
   },
 };
 
 // 1. 加载中组件
-export const Loading = () => {
-  const sharedProps = {
-    spinning: true,
-    percent: 0,
-    classNames: 'my-40',
-  };
-
-  return <Spin {...sharedProps} size="large" styles={stylesObject} />;
+export const Loading = ({
+  tip = '加载中...',
+  size = 'large',
+  className = 'my-40',
+}) => {
+  return (
+    <div className="w-full flex justify-center items-center min-h-120">
+      <Spin
+        spinning={true}
+        size={size}
+        styles={stylesObject}
+        className={className}
+        description={tip}
+      />
+    </div>
+  );
 };
 
 // 2. 无数据组件
@@ -37,6 +44,16 @@ export const LoadError = () => {
       <p className="text-lg" style={{ marginTop: 16, color: '#ff4d4f' }}>
         数据加载失败
       </p>
+    </div>
+  );
+};
+
+// 骨架屏加载组件
+export const LoadingSkeleton = () => {
+  return (
+    <div className="p-30 ">
+      <Skeleton active className="py-10" />
+      <Skeleton active className="py-10 mb-20" />
     </div>
   );
 };

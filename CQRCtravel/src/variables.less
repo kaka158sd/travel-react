@@ -26,7 +26,7 @@
 // 按钮样式2：如加入行程、立即预约等
 .btn2 {
   width: 100%;
-  padding: 12px 10px;
+  padding: 8px 10px;
   color: white;
   text-align: center;
   cursor: pointer;
@@ -147,4 +147,13 @@
   padding: 5px 12px;
   border: 1px solid rgba(0, 0, 0, 0.16);
   border-radius: 6px;
+}
+
+// 编辑图标悬停时的样式
+.editIcon {
+  &:hover {
+    color: @color-org;
+    transform: scale(1.1);
+    cursor: pointer;
+  }
 }

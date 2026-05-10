@@ -2,12 +2,12 @@ import { getNewsAPI } from '@/apis/news';
 import { DataField, DialogCommon, Title } from '@/components';
 import { useEffect, useState, useMemo } from 'react';
 import { Splitter } from 'antd';
-import dayjs from 'dayjs';
-
-// 弹窗的label
-const label = ['新闻图片', '发布者', '发布单位', '新闻内容', '发布时间'];
+import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
+import { getDetailNewItems } from '@/utils';
 
 const NewsPage = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [newsList, setNewsList] = useState([]);
 
   // 控制弹窗的显隐
@@ -16,16 +16,25 @@ const NewsPage = () => {
   const [newsDialogData, setNewsDialogData] = useState({});
 
   useEffect(() => {
+    let timer;
     const getNewsList = async () => {
       try {
+        setIsLoading(true);
         const res = await getNewsAPI();
         setNewsList(res.data);
       } catch (error) {
         console.error('获取新闻列表失败', error);
+        setError(true);
+      } finally {
+        // 强制等待至少 200ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       }
     };
 
     getNewsList();
+    return () => clearTimeout(timer);
   }, []);
 
   // 按 publish_time 时间戳从新到旧排序
@@ -43,39 +52,11 @@ const NewsPage = () => {
 
   // 点击事件：点击新闻标题打开新闻详情弹窗
   const handleOpenDialog = (item) => {
+    const items = getDetailNewItems(item);
     // 新闻弹窗传参数据
     const dialogData = {
       type: 3,
-      items: [
-        {
-          key: '1',
-          label: label[0],
-          children: <img src={item.news_image} />,
-          span: 3,
-        },
-        {
-          key: '2',
-          label: label[1],
-          children: item.publisher,
-        },
-        {
-          key: '3',
-          label: label[2],
-          children: item.publish_unit,
-          span: 'filled',
-        },
-        {
-          key: '4',
-          label: label[3],
-          children: item.news_content,
-          span: 3,
-        },
-        {
-          key: '5',
-          label: label[4],
-          children: dayjs(item.publish_time).format('YYYY-MM-DD HH:mm'),
-        },
-      ],
+      items,
       title: item.news_title,
       width: 1000,
     };
@@ -85,6 +66,15 @@ const NewsPage = () => {
     // 打开弹窗
     setIsShowDialog(true);
   };
+
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  // 错误状态
+  if (error) {
+    return <LoadError />;
+  }
 
   return (
     <div className="flex flex-col items-center">

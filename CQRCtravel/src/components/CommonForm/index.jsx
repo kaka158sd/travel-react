@@ -8,16 +8,9 @@ const CommonForm = ({
   formType,
   form,
   maxWidth,
-  initialValues,
+  initialValues = {},
   formFields,
 }) => {
-  // 手动设置表单初始值
-  useEffect(() => {
-    if (!form || !initialValues) return;
-    // 直接设置完整的初始值数组
-    form.setFieldsValue(initialValues);
-  }, [form, initialValues]);
-
   // 控制弹窗的开关
   const [isShowDialog, setIsShowDialog] = useState(false);
   // 存储【当前激活的表单项】,以控制打开的弹窗
@@ -69,7 +62,6 @@ const CommonForm = ({
     <div>
       <div className={`${formType === 'edit' ? 'relative w-100' : ''}`}>
         <Form
-          key={JSON.stringify(initialValues)}
           form={form}
           style={{ maxWidth: maxWidth || 600 }}
           size="medium"
@@ -107,6 +99,10 @@ const CommonForm = ({
                       <DataField
                         formConfig={item.formConfig}
                         type={item.type}
+                        value={form.getFieldValue(item.name)}
+                        onChange={(val) =>
+                          form.setFieldsValue({ [item.name]: val })
+                        }
                       />
                     </Form.Item>
                   ))}
@@ -133,6 +129,10 @@ const CommonForm = ({
                       <DataField
                         formConfig={item.formConfig}
                         type={item.type}
+                        value={form.getFieldValue(item.name)}
+                        onChange={(val) =>
+                          form.setFieldsValue({ [item.name]: val })
+                        }
                       />
                     </Form.Item>
                   ))}
@@ -149,6 +149,8 @@ const CommonForm = ({
                 <DataField
                   formConfig={item.formConfig}
                   type={item.type}
+                  value={form.getFieldValue(item.name)}
+                  onChange={(val) => form.setFieldsValue({ [item.name]: val })}
                   handleOpenDialogClick={
                     formType === 'user'
                       ? () => {
@@ -189,7 +191,7 @@ const CommonForm = ({
         />
 
         {contextHolder}
-        {formType === 'edit' && initialValues.editType === 1 && (
+        {formType === 'edit' && Object.hasOwn(initialValues, 'code') && (
           <button
             className="btn3 absolute top-28 right-6"
             onClick={handleButtonClick}

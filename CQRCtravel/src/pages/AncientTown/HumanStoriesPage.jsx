@@ -2,6 +2,7 @@ import { getHumanStoriesAPI } from '@/apis/human_stories';
 import { Card, Title, DataField } from '@/components';
 import { useEffect, useState } from 'react';
 import './index.less';
+import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
 
 //搜索框配置
 const formConfig = {
@@ -11,20 +12,41 @@ const formConfig = {
 };
 
 const HumanStoriesPage = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [humanStoriesList, setHumanStoriesList] = useState([]);
 
   useEffect(() => {
+    let timer; // 用于最小加载时间
     const getHumanStoriesList = async () => {
       try {
+        setIsLoading(true);
         const res = await getHumanStoriesAPI();
         setHumanStoriesList(res.data);
       } catch (error) {
         console.error('获取人文故事集失败', error);
+        setError(true);
+      } finally {
+        // 强制等待至少 300ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
       }
     };
 
     getHumanStoriesList();
+    // 组件卸载时清除定时器，防止内存泄漏
+    return () => clearTimeout(timer);
   }, []);
+
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  // 错误状态
+  if (error) {
+    return <LoadError />;
+  }
 
   return (
     <div className="w-full">

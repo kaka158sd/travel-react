@@ -1,34 +1,54 @@
 import { getScenicSpotsAPI, getSpotTypeAPI } from '@/apis/scenic_spots';
 import { Title, Card, DataField } from '@/components';
 import { useEffect, useState } from 'react';
+import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
 
 const ScenicSpotsPage = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
   // 获取景点列表
   const [scenicSpotsList, setScenicSpotsList] = useState([]);
   // 获取景点类型列表
   const [spotType, setspotType] = useState([]);
 
   useEffect(() => {
+    let timer; // 用于最小加载时间
     const getScenicSpotsList = async () => {
       try {
+        setIsLoading(true);
         const res = await getScenicSpotsAPI();
         setScenicSpotsList(res.data);
       } catch (error) {
         console.error('获取景点列表失败', error);
+        setError(true);
+      } finally {
+        // 强制等待至少 300ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
       }
     };
 
     const getSpotTypeList = async () => {
       try {
+        setIsLoading(true);
         const res = await getSpotTypeAPI();
         setspotType(res.data);
       } catch (error) {
         console.error('获取景点类型列表失败', error);
+        setError(true);
+      } finally {
+        // 强制等待至少 300ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
       }
     };
 
     getScenicSpotsList();
     getSpotTypeList();
+    // 组件卸载时清除定时器，防止内存泄漏
+    return () => clearTimeout(timer);
   }, []);
 
   // 下拉菜单 / 搜索框配置
@@ -55,6 +75,16 @@ const ScenicSpotsPage = () => {
       },
     },
   ];
+
+  if (isLoading) {
+    // return <Loading />;
+    return <LoadingSkeleton />;
+  }
+
+  // 错误状态
+  if (error) {
+    return <LoadError />;
+  }
 
   return (
     <div className="w-full px-36">
@@ -97,7 +127,10 @@ const ScenicSpotsPage = () => {
               key={item.spot_id}
               boxStyle={boxStyle}
               cardData={cardData}
-              reservationForm={item}
+              reservationForm={{
+                item_name: item.spot_name,
+                single_price: item.ticket_price,
+              }}
             />
           );
         })}

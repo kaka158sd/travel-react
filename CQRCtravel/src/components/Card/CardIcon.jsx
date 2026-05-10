@@ -1,5 +1,5 @@
 const color = ['#d97706', '#349c3d', '#F76560', '#3491FA']; //图标颜色
-const bgColor = ['#fbf1e6', '#AFF0B5', '#FDCDC5', '#C3E7FE']; //背景颜色
+const bgColor = ['#fbf1e6', '#d2f9d9', '#ffe0db', '#d6efff']; //背景颜色
 
 const CardIcon = ({ iconfont }) => {
   return (

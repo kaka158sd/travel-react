@@ -1,12 +1,22 @@
 // 存放新增相关的表单配置，如景点、非遗、活动
 
+import {
+  heritageLevelOptions,
+  openStatusOptions,
+  spotStarOptions,
+} from '@/store';
 import { Form } from 'antd';
 import { useMemo } from 'react';
+import { dayjs } from 'dayjs';
 
 // 新增景点
 export const useAddSpotForm = (params = {}) => {
-  const { addSpot, spotTypeOptions, spotTagsOptions, humanStoriesOptions } =
-    params;
+  const {
+    addSpot = {},
+    spotTypeOptions = [],
+    spotTagsOptions = [],
+    humanStoriesOptions = [],
+  } = params;
 
   const [form] = Form.useForm();
 
@@ -32,6 +42,7 @@ export const useAddSpotForm = (params = {}) => {
         name: 'spot_image',
         listType: 1,
         width: 200,
+        src: addSpot.spot_image || '',
       },
       column: 'left',
     },
@@ -69,12 +80,7 @@ export const useAddSpotForm = (params = {}) => {
       type: 'select',
       formConfig: {
         placeholder: '请选择景点星级...',
-        options: [
-          { value: '5A', label: '5A' },
-          { value: '4A', label: '4A' },
-          { value: '3A', label: '3A' },
-          { value: '无', label: '无' },
-        ],
+        options: spotStarOptions,
       },
       column: 'left',
     },
@@ -85,11 +91,7 @@ export const useAddSpotForm = (params = {}) => {
       type: 'select',
       formConfig: {
         placeholder: '请选择景点开放状态...',
-        options: [
-          { value: '正常开放', label: '正常开放' },
-          { value: '临时维护', label: '临时维护' },
-          { value: '暂停开放', label: '暂停开放' },
-        ],
+        options: openStatusOptions,
       },
       column: 'left',
     },
@@ -210,10 +212,188 @@ export const useAddSpotForm = (params = {}) => {
 };
 
 // 新增非遗
+export const useAddHeritageForm = (params = {}) => {
+  const {
+    addHeritage = {},
+    heritageTypeOptions = [],
+    heritageTagsOptions = [],
+    humanStoriesOptions = [],
+  } = params;
+
+  const [form] = Form.useForm();
+
+  const formFields = [
+    {
+      name: 'heritage_name',
+      label: '非遗名称',
+      rules: 'required string',
+      type: 'textInput',
+      formConfig: {
+        placeholder: '请输入非遗名称...',
+        isAllowClear: true,
+        count: { max: 20 },
+      },
+      column: 'left',
+    },
+    {
+      name: 'heritage_type',
+      label: '非遗类型',
+      rules: 'required',
+      type: 'select',
+      formConfig: {
+        placeholder: '请选择/输入非遗类型...',
+        isAllowClear: true,
+        isShowSearch: true,
+        options: heritageTypeOptions,
+      },
+      column: 'left',
+    },
+    {
+      name: 'heritage_tags',
+      label: '非遗标签',
+      rules: 'required',
+      type: 'select',
+      formConfig: {
+        placeholder: '请选择/输入非遗标签...',
+        isAllowClear: true,
+        isShowSearch: true,
+        mode: 2,
+        options: heritageTagsOptions,
+      },
+      column: 'left',
+    },
+    {
+      name: 'heritage_image',
+      label: '非遗图片',
+      rules: 'required',
+      type: 'upload',
+      formConfig: {
+        name: 'heritage_image',
+        listType: 1,
+        width: 200,
+        src: addHeritage.heritage_image || '',
+      },
+      column: 'left',
+    },
+    {
+      name: 'price',
+      label: '单人价格',
+      rules: 'required',
+      type: 'number',
+      formConfig: {
+        placeholder: '请输入价格...',
+        min: 0,
+        prefix: '￥',
+      },
+      column: 'left',
+    },
+    {
+      name: 'heritage_level',
+      label: '非遗等级',
+      rules: 'required',
+      type: 'select',
+      formConfig: {
+        placeholder: '请选择您的非遗等级...',
+        options: heritageLevelOptions,
+      },
+      column: 'left',
+    },
+    {
+      name: 'heritage_desc',
+      label: '非遗描述',
+      rules: 'required',
+      type: 'textArea',
+      formConfig: {
+        placeholder: '请输入非遗描述...',
+        isAllowClear: true,
+        maxCount: 1000,
+      },
+      column: 'right',
+    },
+    {
+      name: 'reserve_weeks',
+      label: '预约周期',
+      rules: 'required',
+      type: 'number',
+      formConfig: {
+        placeholder: '请输入需要提前预约的天数...',
+        min: 1,
+        defaultValue: 1,
+      },
+      column: 'right',
+    },
+    {
+      name: 'experience_duration',
+      label: '体验时长',
+      rules: 'required',
+      type: 'number',
+      formConfig: {
+        placeholder: '请输入体验时长...',
+        controls: false,
+        suffix: '分钟',
+      },
+      column: 'right',
+    },
+    {
+      name: 'story_id',
+      label: '关联故事',
+      rules: 'optional',
+      type: 'select',
+      formConfig: {
+        placeholder: '请选择关联的人文故事(可不填)',
+        options: humanStoriesOptions,
+      },
+      column: 'right',
+    },
+    {
+      name: 'heritage_address',
+      label: '场地地址',
+      rules: 'required string',
+      type: 'textInput',
+      formConfig: {
+        placeholder: '请输入地址...',
+        isAllowClear: true,
+        count: { max: 50 },
+      },
+      column: 'right',
+    },
+    {
+      name: 'suitable_people',
+      label: '适合人群',
+      rules: 'required',
+      type: 'textInput',
+      formConfig: {
+        placeholder: '请输入适合人群...',
+      },
+      column: 'right',
+    },
+    {
+      name: 'notice',
+      label: '注意事项',
+      rules: 'optional',
+      type: 'textArea',
+      formConfig: {
+        placeholder: '请输入注意事项(可不填)...',
+        maxCount: 500,
+      },
+      column: 'right',
+    },
+  ];
+
+  return {
+    form,
+    formFields,
+    initialValues: addHeritage,
+  };
+};
 
 // 新增活动
 export const useAddActivityForm = (params = {}) => {
-  const { addActivity, scenicSpotsOptions, intangibleHeritageOptions } = params;
+  const {
+    addActivity = {},
+    scenicSpotsOptions = [],
+    intangibleHeritageOptions = [],
+  } = params;
 
   const [form] = Form.useForm();
 
@@ -276,8 +456,8 @@ export const useAddActivityForm = (params = {}) => {
       {
         name: 'start_time',
         label: '开始时间',
-        rules: 'required',
-        type: 'timePicker',
+        rules: 'required date',
+        type: 'date',
         formConfig: {
           placeholder: '请选择活动开始时间...',
         },
@@ -286,8 +466,8 @@ export const useAddActivityForm = (params = {}) => {
       {
         name: 'end_time',
         label: '结束时间',
-        rules: 'required',
-        type: 'timePicker',
+        rules: 'required date',
+        type: 'date',
         formConfig: {
           placeholder: '请选择活动结束时间...',
         },
@@ -346,9 +526,90 @@ export const useAddActivityForm = (params = {}) => {
     ];
   }, [relateNameOptions, form]);
 
+  const initialValues = useMemo(() => {
+    return {
+      ...addActivity,
+      start_time: addActivity.start_time ? dayjs(addActivity.start_time) : null,
+      end_time: addActivity.end_time ? dayjs(addActivity.end_time) : null,
+    };
+  }, [addActivity]);
+
   return {
     form,
     formFields,
-    initialValues: addActivity,
+    initialValues,
+  };
+};
+
+// 新增新闻
+export const useAddNewsForm = (params = {}) => {
+  const { addNew = {}, userData } = params;
+
+  const [form] = Form.useForm();
+
+  const formFields = [
+    {
+      name: 'news_title',
+      label: '新闻标题',
+      rules: 'required string',
+      type: 'textInput',
+      formConfig: {
+        placeholder: '请输入新闻标题...',
+        isAllowClear: true,
+        count: { max: 50 },
+      },
+      column: 'left',
+    },
+    {
+      name: 'news_image',
+      label: '新闻图片',
+      rules: 'required',
+      type: 'upload',
+      formConfig: {
+        name: 'news_image',
+        listType: 1,
+        width: 200,
+      },
+      column: 'left',
+    },
+    {
+      name: 'publisher',
+      label: '发布者',
+      rules: 'required',
+      type: 'textInput',
+      formConfig: {
+        placeholder: userData.userName,
+        isDisabled: true,
+      },
+      column: 'left',
+    },
+    {
+      name: 'publish_unit',
+      label: '发布单位',
+      rules: 'required',
+      type: 'textInput',
+      formConfig: {
+        placeholder: userData.department,
+        isDisabled: true,
+      },
+      column: 'left',
+    },
+    {
+      name: 'news_content',
+      label: '新闻内容',
+      rules: 'required',
+      type: 'textArea',
+      formConfig: {
+        placeholder: '请输入新闻公告的内容...',
+        maxCount: 1000,
+      },
+      column: 'left',
+    },
+  ];
+
+  return {
+    form,
+    formFields,
+    initialValues: addNew,
   };
 };

@@ -5,6 +5,7 @@ import { Card, NoData } from '@/components';
 import { useEffect, useMemo, useState } from 'react';
 import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
 import { getFoodsAPI } from '@/apis/foods';
+import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
 
 // 收藏数据
 const favoritesList = [
@@ -51,6 +52,8 @@ const menuItems = [
 ];
 
 const MyFavorites = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
   // 当前选中的菜单项
   const [selectedMenu, setSelectedMenu] = useFirstEnterNav(
     '/touristCenter',
@@ -65,34 +68,57 @@ const MyFavorites = () => {
   const [foodsList, setFoodsList] = useState([]);
 
   useEffect(() => {
+    let timer;
     const getScenicSpotsList = async () => {
       try {
+        setIsLoading(true);
         const res = await getScenicSpotsAPI();
         setScenicSpotsList(res.data);
       } catch (error) {
         console.error('获取景点列表失败', error);
+        setError(true);
+      } finally {
+        // 强制等待至少 200ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       }
     };
     const getIntangibleHeritageList = async () => {
       try {
+        setIsLoading(true);
         const res = await getIntangibleHeritageAPI();
         setIntangibleHeritageList(res.data);
       } catch (error) {
         console.error('获取非遗列表失败', error);
+        setError(true);
+      } finally {
+        // 强制等待至少 200ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       }
     };
     const getFoodsList = async () => {
       try {
+        setIsLoading(true);
         const res = await getFoodsAPI();
         setFoodsList(res.data);
       } catch (error) {
         console.error('获取非遗列表失败', error);
+        setError(true);
+      } finally {
+        // 强制等待至少 200ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       }
     };
 
     getScenicSpotsList();
     getIntangibleHeritageList();
     getFoodsList();
+    return () => clearTimeout(timer);
   }, []);
 
   // 用于展示在收藏中的数据
@@ -128,6 +154,14 @@ const MyFavorites = () => {
       foods,
     };
   }, [scenicSpotsList, intangibleHeritageList, foodsList]);
+
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+  // 错误状态
+  if (error) {
+    return <LoadError />;
+  }
 
   return (
     <div className="w-full">

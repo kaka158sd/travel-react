@@ -1,28 +1,51 @@
 import { getFoodsAPI } from '@/apis/foods';
 import { Card, LookMore, Title } from '@/components';
 import { useEffect, useState } from 'react';
+import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
+
 const titleData = {
   title: '美食探索 · 味觉盛宴',
   desc: '品味荣昌特色美食，感受千年饮食文化的传承与创新',
 };
 
 const FoodExploration = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [foodsList, setFoodsList] = useState([]);
 
   useEffect(() => {
+    let timer;
     const getFoodsList = async () => {
       try {
+        setIsLoading(true);
         const res = await getFoodsAPI();
         setFoodsList(res.data);
       } catch (error) {
         console.error('获取美食列表失败', error);
+        setError(true);
+      } finally {
+        // 强制等待至少 200ms，避免请求太快导致的闪烁
+        timer = setTimeout(() => {
+          setIsLoading(false);
+        }, 200);
       }
     };
 
     getFoodsList();
+    return () => clearTimeout(timer);
   }, []);
 
   const foodsThreeList = foodsList.slice(0, 3);
+
+  if (isLoading) {
+    // return <Loading />;
+    return <LoadingSkeleton />;
+  }
+
+  // 错误状态
+  if (error) {
+    return <LoadError />;
+  }
 
   return (
     <div className="max-w-350 m-auto">

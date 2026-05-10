@@ -5,5 +5,5 @@ export { default as DataField } from './CommonForm/DataField';
 export { default as CommonForm } from './CommonForm';
 export { default as DialogCommon } from './DialogCommon';
 
-import { Loading, LoadError, NoData } from './EmptyStates';
-export { Loading, LoadError, NoData };
+import { Loading, LoadError, NoData, LoadingSkeleton } from './EmptyStates';
+export { Loading, LoadError, NoData, LoadingSkeleton };

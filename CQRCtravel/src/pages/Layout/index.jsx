@@ -162,13 +162,13 @@ const Layout = () => {
         </div>
 
         <div className="w-24 h-10">
-          {/* <button className="btn1" onClick={() => navigate('/login')}>
+          <button className="btn1" onClick={() => navigate('/login')}>
             <i className="iconfont icon-user1 mr-2 text-2xl"></i>
             登陆
-          </button> */}
+          </button>
 
           {/* 登陆后则显示头像和下拉菜单 */}
-          <Dropdown menu={userItems}>
+          {/* <Dropdown menu={userItems}>
             <div>
               <Avatar
                 // src="#"
@@ -177,7 +177,7 @@ const Layout = () => {
                 className="cursor-pointer"
               />
             </div>
-          </Dropdown>
+          </Dropdown> */}
         </div>
       </header>
 
@@ -187,115 +187,113 @@ const Layout = () => {
       </div>
 
       {/* 底部栏:登陆后不显示 */}
-      {!userItems && (
-        <footer className="footer">
-          <div className="footer-container">
-            {/* 第一栏：品牌介绍 */}
-            <div className="footer-col brand-col">
-              <div className="brand-header">
-                <span className="brand-icon">
-                  <img src="./logo.svg" />
+      <footer className="footer">
+        <div className="footer-container">
+          {/* 第一栏：品牌介绍 */}
+          <div className="footer-col brand-col">
+            <div className="brand-header">
+              <span className="brand-icon">
+                <img src="./logo.svg" />
+              </span>
+              <h3>荣昌深度游</h3>
+            </div>
+            <p className="brand-desc">
+              荣昌，一座历史悠久、文化底蕴深厚的城市，以其独特的非遗文化、美食文化和自然风光，成为重庆旅游的新亮点。
+            </p>
+            <div className="social-links">
+              <a href="#" className="social-link">
+                <i className="iconfont icon-wechat-fill"></i>
+              </a>
+              <a href="#" className="social-link">
+                <i className="iconfont icon-alipay"></i>
+              </a>
+              <a href="#" className="social-link">
+                <i className="iconfont icon-taobao"></i>
+              </a>
+              <a href="#" className="social-link">
+                <i className="iconfont icon-QQ"></i>
+              </a>
+            </div>
+          </div>
+
+          {/* 第二栏：快速链接 */}
+          <div className="footer-col">
+            <h4>快速链接</h4>
+            <ul className="link-list">
+              <li>
+                <a href="/">首页</a>
+              </li>
+              <li>
+                <a href="ancient-town">古镇人文</a>
+              </li>
+              <li>
+                <a href="intangible-cultural">非遗体验</a>
+              </li>
+              <li>
+                <a href="food-exploration">美食探索</a>
+              </li>
+              <li>
+                <a href="itinerary-planning">行程规划</a>
+              </li>
+              <li>
+                <a href="practical-tips">实用贴士</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* 第三栏：联系我们 */}
+          <div className="footer-col contact">
+            <h4>联系我们</h4>
+            <ul className="contact-list">
+              <li>
+                <span className="contact-icon">
+                  <i className="iconfont icon-ditu-dibiao"></i>
                 </span>
-                <h3>荣昌深度游</h3>
-              </div>
-              <p className="brand-desc">
-                荣昌，一座历史悠久、文化底蕴深厚的城市，以其独特的非遗文化、美食文化和自然风光，成为重庆旅游的新亮点。
-              </p>
-              <div className="social-links">
-                <a href="#" className="social-link">
-                  <i className="iconfont icon-wechat-fill"></i>
-                </a>
-                <a href="#" className="social-link">
-                  <i className="iconfont icon-alipay"></i>
-                </a>
-                <a href="#" className="social-link">
-                  <i className="iconfont icon-taobao"></i>
-                </a>
-                <a href="#" className="social-link">
-                  <i className="iconfont icon-QQ"></i>
-                </a>
-              </div>
-            </div>
-
-            {/* 第二栏：快速链接 */}
-            <div className="footer-col">
-              <h4>快速链接</h4>
-              <ul className="link-list">
-                <li>
-                  <a href="/">首页</a>
-                </li>
-                <li>
-                  <a href="ancient-town">古镇人文</a>
-                </li>
-                <li>
-                  <a href="intangible-cultural">非遗体验</a>
-                </li>
-                <li>
-                  <a href="food-exploration">美食探索</a>
-                </li>
-                <li>
-                  <a href="itinerary-planning">行程规划</a>
-                </li>
-                <li>
-                  <a href="practical-tips">实用贴士</a>
-                </li>
-              </ul>
-            </div>
-
-            {/* 第三栏：联系我们 */}
-            <div className="footer-col contact">
-              <h4>联系我们</h4>
-              <ul className="contact-list">
-                <li>
-                  <span className="contact-icon">
-                    <i className="iconfont icon-ditu-dibiao"></i>
-                  </span>
-                  <span>重庆市荣昌区昌元街道广场路1号</span>
-                </li>
-                <li>
-                  <span className="contact-icon">
-                    <i className="iconfont icon-customer-service"></i>
-                  </span>
-                  <span>023-46732666</span>
-                </li>
-                <li>
-                  <span className="contact-icon">
-                    <i className="iconfont icon-mail"></i>
-                  </span>
-                  <span>tourism@rongchang.gov.cn</span>
-                </li>
-              </ul>
-              <p className="work-time">工作时间：周一至周五 9:00-17:30</p>
-            </div>
-
-            {/* 第四栏：订阅资讯 */}
-            <div className="footer-col subscribe-col">
-              <h4>订阅资讯</h4>
-              <p className="subscribe-desc">
-                订阅我们的旅游资讯，及时获取最新活动信息和旅游攻略
-              </p>
-              <input
-                type="email"
-                placeholder="请输入您的邮箱"
-                className="subscribe-input"
-              />
-              <button className="subscribe-btn">订阅</button>
-            </div>
+                <span>重庆市荣昌区昌元街道广场路1号</span>
+              </li>
+              <li>
+                <span className="contact-icon">
+                  <i className="iconfont icon-customer-service"></i>
+                </span>
+                <span>023-46732666</span>
+              </li>
+              <li>
+                <span className="contact-icon">
+                  <i className="iconfont icon-mail"></i>
+                </span>
+                <span>tourism@rongchang.gov.cn</span>
+              </li>
+            </ul>
+            <p className="work-time">工作时间：周一至周五 9:00-17:30</p>
           </div>
 
-          {/* 版权信息 */}
-          <div className="copyright">
-            <p>© 2025 重庆荣昌深度游指南. 版权所有</p>
-            <div className="copyright-links">
-              <a href="#">隐私政策</a>
-              <span>|</span>
-              <a href="#">使用条款</a>
-              <span>|</span>
-              <a href="#">网站地图</a>
-            </div>
+          {/* 第四栏：订阅资讯 */}
+          <div className="footer-col subscribe-col">
+            <h4>订阅资讯</h4>
+            <p className="subscribe-desc">
+              订阅我们的旅游资讯，及时获取最新活动信息和旅游攻略
+            </p>
+            <input
+              type="email"
+              placeholder="请输入您的邮箱"
+              className="subscribe-input"
+            />
+            <button className="subscribe-btn">订阅</button>
           </div>
-        </footer>
-      )}
+        </div>
+
+        {/* 版权信息 */}
+        <div className="copyright">
+          <p>© 2025 重庆荣昌深度游指南. 版权所有</p>
+          <div className="copyright-links">
+            <a href="#">隐私政策</a>
+            <span>|</span>
+            <a href="#">使用条款</a>
+            <span>|</span>
+            <a href="#">网站地图</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

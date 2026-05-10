@@ -86,8 +86,10 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
   const [isShowReservationDialog, setIsShowReservationDialog] = useState(false);
 
   // 弹窗传参数据
-  const { form, formFields, initialValues } =
-    useReservationForm(reservationForm);
+  const { form, formFields, initialValues } = useReservationForm(
+    reservationForm || {},
+  );
+
   const dialogData = {
     type: 1,
     title: `预约-${cardData.title}`,
@@ -228,6 +230,7 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
                         className="iconfont icon-favorite text-color1 visibility"
                         style={{ fontSize: '24px' }}
                       />
+
                       {/* 已收藏 */}
                       {/* <i
                         className="iconfont icon-favorite-filling text-color1"
@@ -257,11 +260,11 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
       {/* 模版3：图标、标题、数据（游客的卡片数据为0时不显示data） */}
       {cardData.mode === 3 && (
         <div
-          className={`w-full ${boxStyle.bgColor} px-5 py-2 card-border flex items-center ${cardData.iconType === 1 ? 'flex-col' : 'flex-row-reverse justify-between'}`}
+          className={`w-full ${boxStyle.bgColor} ${boxStyle.padding ? boxStyle.padding : 'px-5 py-2'} card-border flex items-center ${cardData.iconType === 1 ? 'flex-col' : 'flex-row-reverse justify-between'}`}
         >
           <CardIcon iconfont={iconfont[1]} />
           <div
-            className={`flex flex-col ${cardData.iconType === 1 && 'items-center'}`}
+            className={`flex flex-col ${cardData.iconType === 1 && 'items-center'} ${boxStyle.gap ? boxStyle.gap : ''}`}
           >
             <h3 className="titie-card my-1 line-clamp-1">{cardData.title}</h3>
             {cardData.iconType === 1 && cardData.data <= 0 ? (
