@@ -3,6 +3,7 @@ import { getScenicSpotsAPI } from '@/apis/scenic_spots';
 import { Title, Card, LookMore } from '@/components';
 import { useEffect, useState } from 'react';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
+import { useNavigate } from 'react-router-dom';
 
 const titleData = {
   title: '古镇人文 · 千年底蕴',
@@ -12,6 +13,7 @@ const titleData = {
 const AncientTown = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+  const navigate = useNavigate();
 
   // 获取景点列表
   const [scenicSpotsList, setScenicSpotsList] = useState([]);
@@ -66,7 +68,6 @@ const AncientTown = () => {
   const humanStoriesThreeList = humanStoriesList.slice(0, 3);
 
   if (isLoading) {
-    // return <Loading />;
     return <LoadingSkeleton />;
   }
 
@@ -112,6 +113,7 @@ const AncientTown = () => {
                 item_name: item.spot_name,
                 single_price: item.ticket_price,
               }}
+              onClick={() => navigate(`/scenicSpotsDetail/${item.spot_id}`)}
             />
           );
         })}

@@ -10,6 +10,7 @@ import { statusStyle, orderLabel } from './commonList/order';
 import { spotStarOptions, openStatusOptions } from './commonList/scenicSpot';
 import { newLabel } from './commonList/new';
 import { identity } from './commonList/user';
+import { defaultAvatar } from './commonData/user';
 
 export default configureStore({
   reducer: {
@@ -26,4 +27,5 @@ export {
   openStatusOptions,
   newLabel,
   identity,
+  defaultAvatar,
 };

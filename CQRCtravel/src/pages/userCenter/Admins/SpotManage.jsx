@@ -4,6 +4,7 @@ import { CommonForm, Card } from '@/components';
 import { useAddSpotForm } from '@/hook';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 // 数据的时间需要处理
 const addSpot = {
@@ -29,7 +30,10 @@ const addSpot = {
   score: 4.8,
 };
 
-const SpotManage = ({ adminNav, scenicSpots }) => {
+const SpotManage = () => {
+  const navigate = useNavigate();
+  const { adminNav = 'spotAdd', scenicSpots = [] } = useOutletContext() || {};
+
   const [spotType, setSpotType] = useState([]);
   const [spotTags, setSpotTags] = useState([]);
   const [humanStories, setHumanStories] = useState([]);
@@ -78,12 +82,13 @@ const SpotManage = ({ adminNav, scenicSpots }) => {
     label: item.story_title,
   }));
 
-  const { form, formFields, initialValues } = useAddSpotForm({
-    addSpot,
-    spotTypeOptions,
-    spotTagsOptions,
-    humanStoriesOptions,
-  });
+  const { form, formFields, initialValues } =
+    useAddSpotForm({
+      addSpot,
+      spotTypeOptions,
+      spotTagsOptions,
+      humanStoriesOptions,
+    }) || {};
 
   return (
     <div>
@@ -144,6 +149,7 @@ const SpotManage = ({ adminNav, scenicSpots }) => {
                   key={item.spot_id}
                   boxStyle={boxStyle}
                   cardData={cardData}
+                  onClick={() => navigate(`/scenicSpotsDetail/${item.spot_id}`)}
                 />
               );
             })}

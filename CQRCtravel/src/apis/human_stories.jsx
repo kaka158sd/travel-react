@@ -9,3 +9,15 @@ export function getHumanStoriesAPI() {
     method: 'GET',
   });
 }
+
+// 获取人文故事详情请求
+
+export function getHumanStoriesDetailAPI(id) {
+  return request({
+    url: '/human_stories',
+    method: 'GET',
+    params: {
+      story_id: `eq.${id}`,
+    },
+  });
+}

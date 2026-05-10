@@ -14,8 +14,13 @@ import Login from '@/pages/Login';
 import NewsPage from '@/pages/NewsPage';
 import PracticalTips from '@/pages/PracticalTips';
 import Register from '@/pages/Register';
-import Test from '@/pages/test';
 import AdminCenter from '@/pages/userCenter/Admins';
+import AdminsAccount from '@/pages/userCenter/Admins/AdminsAccount';
+import ActivityManage from '@/pages/userCenter/Admins/ActivityManage';
+import AdminsConsole from '@/pages/userCenter/Admins/AdminsConsole';
+import NewsManage from '@/pages/userCenter/Admins/NewsManage';
+import PeopleManage from '@/pages/userCenter/Admins/PeopleManage';
+import SpotManage from '@/pages/userCenter/Admins/SpotManage';
 import InheritorCenter from '@/pages/userCenter/Inheritors';
 import TouristCenter from '@/pages/userCenter/Tourists';
 import HelpCenter from '@/pages/userCenter/Tourists/HelpCenter';
@@ -25,6 +30,12 @@ import MyOrders from '@/pages/userCenter/Tourists/MyOrders';
 import MyTrips from '@/pages/userCenter/Tourists/MyTrips';
 import Setting from '@/pages/userCenter/Tourists/Setting';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
+import InheritorConsole from '@/pages/userCenter/Inheritors/InheritorConsole';
+import OrderManage from '@/pages/userCenter/Inheritors/OrderManage';
+import HeritageManage from '@/pages/userCenter/Inheritors/HeritageManage';
+import InheritorAccount from '@/pages/userCenter/Inheritors/InheritorAccount';
+import ScenicSpotsDetail from '@/pages/AncientTown/ScenicSpotsDetail';
+import IntangibleHeritageDetail from '@/pages/IntangibleCultural/IntangibleHeritageDetail';
 
 const router = createBrowserRouter([
   {
@@ -115,14 +126,32 @@ const router = createBrowserRouter([
   {
     path: '/adminCenter',
     element: <AdminCenter />,
+    children: [
+      { path: '', element: <AdminsConsole /> },
+      { path: 'spotManage', element: <SpotManage /> },
+      { path: 'activityManage', element: <ActivityManage /> },
+      { path: 'newsManage', element: <NewsManage /> },
+      { path: 'peopleManage', element: <PeopleManage /> },
+      { path: 'account', element: <AdminsAccount /> },
+    ],
   },
   {
     path: '/inheritorCenter',
     element: <InheritorCenter />,
+    children: [
+      { path: '', element: <InheritorConsole /> },
+      { path: 'orderManage', element: <OrderManage /> },
+      { path: 'heritageManage', element: <HeritageManage /> },
+      {
+        path: 'inheritorAccount',
+        element: <InheritorAccount />,
+      },
+    ],
   },
+  { path: '/scenicSpotsDetail/:id', element: <ScenicSpotsDetail /> },
   {
-    path: '/test',
-    element: <Test />,
+    path: '/intangibleHeritageDetail/:id',
+    element: <IntangibleHeritageDetail />,
   },
 ]);
 

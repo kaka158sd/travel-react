@@ -2,6 +2,7 @@ import { getScenicSpotsAPI, getSpotTypeAPI } from '@/apis/scenic_spots';
 import { Title, Card, DataField } from '@/components';
 import { useEffect, useState } from 'react';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
+import { useNavigate } from 'react-router-dom';
 
 const ScenicSpotsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,6 +11,7 @@ const ScenicSpotsPage = () => {
   const [scenicSpotsList, setScenicSpotsList] = useState([]);
   // 获取景点类型列表
   const [spotType, setspotType] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let timer; // 用于最小加载时间
@@ -131,6 +133,7 @@ const ScenicSpotsPage = () => {
                 item_name: item.spot_name,
                 single_price: item.ticket_price,
               }}
+              onClick={() => navigate(`/scenicSpotsDetail/${item.spot_id}`)}
             />
           );
         })}

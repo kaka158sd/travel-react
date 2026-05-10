@@ -29,7 +29,7 @@ const editPaW = {
   passwordAgain: '',
 };
 
-const Account = ({ adminNav }) => {
+const ActivityManage = () => {
   const [adminDepartment, setAdminDepartment] = useState([]);
   const [adminPosition, setAdminPosition] = useState([]);
 
@@ -152,50 +152,43 @@ const Account = ({ adminNav }) => {
 
   return (
     <div>
-      {adminNav === 'account' && (
-        <div>
-          <div className="text-xl font-semibold">个人资料</div>
+      <div className="text-xl font-semibold">个人资料</div>
 
-          <div className="py-10 -translate-x-12">
-            <div className="flex">
-              <CommonForm
-                formType="user"
-                form={form}
-                maxWidth={600}
-                initialValues={initialValues}
-                formFields={formFields || {}}
-              />
+      <div className="py-10 -translate-x-12">
+        <div className="flex">
+          <CommonForm
+            formType="user"
+            form={form}
+            maxWidth={600}
+            initialValues={initialValues}
+            formFields={formFields || {}}
+          />
 
-              <div className="mt-58.5 ml-26">
-                <div
-                  className="btn3 mb-5.5"
-                  onClick={() => handleOpenDialog(1)}
-                >
-                  修改
-                </div>
-                <div className="btn3" onClick={() => handleOpenDialog(2)}>
-                  修改
-                </div>
-              </div>
+          <div className="mt-58.5 ml-26">
+            <div className="btn3 mb-5.5" onClick={() => handleOpenDialog(1)}>
+              修改
             </div>
-
-            {/* 保存按钮 */}
-            <div className="w-26 ml-40 mt-4">
-              <div className="btn2">保存</div>
+            <div className="btn3" onClick={() => handleOpenDialog(2)}>
+              修改
             </div>
           </div>
-
-          {/* 弹窗组件 */}
-          <DialogCommon
-            isShowDialog={isShowDialog}
-            onCancel={() => setIsShowDialog(false)}
-            onOk={() => setIsShowDialog(false)}
-            dialogData={dialogData}
-          />
         </div>
-      )}
+
+        {/* 保存按钮 */}
+        <div className="w-26 ml-40 mt-4">
+          <div className="btn2">保存</div>
+        </div>
+      </div>
+
+      {/* 弹窗组件 */}
+      <DialogCommon
+        isShowDialog={isShowDialog}
+        onCancel={() => setIsShowDialog(false)}
+        onOk={() => setIsShowDialog(false)}
+        dialogData={dialogData}
+      />
     </div>
   );
 };
 
-export default Account;
+export default ActivityManage;

@@ -4,6 +4,8 @@ export { default as LookMore } from './LookMore';
 export { default as DataField } from './CommonForm/DataField';
 export { default as CommonForm } from './CommonForm';
 export { default as DialogCommon } from './DialogCommon';
+export { default as HighlightKeywords } from './HighlightKeywords';
+export { default as CommentSection } from './Comment';
 
 import { Loading, LoadError, NoData, LoadingSkeleton } from './EmptyStates';
 export { Loading, LoadError, NoData, LoadingSkeleton };

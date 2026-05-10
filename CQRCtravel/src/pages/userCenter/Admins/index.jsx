@@ -1,23 +1,20 @@
 import { useEffect, useState } from 'react';
 import './index.less';
-import { Menu, Table } from 'antd';
-import { Card, LoadError, Loading } from '@/components';
+import { Menu } from 'antd';
+import { LoadError, Loading } from '@/components';
 import { getScenicSpotsAPI } from '@/apis/scenic_spots';
 import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
 import { getNewsAPI } from '@/apis/news';
 import { getUsersAPI } from '@/apis/users';
 import { getActivitiesAPI } from '@/apis/activities';
 import dayjs from 'dayjs';
-import SpotManage from './SpotManage';
-import ActivityManage from './ActivityManage';
-import NewsManage from './NewsManage';
-import PeopleManage from './PeopleManage';
-import Account from './Account';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useNavKey } from '@/hook/useNavKey';
 
 // 导航菜单栏的导航项
 const inlineNavItems = [
   {
-    key: 'console',
+    key: '/adminCenter',
     label: '控制台',
     icon: (
       <i className="iconfont icon-shouye-zhihui" style={{ fontSize: 20 }} />
@@ -25,7 +22,7 @@ const inlineNavItems = [
   },
   { type: 'divider' },
   {
-    key: 'spot',
+    key: '/adminCenter/spotManage',
     label: '景点管理',
     icon: <i className="iconfont icon-dingwei2" style={{ fontSize: 20 }} />,
     children: [
@@ -41,7 +38,7 @@ const inlineNavItems = [
   },
   { type: 'divider' },
   {
-    key: 'activity',
+    key: '/adminCenter/activityManage',
     label: '活动管理',
     icon: (
       <i className="iconfont icon-RectangleCopy1" style={{ fontSize: 24 }} />
@@ -49,7 +46,7 @@ const inlineNavItems = [
   },
   { type: 'divider' },
   {
-    key: 'new',
+    key: '/adminCenter/newsManage',
     label: '新闻管理',
     icon: (
       <i className="iconfont icon-RectangleCopy" style={{ fontSize: 24 }} />
@@ -57,7 +54,7 @@ const inlineNavItems = [
   },
   { type: 'divider' },
   {
-    key: 'people',
+    key: '/adminCenter/peopleManage',
     label: '人员管理',
     icon: (
       <i className="iconfont icon-RectangleCopy3" style={{ fontSize: 24 }} />
@@ -65,7 +62,7 @@ const inlineNavItems = [
   },
   { type: 'divider' },
   {
-    key: 'account',
+    key: '/adminCenter/account',
     label: '个人资料',
     icon: <i className="iconfont icon-shenfen" style={{ fontSize: 20 }} />,
   },
@@ -77,45 +74,20 @@ const inlineNavItems = [
   },
 ];
 
-// 最近活动的表格栏
-const activityColumns = [
-  {
-    title: '活动ID',
-    dataIndex: 'activity_id',
-    key: 'activity_id',
-  },
-  {
-    title: '活动名称',
-    dataIndex: 'activity_name',
-    key: 'activity_name',
-  },
-  {
-    title: '关联名称',
-    dataIndex: 'relate_name',
-    key: 'relate_name',
-  },
-  {
-    title: '开始时间',
-    dataIndex: 'start_time',
-    key: 'start_time',
-  },
-  {
-    title: '结束时间',
-    dataIndex: 'end_time',
-    key: 'end_time',
-  },
-  {
-    title: '活动地址',
-    dataIndex: 'address',
-    key: 'address',
-  },
-];
-
 const AdminCenter = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   // 导航菜单
-  const [adminNav, setAdminNav] = useState('console');
+  const { activeNav: adminNav, updateActiveNav: setAdminNav } = useNavKey(
+    inlineNavItems,
+    'adminNav',
+    '/adminCenter',
+  );
+
+  const [spotNav, setSpotNav] = useState('spotAdd');
+  // 展开的父菜单
+  const location = useLocation();
+  const navigate = useNavigate();
   // 获取接口数据
   const [scenicSpots, setScenicSpots] = useState([]);
   const [intangibleHeritage, setIntangibleHeritage] = useState([]);
@@ -219,33 +191,13 @@ const AdminCenter = () => {
     label: item.heritage_name,
   }));
 
-  // 数据卡片的配置
-  const adminDataCard = [
-    {
-      title: '景点总数',
-      icon: 'icon-dujia',
-      iconColor: 0,
-      data: scenicSpots.length,
-    },
-    {
-      title: '非遗总数',
-      icon: 'icon-chuntianran',
-      iconColor: 1,
-      data: intangibleHeritage.length,
-    },
-    {
-      title: '新闻总数',
-      icon: 'icon-notification',
-      iconColor: 2,
-      data: news.length,
-    },
-    {
-      title: '人员总数',
-      icon: 'icon-RectangleCopy2',
-      iconColor: 3,
-      data: users.length,
-    },
-  ];
+  // 数据卡片需要的data
+  const cardData = {
+    spots: scenicSpots?.length || 0,
+    heritage: intangibleHeritage?.length || 0,
+    news: news?.length || 0,
+    user: users?.length || 0,
+  };
 
   // 活动的开始、结束时间处理
   const activitiesData = activities
@@ -259,6 +211,53 @@ const AdminCenter = () => {
     })
     .reverse();
 
+  // 根据二级路由，传递不同参数
+  const getShareData = () => {
+    // 控制台需要的数据
+    if (
+      location.pathname === '/adminCenter' ||
+      location.pathname === '/adminCenter/'
+    ) {
+      return { cardData: cardData || {}, activitiesData: activitiesData || [] };
+    }
+
+    // 景点管理需要的数据
+    if (location.pathname.startsWith('/adminCenter/spotManage')) {
+      return {
+        adminNav: spotNav || 'spotAdd',
+        scenicSpots: scenicSpots || [],
+      };
+    }
+
+    // 活动管理需要的数据
+    if (location.pathname.startsWith('/adminCenter/activityManage')) {
+      return {
+        activities: activities || [],
+        activitiesData: activitiesData || [],
+        scenicSpotsOptions: scenicSpotsOptions || [],
+        intangibleHeritageOptions: intangibleHeritageOptions || [],
+      };
+    }
+
+    // 新闻管理需要的数据
+    if (location.pathname.startsWith('/adminCenter/newsManage')) {
+      return { news: news || [] };
+    }
+
+    // 人员管理需要的数据
+    if (location.pathname.startsWith('/adminCenter/peopleManage')) {
+      return { users: users || [] };
+    }
+
+    // 个人资料需要的数据
+    if (location.pathname.startsWith('/adminCenter/account')) {
+      return {};
+    }
+
+    // 其他情况
+    return {};
+  };
+
   // 处理导航点击事件，包含退出登陆
   const handleMenuClick = (e) => {
     const key = e.key;
@@ -268,7 +267,16 @@ const AdminCenter = () => {
       return;
     }
 
+    if (key === 'spotAdd' || key === 'spotList') {
+      setSpotNav(key);
+      navigate('/adminCenter/spotManage');
+      setAdminNav(spotNav);
+      return;
+    }
+
     setAdminNav(key);
+    setSpotNav('spotAdd');
+    navigate(`${key}`);
   };
 
   if (loading)
@@ -301,7 +309,7 @@ const AdminCenter = () => {
       {/* 侧边栏 */}
       <div className="w-full flex py-1">
         <Menu
-          selectedKeys={adminNav}
+          selectedKeys={[adminNav]}
           style={{ width: 240, fontSize: 16 }}
           mode="inline"
           items={inlineNavItems}
@@ -310,70 +318,7 @@ const AdminCenter = () => {
         />
 
         <div className="py-8 flex-1 px-10 mr-6">
-          {/* 控制台 */}
-          {adminNav === 'console' && (
-            <div>
-              {/* 数据卡片 */}
-              <div className="flex justify-between">
-                {adminDataCard.map((item) => {
-                  const boxStyle = {
-                    width: 'w-[280px]',
-                    padding: 'py-4 px-10',
-                    gap: 'gap-2',
-                  };
-
-                  const cardData = {
-                    mode: 3,
-                    iconType: 3,
-                    iconColor: item.iconColor,
-                    icon: item.icon,
-                    title: item.title,
-                    data: item.data,
-                  };
-
-                  return (
-                    <Card
-                      key={item.title}
-                      boxStyle={boxStyle}
-                      cardData={cardData}
-                    />
-                  );
-                })}
-              </div>
-
-              {/* 最近活动 */}
-              <div className="py-8">
-                <div className="text-xl font-semibold mb-4">最近活动</div>
-                <div className="px-4 mr-4">
-                  <Table
-                    columns={activityColumns}
-                    dataSource={activitiesData.slice(0, 10)}
-                    pagination={false}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 景点管理 */}
-          <SpotManage adminNav={adminNav} scenicSpots={scenicSpots} />
-
-          {/* 活动管理 */}
-          <ActivityManage
-            adminNav={adminNav}
-            activities={activities}
-            scenicSpotsOptions={scenicSpotsOptions}
-            intangibleHeritageOptions={intangibleHeritageOptions}
-          />
-
-          {/* 新闻管理 */}
-          <NewsManage adminNav={adminNav} news={news} />
-
-          {/* 人员管理 */}
-          <PeopleManage adminNav={adminNav} users={users} />
-
-          {/* 个人资料 */}
-          <Account adminNav={adminNav} />
+          <Outlet context={getShareData()} />
         </div>
       </div>
     </div>

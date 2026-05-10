@@ -4,8 +4,10 @@ import { getDetailPeopleItems } from '@/utils';
 import { Button, Table } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 
-const PeopleManage = ({ adminNav, users }) => {
+const PeopleManage = () => {
+  const { users } = useOutletContext() || {};
   // 获取三种身份的列表数据
   const [tourists, setTourists] = useState([]);
   const [inheritors, setInheritors] = useState([]);
@@ -160,25 +162,21 @@ const PeopleManage = ({ adminNav, users }) => {
 
   return (
     <div>
-      {adminNav === 'people' && (
-        <div>
-          <div className="text-xl font-semibold">人员管理</div>
+      <div className="text-xl font-semibold">人员管理</div>
 
-          {/* 筛选框和搜索框 */}
+      {/* 筛选框和搜索框 */}
 
-          {/* 人员列表渲染 */}
-          <div className="w-full px-4 py-8">
-            <Table columns={peopleColumns} dataSource={peopleData} />
-          </div>
+      {/* 人员列表渲染 */}
+      <div className="w-full px-4 py-8">
+        <Table columns={peopleColumns} dataSource={peopleData} />
+      </div>
 
-          {/* 人员详情弹窗 */}
-          <DialogCommon
-            isShowDialog={isShowDialog}
-            onCancel={() => setIsShowAddDialog(false)}
-            dialogData={dialogData}
-          />
-        </div>
-      )}
+      {/* 人员详情弹窗 */}
+      <DialogCommon
+        isShowDialog={isShowDialog}
+        onCancel={() => setIsShowAddDialog(false)}
+        dialogData={dialogData}
+      />
     </div>
   );
 };

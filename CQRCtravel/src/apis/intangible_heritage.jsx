@@ -27,3 +27,15 @@ export function getHeritageTagsAPI() {
     method: 'GET',
   });
 }
+
+// 获取非遗详情请求
+
+export function getIntangibleHeritageDetailAPI(id) {
+  return request({
+    url: '/intangible_heritage',
+    method: 'GET',
+    params: {
+      heritage_id: `eq.${id}`,
+    },
+  });
+}

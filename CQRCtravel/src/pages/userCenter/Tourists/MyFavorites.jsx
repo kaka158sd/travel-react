@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
 import { getFoodsAPI } from '@/apis/foods';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
+import { useNavigate } from 'react-router-dom';
 
 // 收藏数据
 const favoritesList = [
@@ -52,6 +53,7 @@ const menuItems = [
 ];
 
 const MyFavorites = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   // 当前选中的菜单项
@@ -209,6 +211,9 @@ const MyFavorites = () => {
                       key={item.spot_id}
                       boxStyle={boxStyle}
                       cardData={cardData}
+                      onClick={() =>
+                        navigate(`/scenicSpotsDetail/${item.spot_id}`)
+                      }
                     />
                   );
                 })}
@@ -258,6 +263,11 @@ const MyFavorites = () => {
                       key={item.heritage_id}
                       boxStyle={boxStyle}
                       cardData={cardData}
+                      onClick={() =>
+                        navigate(
+                          `/intangibleHeritageDetail/${item.heritage_id}`,
+                        )
+                      }
                     />
                   );
                 })}

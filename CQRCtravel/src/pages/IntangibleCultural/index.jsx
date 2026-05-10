@@ -2,6 +2,7 @@ import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
 import { Card, LookMore, Title } from '@/components';
 import { useEffect, useState } from 'react';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
+import { useNavigate } from 'react-router-dom';
 
 const titleData = {
   title: '非遗体验 · 匠心传承',
@@ -9,6 +10,7 @@ const titleData = {
 };
 
 const IntangibleCultural = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [intangibleHeritageList, setintangibleHeritageList] = useState([]);
@@ -88,6 +90,9 @@ const IntangibleCultural = () => {
                 item_name: item.heritage_name,
                 single_price: item.price,
               }}
+              onClick={() =>
+                navigate(`/intangibleHeritageDetail/${item.heritage_id}`)
+              }
             />
           );
         })}

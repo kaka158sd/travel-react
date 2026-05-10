@@ -1,10 +1,10 @@
 import { Table, Button, Tooltip } from 'antd';
-import dayjs from 'dayjs';
 import { SearchOutlined, FormOutlined, CloseOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { DialogCommon } from '@/components';
 import { getDetailActivityItems } from '@/utils';
 import { useAddActivityForm } from '@/hook';
+import { useOutletContext } from 'react-router-dom';
 
 // 活动数据
 const addActivity = {
@@ -23,24 +23,13 @@ const addActivity = {
   // created_time: '2026-04-20T15:19:30.539685+00:00',
 };
 
-const ActivityManage = ({
-  adminNav,
-  activities,
-  scenicSpotsOptions,
-  intangibleHeritageOptions,
-}) => {
-  // 处理活动数据，table中的每条数据都要加上key
-  const activitiesData = activities
-    .map((item) => {
-      return {
-        ...item,
-        key: item.activity_id,
-        start_time: dayjs(item.start_time).format('YYYY-MM-DD'),
-        end_time: dayjs(item.end_time).format('YYYY-MM-DD'),
-      };
-    })
-    .reverse();
-
+const ActivityManage = () => {
+  const {
+    activities = [],
+    activitiesData = [],
+    scenicSpotsOptions = [],
+    intangibleHeritageOptions = [],
+  } = useOutletContext() || {};
   // 控制弹窗的开关和类型
   const [isShowDialog, setIsShowDialog] = useState(false);
   const [dialogType, setDialogType] = useState(1); //1：详情；2：新增；3：编辑
@@ -199,56 +188,52 @@ const ActivityManage = ({
 
   return (
     <div>
-      {adminNav === 'activity' && (
-        <div>
-          <div className="text-xl font-semibold">活动管理</div>
+      <div className="text-xl font-semibold">活动管理</div>
 
-          <div className="flex justify-between py-4">
-            {/* 搜索框和筛选框 */}
-            <div></div>
+      <div className="flex justify-between py-4">
+        {/* 搜索框和筛选框 */}
+        <div></div>
 
-            <div className="w-22">
-              <button
-                className="btn2"
-                onClick={() => {
-                  addForm.resetFields();
-                  setDialogType(2);
-                  setIsShowAddDialog(true);
-                }}
-              >
-                新增
-              </button>
-            </div>
-          </div>
-
-          {/* 活动列表 */}
-          <div className="mr-4">
-            <Table columns={activityColumns} dataSource={activitiesData} />
-          </div>
-
-          {/* 弹窗：详情和编辑 */}
-          <DialogCommon
-            isShowDialog={isShowDialog}
-            onCancel={() => {
-              setIsShowDialog(false);
-              editForm.resetFields();
-              setDialogItem({});
-            }}
-            onOk={() => setIsShowDialog(false)}
-            dialogData={dialogData}
-          />
-          {/* 弹窗：新增 */}
-          <DialogCommon
-            isShowDialog={isShowAddDialog}
-            onCancel={() => {
-              setIsShowAddDialog(false);
+        <div className="w-22">
+          <button
+            className="btn2"
+            onClick={() => {
               addForm.resetFields();
+              setDialogType(2);
+              setIsShowAddDialog(true);
             }}
-            onOk={() => setIsShowAddDialog(false)}
-            dialogData={addDialogData}
-          />
+          >
+            新增
+          </button>
         </div>
-      )}
+      </div>
+
+      {/* 活动列表 */}
+      <div className="mr-4">
+        <Table columns={activityColumns} dataSource={activitiesData} />
+      </div>
+
+      {/* 弹窗：详情和编辑 */}
+      <DialogCommon
+        isShowDialog={isShowDialog}
+        onCancel={() => {
+          setIsShowDialog(false);
+          editForm.resetFields();
+          setDialogItem({});
+        }}
+        onOk={() => setIsShowDialog(false)}
+        dialogData={dialogData}
+      />
+      {/* 弹窗：新增 */}
+      <DialogCommon
+        isShowDialog={isShowAddDialog}
+        onCancel={() => {
+          setIsShowAddDialog(false);
+          addForm.resetFields();
+        }}
+        onOk={() => setIsShowAddDialog(false)}
+        dialogData={addDialogData}
+      />
     </div>
   );
 };

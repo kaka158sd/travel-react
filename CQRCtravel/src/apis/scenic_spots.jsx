@@ -27,3 +27,14 @@ export function getSpotTagsAPI() {
     method: 'GET',
   });
 }
+
+// 获取景点详情请求
+export function getScenicSpotDetailAPI(spotId) {
+  return request({
+    url: `/scenic_spots`,
+    method: 'GET',
+    params: {
+      spot_id: `eq.${spotId}`,
+    },
+  });
+}

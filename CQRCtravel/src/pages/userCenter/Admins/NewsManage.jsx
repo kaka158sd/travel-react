@@ -1,9 +1,10 @@
 import { getDetailNewItems } from '@/utils';
-import { ConfigProvider, Divider, Slider } from 'antd';
+import { ConfigProvider, Divider } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import { DialogCommon } from '@/components';
 import { useAddNewsForm } from '@/hook';
+import { useOutletContext } from 'react-router-dom';
 
 // 新闻数据
 const addNew = {
@@ -23,7 +24,8 @@ const userData = {
   department: '宣传科',
 };
 
-const NewsManage = ({ adminNav, news }) => {
+const NewsManage = () => {
+  const { news } = useOutletContext() || {};
   // 控制弹窗的开关和类型
   const [isShowDialog, setIsShowDialog] = useState(false);
   const [dialogType, setDialogType] = useState(1); //1：详情；2：新增；
@@ -93,61 +95,57 @@ const NewsManage = ({ adminNav, news }) => {
         },
       }}
     >
-      {adminNav === 'new' && (
-        <div>
-          <div className="text-xl font-semibold">新闻管理</div>
+      <div className="text-xl font-semibold">新闻管理</div>
 
-          <div className="flex justify-between py-4">
-            {/* 搜索框和筛选框 */}
-            <div></div>
+      <div className="flex justify-between py-4">
+        {/* 搜索框和筛选框 */}
+        <div></div>
 
-            {/* 新增按钮 */}
-            <div className="w-22">
-              <div
-                className="btn2"
-                onClick={() => {
-                  form.resetFields();
-                  setDialogType(2);
-                  setIsShowDialog(true);
-                }}
-              >
-                新增
-              </div>
-            </div>
+        {/* 新增按钮 */}
+        <div className="w-22">
+          <div
+            className="btn2"
+            onClick={() => {
+              form.resetFields();
+              setDialogType(2);
+              setIsShowDialog(true);
+            }}
+          >
+            新增
           </div>
-
-          {/* 新闻列表,需要分页 */}
-          <div className="pr-12 pl-6">
-            <div className="w-full border border-slate-200 rounded-xl shadow shadow-amber-300">
-              {sortedNewsList.map((item) => (
-                <div key={item.news_id}>
-                  <div className="text-base flex items-center justify-between px-4 py-2">
-                    <div
-                      onClick={() => handleOpenDialog(item)}
-                      className="hover:text-orange-500 hover:underline hover:decoration-orange-500 cursor-pointer"
-                    >
-                      {item.publish_time}&emsp;{item.news_title}
-                    </div>
-                    <i
-                      className="iconfont icon-close cursor-pointer hover:text-orange-500 hover:scale-115"
-                      style={{ fontSize: 22 }}
-                    />
-                  </div>
-                  <Divider size="small" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 新闻弹窗 */}
-          <DialogCommon
-            isShowDialog={isShowDialog}
-            dialogData={dialogData}
-            onCancel={() => setIsShowDialog(false)}
-            onOk={() => setIsShowDialog(false)}
-          />
         </div>
-      )}
+      </div>
+
+      {/* 新闻列表,需要分页 */}
+      <div className="pr-12 pl-6">
+        <div className="w-full border border-slate-200 rounded-xl shadow shadow-amber-300">
+          {sortedNewsList.map((item) => (
+            <div key={item.news_id}>
+              <div className="text-base flex items-center justify-between px-4 py-2">
+                <div
+                  onClick={() => handleOpenDialog(item)}
+                  className="hover:text-orange-500 hover:underline hover:decoration-orange-500 cursor-pointer"
+                >
+                  {item.publish_time}&emsp;{item.news_title}
+                </div>
+                <i
+                  className="iconfont icon-close cursor-pointer hover:text-orange-500 hover:scale-115"
+                  style={{ fontSize: 22 }}
+                />
+              </div>
+              <Divider size="small" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 新闻弹窗 */}
+      <DialogCommon
+        isShowDialog={isShowDialog}
+        dialogData={dialogData}
+        onCancel={() => setIsShowDialog(false)}
+        onOk={() => setIsShowDialog(false)}
+      />
     </ConfigProvider>
   );
 };
