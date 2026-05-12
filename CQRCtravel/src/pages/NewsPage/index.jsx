@@ -81,7 +81,7 @@ const NewsPage = () => {
       <Title titleData={{ title: '荣昌新闻公告' }} />
 
       {/* 搜索框 */}
-      <div>
+      <div className="mt-6">
         <DataField
           type="search"
           formConfig={{

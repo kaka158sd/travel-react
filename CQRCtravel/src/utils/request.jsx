@@ -19,6 +19,7 @@ request.interceptors.request.use(
 
     config.headers['apikey'] = SUPABASE_ANON_KEY;
     config.headers['Authorization'] = `Bearer ${SUPABASE_ANON_KEY}`;
+
     return config;
   },
   function (error) {

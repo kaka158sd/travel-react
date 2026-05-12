@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import './index.less';
 import { Flex, Carousel, Typography } from 'antd';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getNewsAPI } from '@/apis/news';
 import dayjs from 'dayjs';
 
@@ -158,7 +158,44 @@ const PracticalTips = () => {
     getNewsList();
   }, []);
 
-  const newsSenvenList = newsList.slice(-7);
+  const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
+  // 新增一个控制淡入的状态
+  const [isFading, setIsFading] = useState(true);
+  // 创建轮播的 ref
+  const carouselRef = useRef(null);
+
+  // 将新闻按时间排序
+  const sortNewsList = useMemo(() => {
+    if (!newsList.length) return [];
+    return [...newsList].sort(
+      (a, b) =>
+        new Date(b.publish_time).getTime() - new Date(a.publish_time).getTime(),
+    );
+  }, [newsList]);
+
+  const newsSevenList = sortNewsList.slice(0, 7);
+
+  // 监听轮播切换，更新索引
+  const handleCarouselChange = (index) => {
+    setCurrentNewsIndex(index);
+    setIsFading(true); // 淡入新内容
+  };
+
+  // 点击右侧的行为并切换
+  const handleUpdateNews = (index) => {
+    // 先淡出文字
+    setIsFading(false);
+    // 调用 goTo 方法，直接切换到指定索引
+    carouselRef.current?.goTo(index);
+
+    // 等待淡出完成，再更新索引
+    const timer = setTimeout(() => {
+      setCurrentNewsIndex(index);
+      setIsFading(true); // 淡入新内容
+    }, 100);
+
+    return () => clearTimeout(timer);
+  };
 
   return (
     <div className="max-w-350 m-auto">
@@ -222,34 +259,39 @@ const PracticalTips = () => {
 
       <p className="titie1">新闻公告</p>
       <LookMore path="/news_Page" />
-      <div className="w-full h-140 flex justify-between border border-amber-500 px-8 rounded-2xl">
+      <div className="w-full h-140 flex justify-between border border-amber-500 px-8 rounded-2xl py-4">
         {/* 图片 + 标题 + 描述（显示2行） */}
         <div className="w-154 pt-12 pb-6 overflow-hidden rounded-xl">
-          <Carousel arrows autoplay={true} infinite={true}>
-            <div className="rounded-xl">
-              <img
-                src={newsList[0]?.news_image}
-                className="w-full h-87.5 rounded-xl"
-              />
-            </div>
-            <div className="rounded-xl">
-              <img
-                src={newsList[1]?.news_image}
-                className="w-full rounded-xl h-87.5"
-              />
-            </div>
-            <div className="rounded-xl">
-              <img
-                src={newsList[2]?.news_image}
-                className="w-full rounded-xl h-87.5"
-              />
-            </div>
+          <Carousel
+            arrows
+            effect="fade"
+            autoplay={true}
+            infinite={true}
+            speed={700}
+            ref={carouselRef}
+            beforeChange={() => setIsFading(false)}
+            afterChange={handleCarouselChange}
+          >
+            {newsSevenList.map((item) => (
+              <div className="rounded-xl" key={item.news_id}>
+                <img
+                  src={item.news_image}
+                  className="w-full h-87.5 rounded-xl"
+                />
+              </div>
+            ))}
           </Carousel>
 
           {/* 新闻标题和描述，随图片更换 */}
-          <div>
-            <h3 className="title2 mt-6">{newsList[0]?.news_title}</h3>
-            <p className="line-clamp-2 py-2">{newsList[0]?.news_content}</p>
+          <div
+            className={`transition-opacity duration-500 ease-in-out ${isFading ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <h3 className="title2 mt-6">
+              {newsSevenList[currentNewsIndex]?.news_title}
+            </h3>
+            <p className="line-clamp-2 py-2">
+              {newsSevenList[currentNewsIndex]?.news_content}
+            </p>
           </div>
         </div>
 
@@ -268,10 +310,11 @@ const PracticalTips = () => {
 
           {/* 新闻展示区，点击更换左侧轮播图和文字内容 */}
           <div className="w-150 h-105 border border-orange-200 bg-amber-50 rounded-xl">
-            {newsSenvenList.map((item, index) => (
+            {newsSevenList.map((item, index) => (
               <Text
                 key={item?.news_id}
-                className={`h-15 flex gap-3 items-center ${index === newsSenvenList.length - 1 ? '' : 'border-b border-orange-200'} p-4 text-hover`}
+                onClick={() => handleUpdateNews(index)}
+                className={`h-15 flex gap-3 items-center ${index === newsSevenList.length - 1 ? '' : 'border-b border-orange-200'} p-4 text-hover`}
               >
                 <i className="iconfont icon-RectangleCopy text-color1 pt-0.75" />
                 {dayjs(item?.publish_time).format('YY-MM-DD')}

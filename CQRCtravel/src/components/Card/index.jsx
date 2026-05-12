@@ -104,10 +104,11 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
   };
 
   return (
-    <div onClick={onClick} className={`${boxStyle.width} ${boxStyle.height}`}>
+    <div className={`${boxStyle.width} ${boxStyle.height}`}>
       {/* 模版1：图标、标题、描述（交通卡片有一个具体内容数组） */}
       {cardData.mode === 1 && (
         <div
+          onClick={onClick}
           className={`w-full px-5 card-border ${boxStyle.bgColor} ${cardData.iconType === 3 ? 'flex justify-center items-center gap-4 py-2' : 'py-6'}`}
         >
           <CardIcon iconfont={iconfont[0]} />
@@ -136,6 +137,7 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
       {cardData.mode === 2 && (
         <div
           className={`w-full h-full ${boxStyle.bgColor} card-border relative`}
+          onClick={onClick}
         >
           {/* 图片（类型） */}
           <div className="w-full h-fit">
@@ -193,7 +195,12 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
               <div>
                 <div className="flex py-6 gap-4 w-full">
                   {cardData.btn.includes(1) && (
-                    <button className="btn2">
+                    <button
+                      className="btn2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
                       <MedicineBoxOutlined className="mr-2" />
                       加入行程
                     </button>
@@ -202,7 +209,11 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
                   {cardData.btn.includes(2) && (
                     <button
                       className="btn2"
-                      onClick={() => setIsShowReservationDialog(true)}
+                      onClick={(e) => {
+                        // 阻止事件冒泡到父级卡片
+                        e.stopPropagation();
+                        setIsShowReservationDialog(true);
+                      }}
                     >
                       <BookOutlined className="mr-2" />
                       立即预约
@@ -210,21 +221,36 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
                   )}
 
                   {cardData.btn.includes(3) && (
-                    <button className="btn2">
+                    <button
+                      className="btn2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
                       <FormOutlined className="mr-2" />
                       编辑
                     </button>
                   )}
 
                   {cardData.btn.includes(4) && (
-                    <button className="btn2">
+                    <button
+                      className="btn2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
                       <DeleteOutlined className="mr-2 text-base" />
                       删除
                     </button>
                   )}
 
                   {cardData.btn.includes(5) && (
-                    <button className="absolute top-0 right-0 z-20 mx-3 my-2 cursor-pointer">
+                    <button
+                      className="absolute top-0 right-0 z-20 mx-3 my-2 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
                       {/* 未收藏 */}
                       <i
                         className="iconfont icon-favorite text-color1 visibility"
@@ -244,22 +270,23 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
               <br />
             )}
           </div>
-
-          {/* 立即预约弹窗 */}
-          <DialogCommon
-            isShowDialog={isShowReservationDialog}
-            onCancel={() => {
-              setIsShowReservationDialog(false);
-            }}
-            dialogData={dialogData}
-            onOk={() => setIsShowReservationDialog(false)}
-          />
         </div>
       )}
+
+      {/* 立即预约弹窗 */}
+      <DialogCommon
+        isShowDialog={isShowReservationDialog}
+        onCancel={() => {
+          setIsShowReservationDialog(false);
+        }}
+        dialogData={dialogData}
+        onOk={() => setIsShowReservationDialog(false)}
+      />
 
       {/* 模版3：图标、标题、数据（游客的卡片数据为0时不显示data） */}
       {cardData.mode === 3 && (
         <div
+          onClick={onClick}
           className={`w-full ${boxStyle.bgColor} ${boxStyle.padding ? boxStyle.padding : 'px-5 py-2'} card-border flex items-center ${cardData.iconType === 1 ? 'flex-col' : 'flex-row-reverse justify-between'}`}
         >
           <CardIcon iconfont={iconfont[1]} />

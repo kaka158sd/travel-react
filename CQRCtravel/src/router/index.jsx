@@ -36,6 +36,7 @@ import HeritageManage from '@/pages/userCenter/Inheritors/HeritageManage';
 import InheritorAccount from '@/pages/userCenter/Inheritors/InheritorAccount';
 import ScenicSpotsDetail from '@/pages/AncientTown/ScenicSpotsDetail';
 import IntangibleHeritageDetail from '@/pages/IntangibleCultural/IntangibleHeritageDetail';
+import { AuthAdmin, AuthInheritor, AuthTourist } from '@/components';
 
 const router = createBrowserRouter([
   {
@@ -67,7 +68,11 @@ const router = createBrowserRouter([
       },
       {
         path: '/touristCenter',
-        element: <Outlet />,
+        element: (
+          <AuthTourist>
+            <Outlet />
+          </AuthTourist>
+        ),
         children: [
           { index: true, element: <TouristCenter /> },
           { path: '/touristCenter/setting', element: <Setting /> },
@@ -125,7 +130,11 @@ const router = createBrowserRouter([
   },
   {
     path: '/adminCenter',
-    element: <AdminCenter />,
+    element: (
+      <AuthAdmin>
+        <AdminCenter />
+      </AuthAdmin>
+    ),
     children: [
       { path: '', element: <AdminsConsole /> },
       { path: 'spotManage', element: <SpotManage /> },
@@ -137,7 +146,11 @@ const router = createBrowserRouter([
   },
   {
     path: '/inheritorCenter',
-    element: <InheritorCenter />,
+    element: (
+      <AuthInheritor>
+        <InheritorCenter />
+      </AuthInheritor>
+    ),
     children: [
       { path: '', element: <InheritorConsole /> },
       { path: 'orderManage', element: <OrderManage /> },

@@ -148,7 +148,7 @@ const AdminCenter = () => {
         const res = await getUsersAPI();
         setUsers(res.data);
       } catch (error) {
-        console.error('获取景点列表失败', error);
+        console.error('获取用户列表失败', error);
         setError(true);
       } finally {
         timer = setTimeout(() => {

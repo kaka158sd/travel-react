@@ -37,6 +37,19 @@ export function getTouristsAPI() {
   });
 }
 
+// 更新游客数据
+
+export function updateTouristApi(id, data) {
+  return request({
+    url: '/tourists',
+    method: 'PATCH',
+    params: {
+      tourist_id: `eq.${id}`,
+    },
+    data: data,
+  });
+}
+
 // 获取文化传承人列表
 
 export function getInheritorsAPI() {

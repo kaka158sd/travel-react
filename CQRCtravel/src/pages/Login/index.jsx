@@ -1,7 +1,12 @@
 import { rulesParse } from '@/utils';
-import { Carousel, Typography, Button, Form, Input } from 'antd';
+import { Carousel, Typography, Button, Form, Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { HomeOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import { getUsersAPI } from '@/apis/users';
+import { setUserStorage } from '@/utils/userStorage';
+import { fetchLogin, setToken } from '@/store/modules/user';
+import { useDispatch } from 'react-redux';
 
 const { Title } = Typography;
 
@@ -43,24 +48,72 @@ const loginFormFields = {
   ],
 };
 
+// 不同身份跳转到不同的用户中心
+const navCenter = [
+  { type: 1, nav: '/touristCenter' },
+  { type: 2, nav: '/inheritorCenter' },
+  { type: 3, nav: '/adminCenter' },
+];
+
 const Login = () => {
   const [loginForm] = Form.useForm();
+  const [users, setUsers] = useState([]);
+  const [messageApi, contextHolder] = message.useMessage();
+  const dispatch = useDispatch();
 
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    navigate('/touristCenter');
-  };
+  useEffect(() => {
+    const getUsersList = async () => {
+      try {
+        const res = await getUsersAPI();
+        setUsers(res.data);
+      } catch (error) {
+        console.error('获取用户列表失败', error);
+      }
+    };
 
-  const handleBack = () => {
-    navigate('/');
+    getUsersList();
+  }, []);
+
+  const handleLogin = async (values) => {
+    try {
+      // 调用模拟登录接口
+      const res = await fetchLogin(users, values);
+      // 解构出 user 和 token
+      const { user: userInfo, token } = res;
+
+      // 登录成功，存储 token 和用户信息
+      dispatch(setToken(token));
+      setUserStorage(userInfo);
+      messageApi.success('登录成功');
+
+      let timer;
+      // 延迟跳转
+      timer = setTimeout(() => {
+        const matchedNav = navCenter.find(
+          (item) => item.type === userInfo?.identity_type,
+        );
+        if (matchedNav) {
+          navigate(matchedNav.nav);
+        } else {
+          // 兜底：找不到就跳登录页
+          navigate('/login');
+        }
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    } catch (err) {
+      // 登录失败
+      messageApi.error(err.message);
+    }
   };
 
   return (
     <div className="w-full h-screen flex items-center justify-center relative">
       {/* 返回首页按钮 */}
       <div className="w-32 absolute top-5 left-5">
-        <button className="btn2" onClick={handleBack}>
+        <button className="btn2" onClick={() => navigate('/')}>
           <HomeOutlined className="mr-1" />
           返回首页
         </button>
@@ -88,12 +141,14 @@ const Login = () => {
           </Title>
 
           {/* 登陆表单 */}
+          {contextHolder}
           <div>
             <Form
               form={loginForm}
               size={loginFormFields.size}
               layout="horizontal"
               labelAlign="right"
+              onFinish={handleLogin}
               labelCol={{ span: 6 }} // 设置label的宽度
             >
               <Form.Item
@@ -146,14 +201,15 @@ const Login = () => {
                   }}
                 />
               </Form.Item>
+              <Form.Item>
+                {/* 登陆按钮 */}
+                <div className="mt-4 w-full flex justify-center">
+                  <Button type="primary" htmlType="submit" className="w-30">
+                    登陆
+                  </Button>
+                </div>
+              </Form.Item>
             </Form>
-          </div>
-
-          {/* 登陆按钮 */}
-          <div className="w-40 mt-7 mb-2">
-            <button className="btn2" onClick={handleLogin}>
-              登陆
-            </button>
           </div>
 
           {/* 跳转至注册 */}

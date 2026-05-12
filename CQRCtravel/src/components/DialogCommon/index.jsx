@@ -88,7 +88,7 @@ const DialogCommon = ({
   }, [isShowDialog, initialValue]);
 
   return (
-    <div className="w-full">
+    <div>
       {/* 有表单的弹窗 */}
       {dialogData.type === 1 && (
         <Modal
@@ -100,6 +100,10 @@ const DialogCommon = ({
           cancelText="取消"
           okText="提交"
           className="dialogStyle"
+          onClick={(e) => e.stopPropagation()}
+          maskProps={{
+            onClick: (e) => e.stopPropagation(),
+          }}
         >
           <div className="border border-amber-500 py-4 rounded-lg">
             <CommonForm
@@ -169,6 +173,21 @@ const DialogCommon = ({
             bordered
             items={dialogData.items}
           />
+        </Modal>
+      )}
+
+      {/* 确认框弹窗 */}
+      {dialogData?.type === 4 && (
+        <Modal
+          title={dialogData.title}
+          open={isShowDialog}
+          onCancel={onCancel}
+          onOk={onOk}
+          cancelText="取消"
+          okText="提交"
+          style={{ maxWidth: 400 }}
+        >
+          <div className="py-4">{dialogData.content}</div>
         </Modal>
       )}
     </div>
