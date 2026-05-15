@@ -8,8 +8,12 @@ import {
 import CardIcon from './CardIcon';
 import CardScore from './CardScore';
 import { useState } from 'react';
-import { DialogCommon } from '@/components';
-import { useReservationForm } from '@/hook/formFields/useReservationForm';
+import { DialogCommon, Loading } from '@/components';
+import {
+  useReservationForm,
+  useFavoriteStatus,
+  useReserveConfirm,
+} from '@/hook';
 
 // 设置卡片的宽高、背景色、图片高度
 // const boxStyle = {
@@ -62,7 +66,15 @@ import { useReservationForm } from '@/hook/formFields/useReservationForm';
 // };
 
 // 传递的reservationForm需要时一个订单的空表单 + 点击的相关数据，一旦提交则生成一个新的order并存入这个用户的订单中
-const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
+const Card = ({
+  boxStyle,
+  cardData,
+  onClick,
+  reservationForm,
+  favoriteData = {},
+  reservationData = {},
+}) => {
+  // 图标配置
   const iconfont = [
     {
       icon: cardData.icon, //图标名称
@@ -76,6 +88,7 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
     },
   ];
 
+  // 评分配置
   const scoreRate = {
     score: cardData.score,
     type: cardData.category, //1：价格-number；2：价格-string；3：已体验人数-number
@@ -84,12 +97,15 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
 
   // 控制弹窗的开关
   const [isShowReservationDialog, setIsShowReservationDialog] = useState(false);
+  // 控制提交按钮的异步关闭
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
-  // 弹窗传参数据
+  // 预约弹窗传参数据
   const { form, formFields, initialValues } = useReservationForm(
     reservationForm || {},
   );
 
+  // 预约弹窗数据
   const dialogData = {
     type: 1,
     title: `预约-${cardData.title}`,
@@ -102,6 +118,30 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
     },
     width: 750,
   };
+
+  const { submitReservation, reserveContextHolder } = useReserveConfirm();
+
+  // 预约表单提交
+  const handleReserveConfirm = () =>
+    submitReservation(
+      form,
+      favoriteData,
+      reservationData,
+      setConfirmLoading,
+      setIsShowReservationDialog,
+    );
+
+  // 获取收藏状态
+  const {
+    isFavorite,
+    loading,
+    handleFavClick,
+    contextHolder: favContextHolder,
+  } = useFavoriteStatus(
+    favoriteData?.touristId,
+    favoriteData?.businessType,
+    favoriteData?.businessId,
+  );
 
   return (
     <div className={`${boxStyle.width} ${boxStyle.height}`}>
@@ -215,6 +255,7 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
                         setIsShowReservationDialog(true);
                       }}
                     >
+                      {reserveContextHolder}
                       <BookOutlined className="mr-2" />
                       立即预约
                     </button>
@@ -251,17 +292,18 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
                         e.stopPropagation();
                       }}
                     >
-                      {/* 未收藏 */}
-                      <i
-                        className="iconfont icon-favorite text-color1 visibility"
-                        style={{ fontSize: '24px' }}
-                      />
-
-                      {/* 已收藏 */}
-                      {/* <i
-                        className="iconfont icon-favorite-filling text-color1"
-                        style={{ fontSize: '24px' }}
-                      /> */}
+                      {loading ? (
+                        <Loading size="small" className="my-8" />
+                      ) : (
+                        <div>
+                          {favContextHolder}
+                          <i
+                            className={`iconfont ${isFavorite ? 'icon-favorite-filling' : 'icon-favorite visibility'}  text-color1`}
+                            style={{ fontSize: '24px' }}
+                            onClick={async () => handleFavClick()}
+                          />
+                        </div>
+                      )}
                     </button>
                   )}
                 </div>
@@ -277,10 +319,12 @@ const Card = ({ boxStyle, cardData, onClick, reservationForm }) => {
       <DialogCommon
         isShowDialog={isShowReservationDialog}
         onCancel={() => {
+          form.resetFields();
           setIsShowReservationDialog(false);
         }}
         dialogData={dialogData}
-        onOk={() => setIsShowReservationDialog(false)}
+        onOk={handleReserveConfirm}
+        confirmLoading={confirmLoading}
       />
 
       {/* 模版3：图标、标题、数据（游客的卡片数据为0时不显示data） */}

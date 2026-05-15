@@ -66,8 +66,6 @@ const DataField = ({
     return () => (isMounted.current = false);
   }, []);
 
-  // 单选框中点击“其他”显示输入框，selectedValue - 控制输入框的显隐
-  // const [selectedValue, setSelectedValue] = useState();
   // 拿到单选框中的输入框的值
   const [otherInput, setOtherInput] = useState('');
 
@@ -153,7 +151,9 @@ const DataField = ({
             }
             style={{ width: formConfig.width || 400 }}
             value={value}
-            onChange={onChange}
+            onChange={(e) => {
+              onChange?.(e.target.value);
+            }}
           />
         )}
 
@@ -176,7 +176,9 @@ const DataField = ({
                 : undefined
             }
             value={value}
-            onChange={onChange}
+            onChange={(e) => {
+              onChange?.(e.target.value);
+            }}
           />
         )}
 
@@ -191,9 +193,12 @@ const DataField = ({
                 <i className={`iconfont ${formConfig.prefix}`} />
               ) : undefined
             }
+            visibilityToggle={formConfig.visibilityToggle || true}
             style={{ width: formConfig.width || 400 }}
             value={value}
-            onChange={onChange}
+            onChange={(e) => {
+              onChange?.(e.target.value);
+            }}
           />
         )}
 
@@ -206,7 +211,9 @@ const DataField = ({
             allowClear
             style={{ width: formConfig.width || 400 }}
             value={value}
-            onChange={onChange}
+            onChange={(e) => {
+              onChange?.(e.target.value);
+            }}
           />
         )}
 
@@ -234,7 +241,9 @@ const DataField = ({
             {...rest}
             vertical={formConfig.isVertical || false}
             value={value}
-            onChange={onChange}
+            onChange={(e) => {
+              onChange?.(e.target.value);
+            }}
             options={[
               ...formConfig.options,
               ...(formConfig.input
@@ -273,7 +282,9 @@ const DataField = ({
             {...rest}
             options={formConfig.options}
             value={value}
-            onChange={onChange}
+            onChange={(e) => {
+              onChange?.(e.target.value);
+            }}
           />
         )}
 
@@ -285,7 +296,9 @@ const DataField = ({
             size={formConfig.size || 64}
             icon={<UserOutlined />}
             value={value}
-            onChange={onChange}
+            onChange={(e) => {
+              onChange?.(e.target.value);
+            }}
           />
         )}
 
@@ -296,7 +309,9 @@ const DataField = ({
             // formConfig.name 不存在时，传空字符串或固定值，避免 undefined
             name={formConfig.name || 'avatar'}
             value={value}
-            onChange={onChange}
+            onChange={(e) => {
+              onChange?.(e.target.value);
+            }}
             listType={
               formConfig.listType === 1 ? 'picture-card' : 'picture-circle'
             }
@@ -505,15 +520,6 @@ const DataField = ({
             onChange={onChange}
           />
         )}
-
-        {/* 时间选择器-连着两个 */}
-        {/* {type === 'rangePicker' && (
-          <TimePicker.RangePicker
-            allowClear={formConfig.isAllowClear || false}
-            format={format}
-            placeholder={formConfig.placeholder || ''}
-          />
-        )} */}
       </div>
     </ConfigProvider>
   );

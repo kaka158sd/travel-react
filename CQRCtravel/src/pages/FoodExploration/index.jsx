@@ -2,6 +2,7 @@ import { getFoodsAPI } from '@/apis/foods';
 import { Card, LookMore, Title } from '@/components';
 import { useEffect, useState } from 'react';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
+import { useSelector } from 'react-redux';
 
 const titleData = {
   title: '美食探索 · 味觉盛宴',
@@ -12,6 +13,7 @@ const FoodExploration = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [foodsList, setFoodsList] = useState([]);
+  const { touristId } = useSelector((state) => state.user);
 
   useEffect(() => {
     let timer;
@@ -38,11 +40,8 @@ const FoodExploration = () => {
   const foodsThreeList = foodsList.slice(0, 3);
 
   if (isLoading) {
-    // return <Loading />;
     return <LoadingSkeleton />;
   }
-
-  // 错误状态
   if (error) {
     return <LoadError />;
   }
@@ -75,8 +74,19 @@ const FoodExploration = () => {
             btn: [5], //1:行程；2：预约；3：编辑；4：删除；5：收藏（最好按顺序写，因为当第一项为5时不显示1-4按钮）
           };
 
+          const favoriteData = {
+            touristId: touristId,
+            businessType: 3,
+            businessId: item.food_id,
+          };
+
           return (
-            <Card key={item.food_id} boxStyle={boxStyle} cardData={cardData} />
+            <Card
+              key={item.food_id}
+              boxStyle={boxStyle}
+              cardData={cardData}
+              favoriteData={favoriteData}
+            />
           );
         })}
       </div>

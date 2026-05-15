@@ -14,3 +14,14 @@ export const openStatusOptions = [
   { value: '临时维护', label: '临时维护' },
   { value: '暂停开放', label: '暂停开放' },
 ];
+
+// 景点标签颜色配置
+export const tagsColor = [
+  'magenta',
+  'volcano',
+  'gold',
+  'green',
+  'cyan',
+  'blue',
+  'purple',
+];

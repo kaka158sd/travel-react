@@ -8,10 +8,11 @@ import logo from '../../assets/logo.svg';
 import {
   getNavActiveKey,
   getUserStorage,
-  logout,
+  clearLocalStorage,
   setNavActiveKey,
 } from '@/utils';
-import { defaultAvatar } from '@/store';
+import { clearUser, defaultAvatar } from '@/store';
+import { useDispatch } from 'react-redux';
 
 // 顶部导航列表
 const tabs = [
@@ -39,6 +40,7 @@ const LogoutIcon = (
 );
 
 const Layout = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation(); // 获取当前路由路径
 
@@ -129,6 +131,13 @@ const Layout = () => {
     };
   }, []);
 
+  // 退出登陆
+  const logout = useCallback(() => {
+    dispatch(clearUser());
+    clearLocalStorage();
+    navigate('/');
+  }, [dispatch, navigate]);
+
   // 用户登陆后悬停在顶部栏的头像显示的下拉菜单
   const userItems = useMemo(() => {
     // 用户未登录，不应该执行这里的逻辑，所以先判断
@@ -196,7 +205,7 @@ const Layout = () => {
       default:
         return [];
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, logout]);
 
   return (
     <div>

@@ -80,7 +80,7 @@ export const useReservationForm = (orders = {}) => {
 
   // 动态字段（根据 orders 自动变化）
   const dynamicFields = [];
-  if (orders.business_type === 1) {
+  if (orders.business_type === 2) {
     dynamicFields.push(
       {
         name: 'people_num',

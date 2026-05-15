@@ -5,6 +5,7 @@ import {
   DialogCommon,
   HighlightKeywords,
   LoadError,
+  Loading,
   LoadingSkeleton,
 } from '@/components';
 import { Button, Card, Image, Tag, Tooltip } from 'antd';
@@ -14,11 +15,21 @@ import {
   PlusOutlined,
   CalendarOutlined,
   StarOutlined,
+  StarFilled,
+  CheckOutlined,
+  CheckSquareOutlined,
 } from '@ant-design/icons';
-import { useReservationForm } from '@/hook';
+import {
+  useFavoriteStatus,
+  useReservationForm,
+  useReserveConfirm,
+} from '@/hook';
 import { getCommentsAPI } from '@/apis/comments';
 import { getActivitiesAPI } from '@/apis/activities';
 import dayjs from 'dayjs';
+import { tagsColor } from '@/store';
+import { matchRelateActivities } from '@/utils';
+import { useSelector } from 'react-redux';
 
 // 非遗描述中需要高亮的词语
 const keywords = [
@@ -50,17 +61,6 @@ const activitiesKeywords = [
   '亲子露营活动',
 ];
 
-// 标签颜色配置
-const tagsColor = [
-  'magenta',
-  'volcano',
-  'gold',
-  'green',
-  'cyan',
-  'blue',
-  'purple',
-];
-
 const IntangibleHeritageDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -75,6 +75,7 @@ const IntangibleHeritageDetail = () => {
   const [activity, setActivity] = useState([]);
   // 获取评论列表
   const [comments, setComments] = useState([]);
+  const { touristId: currentUserId } = useSelector((state) => state.user);
 
   // 获取评论列表（复用你原有的逻辑）
   useEffect(() => {
@@ -154,7 +155,7 @@ const IntangibleHeritageDetail = () => {
     return () => clearTimeout(timer);
   }, [id, heritageData?.story_id]);
 
-  // 定义字段配置（完全匹配非遗数据库字段）
+  // 定义字段配置
   const fieldConfigs = [
     { label: '非遗类型', value: heritageData?.heritage_type },
     { label: '非遗等级', value: heritageData?.heritage_level },
@@ -182,9 +183,11 @@ const IntangibleHeritageDetail = () => {
 
   // 弹窗开关（预约功能）
   const [isShowReservationDialog, setIsShowReservationDialog] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   // 预约表单数据
   const reservationForm = {
+    business_type: 2,
     item_name: heritageData?.heritage_name,
     single_price: heritageData?.price,
   };
@@ -207,20 +210,42 @@ const IntangibleHeritageDetail = () => {
     width: 750,
   };
 
-  // 匹配活动
-  const getRelateActivities = () => {
-    const currentList =
-      activity.filter(
-        (item) =>
-          item.relate_type === 2 && item.relate_id === heritageData.heritage_id,
-      ) || [];
+  const currentList = matchRelateActivities(
+    activity,
+    2,
+    heritageData.heritage_id,
+  );
 
-    return currentList;
+  const { submitReservation, reserveContextHolder } = useReserveConfirm();
+
+  const favoriteData = {
+    touristId: currentUserId,
+    businessType: 2,
+    businessId: heritageData?.heritage_id,
   };
-  const currentList = getRelateActivities();
+  const reservationData = {
+    inheritor_id: heritageData?.inheritor_id,
+  };
+  // 预约表单提交
+  const handleReserveConfirm = () =>
+    submitReservation(
+      form,
+      favoriteData,
+      reservationData,
+      setConfirmLoading,
+      setIsShowReservationDialog,
+    );
 
   // 处理时间格式
   const formatDate = (dateStr) => dayjs(dateStr).format('YYYY年MM月DD日 HH:mm');
+
+  // 获取收藏状态
+  const {
+    isFavorite,
+    loading: favLoading,
+    handleFavClick,
+    contextHolder,
+  } = useFavoriteStatus(currentUserId, 2, heritageData?.heritage_id);
 
   // 按钮配置
   const btnConfig = [
@@ -236,9 +261,10 @@ const IntangibleHeritageDetail = () => {
       onClick: () => setIsShowReservationDialog(true),
     },
     {
-      title: '收藏',
+      title: isFavorite ? '已收藏' : '收藏',
       color: 'gold',
-      icon: <StarOutlined />,
+      icon: isFavorite ? <StarFilled /> : <StarOutlined />,
+      onClick: () => handleFavClick(),
     },
   ];
 
@@ -248,23 +274,19 @@ const IntangibleHeritageDetail = () => {
       item.business_type === 2 &&
       item.business_id === heritageData?.heritage_id,
   );
-  const currentUserId = 1; // 替换为你的当前登录游客ID
 
   // 发表评论
   const handlePublishComment = async (data) => {
     console.log('发表评论：', data);
   };
-
   // 点赞评论
   const handleLikeComment = async (commentId) => {
     console.log('点赞评论：', commentId);
   };
-
   // 删除评论
   const handleDeleteComment = async (commentId) => {
     console.log('删除评论：', commentId);
   };
-
   // 回复评论
   const handleReplyComment = async (commentId, replyContent) => {
     console.log('回复评论：', commentId, replyContent);
@@ -397,28 +419,37 @@ const IntangibleHeritageDetail = () => {
 
       {/* 按钮 */}
       <div className="absolute top-70 -left-40 flex flex-col gap-8">
+        {contextHolder}
+
         {btnConfig.map((item) => (
           <Tooltip title={item.title} key={item.title}>
-            <Button
-              variant="solid"
-              color={item.color}
-              shape="circle"
-              icon={item.icon}
-              size="large"
-              onClick={item.onClick}
-            />
+            {favLoading ? (
+              <Loading size="small" className="my-1" />
+            ) : (
+              <Button
+                variant="solid"
+                color={item.color}
+                shape="circle"
+                icon={item.icon}
+                size="large"
+                onClick={item.onClick}
+              />
+            )}
           </Tooltip>
         ))}
       </div>
 
       {/* 立即预约弹窗 */}
+      {reserveContextHolder}
       <DialogCommon
         isShowDialog={isShowReservationDialog}
         onCancel={() => {
+          form.resetFields();
           setIsShowReservationDialog(false);
         }}
         dialogData={dialogData}
-        onOk={() => setIsShowReservationDialog(false)}
+        onOk={handleReserveConfirm}
+        confirmLoading={confirmLoading}
       />
     </div>
   );

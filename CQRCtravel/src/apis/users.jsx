@@ -10,6 +10,19 @@ export function getUsersAPI() {
   });
 }
 
+// 修改具体用户的信息
+
+export function updateUserAPI(id, data) {
+  return request({
+    url: '/users',
+    method: 'PATCH',
+    params: {
+      user_id: `eq.${id}`,
+    },
+    data,
+  });
+}
+
 // 获取单位列表请求
 
 export function getAdminsDepartmentAPI() {
@@ -34,6 +47,18 @@ export function getTouristsAPI() {
   return request({
     url: '/tourists',
     method: 'GET',
+  });
+}
+
+// 获取游客详情
+
+export function getTouristDetailAPI(id) {
+  return request({
+    url: '/tourists',
+    method: 'GET',
+    params: {
+      tourist_id: `eq.${id}`,
+    },
   });
 }
 

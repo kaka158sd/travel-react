@@ -187,13 +187,14 @@ export const useUserForm = (params = {}) => {
 
   // 个人信息表单中的 privacyData 由于是数组且内含null，使得form组件无法正确识别，需要在传递初始值时进行处理
   const initialValue = useMemo(() => {
+    const baseData = user.privacyData || [];
     return {
       ...user,
       // 把数组转成对象格式
       privacyData: {
-        0: user.privacyData?.[0] ?? '',
-        1: user.privacyData?.[1] ?? '',
-        2: user.privacyData?.[2] ?? '',
+        0: baseData[0] ?? '',
+        1: baseData[1] ?? '',
+        2: baseData[2] ?? '',
       },
     };
   }, [user]);

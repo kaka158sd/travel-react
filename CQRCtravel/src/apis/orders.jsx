@@ -24,13 +24,26 @@ export function getOrderDetailAPI(id) {
 
 // 编辑订单数据
 
-export function updateOrderstApi(id, data) {
+export function updateOrderstAPI(id, data) {
   return request({
     url: '/orders',
     method: 'PATCH',
     params: {
-      tourist_id: `eq.${id}`,
+      order_id: `eq.${id}`,
     },
     data: data,
+  });
+}
+
+// 新增订单数据
+
+export function postOrderAPI(data) {
+  return request({
+    url: '/orders',
+    method: 'POST',
+    data,
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 }

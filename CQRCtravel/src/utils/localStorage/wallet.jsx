@@ -7,7 +7,7 @@ export function setWalletStorage(wallet) {
 
 // 取
 export function getWalletStorage() {
-  return localStorage.getItem('wallet');
+  return Number(localStorage.getItem('wallet'));
 }
 
 // 删

@@ -3,10 +3,16 @@ import { Carousel, Typography, Button, Form, Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { HomeOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-import { getUsersAPI } from '@/apis/users';
-import { setUserStorage } from '@/utils/userStorage';
-import { fetchLogin, setToken } from '@/store/modules/user';
+import { getTouristsAPI, getUsersAPI } from '@/apis/users';
+import {
+  fetchLogin,
+  setCurrentUser,
+  setToken,
+  setTouristId,
+  setUserPrivacyData,
+} from '@/store/modules/user';
 import { useDispatch } from 'react-redux';
+import { setWallet } from '@/store';
 
 const { Title } = Typography;
 
@@ -58,6 +64,7 @@ const navCenter = [
 const Login = () => {
   const [loginForm] = Form.useForm();
   const [users, setUsers] = useState([]);
+  const [tourists, setTourists] = useState([]);
   const [messageApi, contextHolder] = message.useMessage();
   const dispatch = useDispatch();
 
@@ -72,8 +79,17 @@ const Login = () => {
         console.error('获取用户列表失败', error);
       }
     };
+    const getTouristsList = async () => {
+      try {
+        const res = await getTouristsAPI();
+        setTourists(res.data);
+      } catch (error) {
+        console.error('获取游客列表失败', error);
+      }
+    };
 
     getUsersList();
+    getTouristsList();
   }, []);
 
   const handleLogin = async (values) => {
@@ -81,28 +97,41 @@ const Login = () => {
       // 调用模拟登录接口
       const res = await fetchLogin(users, values);
       // 解构出 user 和 token
-      const { user: userInfo, token } = res;
+      const { user, token } = res;
 
-      // 登录成功，存储 token 和用户信息
+      // 登录成功，存储 token 、用户信息、游客id
       dispatch(setToken(token));
-      setUserStorage(userInfo);
+      dispatch(setCurrentUser(user));
+      // 获取游客ID
+      if (user?.identity_type === 1) {
+        const touristItem = tourists.find(
+          (item) => item.user_id === user?.user_id,
+        );
+        if (touristItem) {
+          dispatch(setTouristId(touristItem.tourist_id));
+          dispatch(setUserPrivacyData(touristItem));
+          dispatch(setWallet(touristItem.wallet));
+        } else {
+          console.error('❌ 未找到对应的游客数据:', user.user_id);
+          messageApi.error('游客信息异常，请联系管理员');
+          return; // 终止流程，不跳转
+        }
+      } else {
+        // 非游客用户，清空游客ID
+        dispatch(setTouristId(''));
+      }
+
       messageApi.success('登录成功');
 
-      let timer;
-      // 延迟跳转
-      timer = setTimeout(() => {
-        const matchedNav = navCenter.find(
-          (item) => item.type === userInfo?.identity_type,
-        );
-        if (matchedNav) {
-          navigate(matchedNav.nav);
-        } else {
-          // 兜底：找不到就跳登录页
-          navigate('/login');
-        }
-      }, 1000);
-
-      return () => clearTimeout(timer);
+      const matchedNav = navCenter.find(
+        (item) => item.type === user?.identity_type,
+      );
+      if (matchedNav) {
+        navigate(matchedNav.nav, { replace: true });
+      } else {
+        // 兜底：找不到就跳登录页
+        navigate('/login', { replace: true });
+      }
     } catch (err) {
       // 登录失败
       messageApi.error(err.message);

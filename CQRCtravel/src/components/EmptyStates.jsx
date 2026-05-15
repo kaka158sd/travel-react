@@ -14,7 +14,9 @@ export const Loading = ({
   className = 'my-40',
 }) => {
   return (
-    <div className="w-full flex justify-center items-center min-h-120">
+    <div
+      className={`w-full flex ${size === 'small' ? 'justify-end' : 'justify-center items-center'} min-h-120`}
+    >
       <Spin
         spinning={true}
         size={size}

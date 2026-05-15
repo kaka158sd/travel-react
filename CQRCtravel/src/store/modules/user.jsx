@@ -1,12 +1,24 @@
 // 和用户相关的状态管理
 import { createSlice } from '@reduxjs/toolkit';
-import { setTokenStorage, getToken } from '@/utils';
+import {
+  setTokenStorage,
+  getToken,
+  getUserStorage,
+  setUserStorage,
+  getTouristIdStorage,
+  setTouristIdStorage,
+  getUserPrivacyData,
+  setUserPrivacyData as setPrivacy,
+} from '@/utils';
 
 const userStore = createSlice({
   name: 'user',
   // 数据状态
   initialState: () => ({
-    token: '',
+    token: getToken() || '',
+    touristId: getTouristIdStorage() || '', // 游客ID（全局可用）
+    currentUser: getUserStorage() || {},
+    userPrivacyData: getUserPrivacyData() || {},
   }),
   // 同步修改方法
   reducers: {
@@ -15,11 +27,37 @@ const userStore = createSlice({
       // 在本地中存一份
       setTokenStorage(action.payload);
     },
+    setTouristId(state, action) {
+      state.touristId = action.payload;
+      setTouristIdStorage(action.payload);
+    },
+    setCurrentUser(state, action) {
+      state.currentUser = action.payload;
+      // 在本地中存一份
+      setUserStorage(action.payload);
+    },
+    setUserPrivacyData(state, action) {
+      state.userPrivacyData = action.payload;
+      setPrivacy(action.payload);
+    },
+    // 退出登陆
+    clearUser(state) {
+      ((state.token = ''),
+        (state.touristId = ''),
+        (state.currentUser = {}),
+        (state.userPrivacyData = {}));
+    },
   },
 });
 
 // 解构出actionCreater
-const { setToken } = userStore.actions;
+const {
+  setToken,
+  setTouristId,
+  setCurrentUser,
+  setUserPrivacyData,
+  clearUser,
+} = userStore.actions;
 
 // 获取reducer函数
 const userReducer = userStore.reducer;
@@ -72,6 +110,13 @@ const fetchLogin = async (users, values) => {
   });
 };
 
-export { fetchLogin, setToken };
+export {
+  fetchLogin,
+  setToken,
+  setTouristId,
+  setCurrentUser,
+  setUserPrivacyData,
+  clearUser,
+};
 
 export default userReducer;

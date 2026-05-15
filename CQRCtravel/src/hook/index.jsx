@@ -8,6 +8,9 @@ import {
 import { usePhoneEditForm, usePaWEditForm } from './formFields/useEditForm';
 import { useReservationForm } from './formFields/useReservationForm';
 import { useUserForm } from './formFields/useUserForm';
+import { useFavoriteStatus } from './useFavoriteStatus';
+import { useReserveConfirm } from './useResereConfirm';
+import { useEditConfirm } from './useEditConfirm';
 
 export {
   useFirstEnterNav,
@@ -19,4 +22,7 @@ export {
   useUserForm,
   useAddNewsForm,
   useAddHeritageForm,
+  useFavoriteStatus,
+  useReserveConfirm,
+  useEditConfirm,
 };

@@ -58,8 +58,9 @@ export const usePaWEditForm = (edit = {}) => {
       rules: 'required password',
       type: 'password',
       formConfig: {
-        placeholder: edit.oldPassword || '',
+        placeholder: '••••••••',
         isDisabled: true,
+        visibilityToggle: false,
         width: 250,
       },
     },

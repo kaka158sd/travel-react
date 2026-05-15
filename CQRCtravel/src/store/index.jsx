@@ -7,14 +7,32 @@ import {
   heritageLevelOptions,
 } from './commonList/inheritor';
 import { statusStyle, orderLabel } from './commonList/order';
-import { spotStarOptions, openStatusOptions } from './commonList/scenicSpot';
+import {
+  spotStarOptions,
+  openStatusOptions,
+  tagsColor,
+} from './commonList/scenicSpot';
 import { newLabel } from './commonList/new';
 import { identity } from './commonList/user';
 import { defaultAvatar } from './commonData/user';
+import {
+  fetchLogin,
+  setToken,
+  setTouristId,
+  setCurrentUser,
+  setUserPrivacyData,
+  clearUser,
+} from './modules/user';
+import favoriteReducer from './modules/favorites';
+import { setFavoritesList, setLoading } from './modules/favorites';
+import walletReducer from './modules/wallet';
+import { setWallet } from './modules/wallet';
 
 export default configureStore({
   reducer: {
     user: userReducer,
+    favorite: favoriteReducer,
+    wallet: walletReducer,
   },
 });
 
@@ -28,4 +46,14 @@ export {
   newLabel,
   identity,
   defaultAvatar,
+  fetchLogin,
+  setToken,
+  setTouristId,
+  setCurrentUser,
+  setUserPrivacyData,
+  clearUser,
+  setFavoritesList,
+  setLoading,
+  tagsColor,
+  setWallet,
 };

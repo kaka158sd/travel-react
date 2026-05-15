@@ -22,14 +22,13 @@ import NewsManage from '@/pages/userCenter/Admins/NewsManage';
 import PeopleManage from '@/pages/userCenter/Admins/PeopleManage';
 import SpotManage from '@/pages/userCenter/Admins/SpotManage';
 import InheritorCenter from '@/pages/userCenter/Inheritors';
-import TouristCenter from '@/pages/userCenter/Tourists';
 import HelpCenter from '@/pages/userCenter/Tourists/HelpCenter';
 import MyComments from '@/pages/userCenter/Tourists/MyComments';
 import MyFavorites from '@/pages/userCenter/Tourists/MyFavorites';
 import MyOrders from '@/pages/userCenter/Tourists/MyOrders';
 import MyTrips from '@/pages/userCenter/Tourists/MyTrips';
 import Setting from '@/pages/userCenter/Tourists/Setting';
-import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import InheritorConsole from '@/pages/userCenter/Inheritors/InheritorConsole';
 import OrderManage from '@/pages/userCenter/Inheritors/OrderManage';
 import HeritageManage from '@/pages/userCenter/Inheritors/HeritageManage';
@@ -37,6 +36,8 @@ import InheritorAccount from '@/pages/userCenter/Inheritors/InheritorAccount';
 import ScenicSpotsDetail from '@/pages/AncientTown/ScenicSpotsDetail';
 import IntangibleHeritageDetail from '@/pages/IntangibleCultural/IntangibleHeritageDetail';
 import { AuthAdmin, AuthInheritor, AuthTourist } from '@/components';
+import TouristCenterLayout from '@/pages/userCenter/Tourists';
+import TouristCenter from '@/pages/userCenter/Tourists/TouristCenter';
 
 const router = createBrowserRouter([
   {
@@ -70,30 +71,30 @@ const router = createBrowserRouter([
         path: '/touristCenter',
         element: (
           <AuthTourist>
-            <Outlet />
+            <TouristCenterLayout />
           </AuthTourist>
         ),
         children: [
           { index: true, element: <TouristCenter /> },
-          { path: '/touristCenter/setting', element: <Setting /> },
+          { path: 'setting', element: <Setting /> },
           {
-            path: '/touristCenter/helpCenter',
+            path: 'helpCenter',
             element: <HelpCenter />,
           },
           {
-            path: '/touristCenter/myComments',
+            path: 'myComments',
             element: <MyComments />,
           },
           {
-            path: '/touristCenter/myOrders',
+            path: 'myOrders',
             element: <MyOrders />,
           },
           {
-            path: '/touristCenter/myTrips',
+            path: 'myTrips',
             element: <MyTrips />,
           },
           {
-            path: '/touristCenter/myFavorites',
+            path: 'myFavorites',
             element: <MyFavorites />,
           },
         ],

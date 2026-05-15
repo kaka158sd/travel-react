@@ -6,6 +6,7 @@ import {
   DialogCommon,
   HighlightKeywords,
   LoadError,
+  Loading,
   LoadingSkeleton,
 } from '@/components';
 import { Button, Card, Image, Tag, Tooltip } from 'antd';
@@ -16,9 +17,19 @@ import {
   PlusOutlined,
   CalendarOutlined,
   StarOutlined,
+  CheckOutlined,
+  CheckSquareOutlined,
+  StarFilled,
 } from '@ant-design/icons';
-import { useReservationForm } from '@/hook';
+import {
+  useFavoriteStatus,
+  useReservationForm,
+  useReserveConfirm,
+} from '@/hook';
 import { getCommentsAPI } from '@/apis/comments';
+import { tagsColor } from '@/store';
+import { matchRelateActivities } from '@/utils';
+import { useSelector } from 'react-redux';
 
 // 景点描述中需要高亮的词语
 const keywords = [
@@ -56,17 +67,6 @@ const activitiesKeywords = [
   '亲子露营活动',
 ];
 
-// 景点标签颜色配置
-const tagsColor = [
-  'magenta',
-  'volcano',
-  'gold',
-  'green',
-  'cyan',
-  'blue',
-  'purple',
-];
-
 const ScenicSpotsDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -80,6 +80,7 @@ const ScenicSpotsDetail = () => {
   const [activity, setActivity] = useState([]);
   // 获取评论列表
   const [comments, setComments] = useState([]);
+  const { touristId: currentUserId } = useSelector((state) => state.user);
 
   useEffect(() => {
     let timer;
@@ -185,21 +186,14 @@ const ScenicSpotsDetail = () => {
     { label: '评分', value: `${spotData?.score} 分` },
   ];
 
-  // 匹配活动
-  const getRelateActivities = () => {
-    const spotRelate = activity.filter((item) => item.relate_type === 1) || [];
-    const currentList =
-      spotRelate.filter((item) => item.relate_id === spotData.spot_id) || [];
-
-    return currentList;
-  };
-  const currentList = getRelateActivities();
+  const currentList = matchRelateActivities(activity, 1, spotData.spot_id);
 
   // 处理时间格式
   const formatDate = (dateStr) => dayjs(dateStr).format('YYYY年MM月DD日 HH:mm');
 
   // 弹窗开关
   const [isShowReservationDialog, setIsShowReservationDialog] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   // 预约表单
   const reservationForm = {
@@ -225,12 +219,39 @@ const ScenicSpotsDetail = () => {
     width: 750,
   };
 
+  const { submitReservation, reserveContextHolder } = useReserveConfirm();
+
+  const favoriteData = {
+    touristId: currentUserId,
+    businessType: 1,
+    businessId: spotData?.spot_id,
+  };
+  const reservationData = {};
+  // 预约表单提交
+  const handleReserveConfirm = () =>
+    submitReservation(
+      form,
+      favoriteData,
+      reservationData,
+      setConfirmLoading,
+      setIsShowReservationDialog,
+    );
+
+  // 获取收藏状态
+  const {
+    isFavorite,
+    loading: favLoading,
+    handleFavClick,
+    contextHolder,
+  } = useFavoriteStatus(currentUserId, 1, spotData?.spot_id);
+
   // 按钮配置
   const btnConfig = [
     {
       title: '加入行程',
       color: 'volcano',
       icon: <PlusOutlined />,
+      icon2: <CheckOutlined />,
     },
     {
       title: '立即预约',
@@ -239,9 +260,10 @@ const ScenicSpotsDetail = () => {
       onClick: () => setIsShowReservationDialog(true),
     },
     {
-      title: '收藏',
+      title: isFavorite ? '已收藏' : '收藏',
       color: 'gold',
-      icon: <StarOutlined />,
+      icon: isFavorite ? <StarFilled /> : <StarOutlined />,
+      onClick: () => handleFavClick(),
     },
   ];
 
@@ -249,7 +271,6 @@ const ScenicSpotsDetail = () => {
   const commentData = comments.filter(
     (item) => item.business_type === 1 && item.business_id === spotData.spot_id,
   );
-  const currentUserId = 1; // 替换为你的当前登录游客ID
 
   // 发表评论
   const handlePublishComment = async (data) => {
@@ -258,18 +279,15 @@ const ScenicSpotsDetail = () => {
     console.log('发表评论：', data);
     // 刷新评论列表
   };
-
   // 点赞评论
   const handleLikeComment = async (commentId) => {
     console.log('点赞评论：', commentId);
   };
-
   // 删除评论
   const handleDeleteComment = async (commentId) => {
     console.log('删除评论：', commentId);
     // 刷新评论列表
   };
-
   // 回复评论
   const handleReplyComment = async (commentId, replyContent) => {
     console.log('回复评论：', commentId, replyContent);
@@ -407,28 +425,37 @@ const ScenicSpotsDetail = () => {
 
       {/* 按钮 */}
       <div className="absolute top-70 -left-40 flex flex-col gap-8">
+        {contextHolder}
+
         {btnConfig.map((item) => (
           <Tooltip title={item.title} key={item.title}>
-            <Button
-              variant="solid"
-              color={item.color}
-              shape="circle"
-              icon={item.icon}
-              size="large"
-              onClick={item.onClick}
-            />
+            {favLoading ? (
+              <Loading size="small" className="my-2" />
+            ) : (
+              <Button
+                variant="solid"
+                color={item.color}
+                shape="circle"
+                icon={item.icon}
+                size="large"
+                onClick={item.onClick}
+              />
+            )}
           </Tooltip>
         ))}
       </div>
 
+      {reserveContextHolder}
       {/* 立即预约弹窗 */}
       <DialogCommon
         isShowDialog={isShowReservationDialog}
         onCancel={() => {
+          form.resetFields();
           setIsShowReservationDialog(false);
         }}
         dialogData={dialogData}
-        onOk={() => setIsShowReservationDialog(false)}
+        onOk={handleReserveConfirm}
+        confirmLoading={confirmLoading}
       />
     </div>
   );

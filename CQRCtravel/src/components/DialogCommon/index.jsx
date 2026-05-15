@@ -67,6 +67,7 @@ const DialogCommon = ({
   onCancel,
   onOk,
   initialValue,
+  confirmLoading,
 }) => {
   // 绑定无表单需要修改数据的弹窗的内部值
   const [formValue, setFormValue] = useState(initialValue || null);
@@ -97,6 +98,7 @@ const DialogCommon = ({
           onCancel={onCancel}
           onOk={onOk}
           width={dialogData.width || 500}
+          confirmLoading={confirmLoading}
           cancelText="取消"
           okText="提交"
           className="dialogStyle"
@@ -183,8 +185,9 @@ const DialogCommon = ({
           open={isShowDialog}
           onCancel={onCancel}
           onOk={onOk}
+          confirmLoading={confirmLoading}
           cancelText="取消"
-          okText="提交"
+          okText="确认"
           style={{ maxWidth: 400 }}
         >
           <div className="py-4">{dialogData.content}</div>

@@ -3,6 +3,7 @@ import { Card, LookMore, Title } from '@/components';
 import { useEffect, useState } from 'react';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const titleData = {
   title: '非遗体验 · 匠心传承',
@@ -14,6 +15,7 @@ const IntangibleCultural = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [intangibleHeritageList, setintangibleHeritageList] = useState([]);
+  const { touristId } = useSelector((state) => state.user);
 
   useEffect(() => {
     let timer;
@@ -40,11 +42,8 @@ const IntangibleCultural = () => {
   const intangibleHeritageThreeList = intangibleHeritageList.slice(0, 3);
 
   if (isLoading) {
-    // return <Loading />;
     return <LoadingSkeleton />;
   }
-
-  // 错误状态
   if (error) {
     return <LoadError />;
   }
@@ -81,15 +80,28 @@ const IntangibleCultural = () => {
             btn: [1, 2, 5], //1:行程；2：预约；3：编辑；4：删除；5：收藏（最好按顺序写，因为当第一项为5时不显示1-4按钮）
           };
 
+          const favoriteData = {
+            touristId: touristId,
+            businessType: 2,
+            businessId: item.heritage_id,
+          };
+
+          const reservationData = {
+            inheritor_id: item.inheritor_id,
+          };
+
           return (
             <Card
               key={item.heritage_id}
               boxStyle={boxStyle}
               cardData={cardData}
               reservationForm={{
+                business_type: 2,
                 item_name: item.heritage_name,
                 single_price: item.price,
               }}
+              favoriteData={favoriteData}
+              reservationData={reservationData}
               onClick={() =>
                 navigate(`/intangibleHeritageDetail/${item.heritage_id}`)
               }

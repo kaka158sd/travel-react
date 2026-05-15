@@ -6,43 +6,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
 import { getFoodsAPI } from '@/apis/foods';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
-import { useNavigate } from 'react-router-dom';
-
-// 收藏数据
-const favoritesList = [
-  {
-    favorite_id: 1,
-    tourist_id: 1,
-    business_type: 1,
-    business_id: 1,
-    favorite_time: '2026-04-19T13:54:35.026635+00:00',
-    is_favorite: true,
-  },
-  {
-    favorite_id: 2,
-    tourist_id: 1,
-    business_type: 2,
-    business_id: 1,
-    favorite_time: '2026-04-19T13:54:35.026635+00:00',
-    is_favorite: true,
-  },
-  {
-    favorite_id: 3,
-    tourist_id: 1,
-    business_type: 3,
-    business_id: 1,
-    favorite_time: '2026-04-19T13:54:35.026635+00:00',
-    is_favorite: true,
-  },
-  {
-    favorite_id: 4,
-    tourist_id: 1,
-    business_type: 4,
-    business_id: 1,
-    favorite_time: '2026-04-19T13:54:35.026635+00:00',
-    is_favorite: true,
-  },
-];
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 
 // 导航配置项
 const menuItems = [
@@ -53,9 +18,12 @@ const menuItems = [
 ];
 
 const MyFavorites = () => {
+  const { favoritesData = [], touristId = 1 } = useOutletContext() || {};
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+
   // 当前选中的菜单项
   const [selectedMenu, setSelectedMenu] = useFirstEnterNav(
     '/touristCenter',
@@ -126,14 +94,14 @@ const MyFavorites = () => {
   // 用于展示在收藏中的数据
   const myFavoritesData = useMemo(() => {
     // 过滤出收藏中不同类型的数据
-    const spotFavoritesList = favoritesList.filter(
-      (item) => item.business_type === 1,
+    const spotFavoritesList = favoritesData.filter(
+      (item) => item.business_type === 1 && item.is_favorite,
     );
-    const heritageFavoritesList = favoritesList.filter(
-      (item) => item.business_type === 2,
+    const heritageFavoritesList = favoritesData.filter(
+      (item) => item.business_type === 2 && item.is_favorite,
     );
-    const foodsFavoritesList = favoritesList.filter(
-      (item) => item.business_type === 3,
+    const foodsFavoritesList = favoritesData.filter(
+      (item) => item.business_type === 3 && item.is_favorite,
     );
 
     // 获取匹配数据的id
@@ -142,25 +110,26 @@ const MyFavorites = () => {
     const foodsIds = foodsFavoritesList.map((item) => item.business_id);
 
     // 从接口中匹配数据
-    const scenicSpots = scenicSpotsList.filter((item) =>
-      spotIds.includes(item.spot_id),
-    );
-    const intangibleHeritage = intangibleHeritageList.filter((item) =>
-      heritageIds.includes(item.heritage_id),
-    );
-    const foods = foodsList.filter((item) => foodsIds.includes(item.food_id));
+    const scenicSpots = scenicSpotsList
+      .filter((item) => spotIds.includes(item.spot_id))
+      .sort((a, b) => new Date(b.update_time) - new Date(a.update_time));
+    const intangibleHeritage = intangibleHeritageList
+      .filter((item) => heritageIds.includes(item.heritage_id))
+      .sort((a, b) => new Date(b.update_time) - new Date(a.update_time));
+    const foods = foodsList
+      .filter((item) => foodsIds.includes(item.food_id))
+      .sort((a, b) => new Date(b.update_time) - new Date(a.update_time));
 
     return {
       scenicSpots,
       intangibleHeritage,
       foods,
     };
-  }, [scenicSpotsList, intangibleHeritageList, foodsList]);
+  }, [favoritesData, scenicSpotsList, intangibleHeritageList, foodsList]);
 
   if (isLoading) {
     return <LoadingSkeleton />;
   }
-  // 错误状态
   if (error) {
     return <LoadError />;
   }
@@ -185,7 +154,7 @@ const MyFavorites = () => {
         {/* 景点列表渲染 */}
         {selectedMenu === 'spot' && (
           <>
-            {myFavoritesData.scenicSpots.length > 0 ? (
+            {myFavoritesData?.scenicSpots?.length > 0 ? (
               <div className="w-full px-10 py-6 mx-auto grid grid-cols-3 gap-y-8 gap-x-27">
                 {myFavoritesData.scenicSpots.map((item) => {
                   // 组装Card组件需要的数据
@@ -205,12 +174,19 @@ const MyFavorites = () => {
                     btn: [5],
                   };
 
+                  const favoriteData = {
+                    touristId: touristId,
+                    businessType: 1,
+                    businessId: item.spot_id,
+                  };
+
                   // 给每个Card传递对象并添加key
                   return (
                     <Card
                       key={item.spot_id}
                       boxStyle={boxStyle}
                       cardData={cardData}
+                      favoriteData={favoriteData}
                       onClick={() =>
                         navigate(`/scenicSpotsDetail/${item.spot_id}`)
                       }
@@ -227,7 +203,7 @@ const MyFavorites = () => {
         {/* 非遗列表渲染 */}
         {selectedMenu === 'heritage' && (
           <>
-            {myFavoritesData.intangibleHeritage.length > 0 ? (
+            {myFavoritesData?.intangibleHeritage?.length > 0 ? (
               <div className="w-full px-10 py-6 mx-auto grid grid-cols-4 gap-y-8 gap-x-7">
                 {myFavoritesData.intangibleHeritage.map((item) => {
                   // 组装Card组件需要的数据
@@ -257,12 +233,19 @@ const MyFavorites = () => {
                     btn: [5],
                   };
 
+                  const favoriteData = {
+                    touristId: touristId,
+                    businessType: 2,
+                    businessId: item.heritage_id,
+                  };
+
                   // 给每个Card传递对象并添加key
                   return (
                     <Card
                       key={item.heritage_id}
                       boxStyle={boxStyle}
                       cardData={cardData}
+                      favoriteData={favoriteData}
                       onClick={() =>
                         navigate(
                           `/intangibleHeritageDetail/${item.heritage_id}`,
@@ -281,7 +264,7 @@ const MyFavorites = () => {
         {/* 美食列表渲染 */}
         {selectedMenu === 'food' && (
           <>
-            {myFavoritesData.foods.length > 0 ? (
+            {myFavoritesData?.foods?.length > 0 ? (
               <div className="w-full px-10 py-6 mx-auto grid grid-cols-3 gap-y-8 gap-x-13">
                 {myFavoritesData.foods.map((item) => {
                   // 组装Card组件需要的数据
@@ -310,11 +293,18 @@ const MyFavorites = () => {
                     btn: [5],
                   };
 
+                  const favoriteData = {
+                    touristId: touristId,
+                    businessType: 3,
+                    businessId: item.food_id,
+                  };
+
                   return (
                     <Card
                       key={item.food_id}
                       boxStyle={boxStyle}
                       cardData={cardData}
+                      favoriteData={favoriteData}
                     />
                   );
                 })}

@@ -1,24 +1,36 @@
-import { request } from './request';
+import { request } from './api/request';
 import { rulesParse } from './rulesParse';
-import { setNavActiveKey, getNavActiveKey } from './navStorage';
+import { setNavActiveKey, getNavActiveKey } from './localStorage/navStorage';
 import {
   getDetailOrderItems,
   getDetailActivityItems,
   getDetailNewItems,
   getDetailPeopleItems,
 } from './detailDialog/detailDialog';
-import { setTokenStorage, getToken, removeToken } from './token';
+import { setTokenStorage, getToken, removeToken } from './localStorage/token';
 import {
   setUserStorage,
   getUserStorage,
   removeUserStorage,
-} from './userStorage';
-import { logout } from './logout';
+} from './localStorage/userStorage';
+import { clearLocalStorage } from './logout';
 import {
   setWalletStorage,
   getWalletStorage,
   removeWalletStorage,
-} from './wallet';
+} from './localStorage/wallet';
+import {
+  getTouristIdStorage,
+  setTouristIdStorage,
+  removeTouristIdStorage,
+} from './localStorage/touristId';
+import {
+  setUserPrivacyData,
+  getUserPrivacyData,
+  removeUserPrivacyData,
+} from './localStorage/userPrivacyData';
+import { matchRelateActivities } from './matchRelateActivities';
+import { isOrderExpired, isReserveFeasible } from './isExpired';
 
 export {
   request,
@@ -35,8 +47,17 @@ export {
   setUserStorage,
   getUserStorage,
   removeUserStorage,
-  logout,
+  clearLocalStorage,
   setWalletStorage,
   getWalletStorage,
   removeWalletStorage,
+  getTouristIdStorage,
+  setTouristIdStorage,
+  removeTouristIdStorage,
+  setUserPrivacyData,
+  getUserPrivacyData,
+  removeUserPrivacyData,
+  matchRelateActivities,
+  isOrderExpired,
+  isReserveFeasible,
 };

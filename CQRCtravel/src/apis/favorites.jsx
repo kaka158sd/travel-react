@@ -9,3 +9,41 @@ export function getFavoritesAPI() {
     method: 'GET',
   });
 }
+
+// 获取收藏详情
+
+export function getFavoriteDetailAPI(id) {
+  return request({
+    url: '/favorites',
+    method: 'GET',
+    params: {
+      favorite_id: `eq.${id}`,
+    },
+  });
+}
+
+// 编辑收藏数据
+
+export function updateFavoriteAPI(id, data) {
+  return request({
+    url: '/favorites',
+    method: 'PATCH',
+    params: {
+      favorite_id: `eq.${id}`,
+    },
+    data: data,
+  });
+}
+
+// 新增收藏数据
+
+export function postFavoriteAPI(data) {
+  return request({
+    url: '/favorites',
+    method: 'POST',
+    data,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}

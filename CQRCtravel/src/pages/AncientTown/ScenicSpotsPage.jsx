@@ -3,6 +3,7 @@ import { Title, Card, DataField } from '@/components';
 import { useEffect, useState } from 'react';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const ScenicSpotsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -12,6 +13,7 @@ const ScenicSpotsPage = () => {
   // 获取景点类型列表
   const [spotType, setspotType] = useState([]);
   const navigate = useNavigate();
+  const { touristId } = useSelector((state) => state.user);
 
   useEffect(() => {
     let timer; // 用于最小加载时间
@@ -123,6 +125,12 @@ const ScenicSpotsPage = () => {
             btn: [1, 2, 5],
           };
 
+          const favoriteData = {
+            touristId: touristId,
+            businessType: 1,
+            businessId: item.spot_id,
+          };
+
           // 给每个Card传递对象并添加key
           return (
             <Card
@@ -130,10 +138,12 @@ const ScenicSpotsPage = () => {
               boxStyle={boxStyle}
               cardData={cardData}
               reservationForm={{
+                business_type: 1,
                 item_name: item.spot_name,
                 single_price: item.ticket_price,
               }}
               onClick={() => navigate(`/scenicSpotsDetail/${item.spot_id}`)}
+              favoriteData={favoriteData}
             />
           );
         })}

@@ -1,12 +1,14 @@
 import { CommonForm, DialogCommon } from '@/components';
-import { useFirstEnterNav } from '@/hook';
+import { useEditConfirm, useFirstEnterNav } from '@/hook';
 import {
   usePaWEditForm,
   usePhoneEditForm,
 } from '@/hook/formFields/useEditForm';
 import { useUserForm } from '@/hook/formFields/useUserForm';
+import { useUserConfirm } from '@/hook/useUserConfirm';
 import { Menu, Radio, Switch } from 'antd';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
 // 导航菜单项
 const items = [
@@ -36,41 +38,6 @@ const items = [
   { type: 'divider' },
 ];
 
-// 个人信息
-const user = {
-  // user_id: 1,
-  identity_type: 1,
-  user_name: '荣昌游客',
-  phone: '13800001111',
-  password: '123456a',
-  avatar:
-    'https://tse4-mm.cn.bing.net/th/id/OIP-C.dL40B4NwCkdjug6poBJ6bQAAAA?w=198&h=198&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
-  // created_time: '2026-04-20T10:19:55.337782+00:00',
-  privacyData: [
-    '我是一名热爱旅行、尤其钟情于重庆荣昌文旅风光的游客。喜欢打卡每一处古镇老街，探寻非遗背后的匠人故事，品尝地道的荣昌卤鹅、黄凉粉等特色美食，感受山水间的烟火气。每次来到荣昌，都能被这里的历史文化、自然风光和热情的民风打动，希望用脚步丈量荣昌的每一寸土地，用镜头记录这座城市的独特魅力，也期待在旅途中遇见更多志同道合的朋友，一起解锁更多荣昌的隐藏宝藏。',
-  ],
-  tourists: {
-    email: 'visitor@rc.com',
-    // email: null,
-    wallet: 500.0,
-    privacy_settings: true,
-    notify_settings: null,
-  },
-};
-// 修改表单
-// 手机号
-const editPhone = {
-  oldPhone: user.phone,
-  newPhone: '',
-  code: '', //验证码固定为111111
-};
-// 密码
-const editPaW = {
-  oldPassword: user.password,
-  newPassword: '',
-  passwordAgain: '',
-};
-
 // 通知设置的开关配置
 const notifySwitchItems = [
   { key: 'system', text: '系统通知' },
@@ -94,11 +61,55 @@ const Setting = () => {
     'touristNav',
   );
   // 获取个人信息表单
+  const { currentUser, userPrivacyData, touristId } = useSelector(
+    (state) => state.user,
+  );
+  // const userId = currentUser?.user_id;
+
+  const user = {
+    identity_type: currentUser.identity_type,
+    user_name: currentUser.user_name,
+    phone: currentUser.phone,
+    password: currentUser.password,
+    avatar: currentUser.avatar,
+    privacyData: [userPrivacyData.signature],
+    tourists: {
+      email: userPrivacyData.email,
+      wallet: userPrivacyData.wallet,
+      privacy_settings: userPrivacyData.privacy_settings,
+      notify_settings: userPrivacyData.notify_settings,
+    },
+  };
+  // 修改表单
+  // 手机号
+  const editPhone = {
+    oldPhone: user.phone,
+    newPhone: '',
+    code: '', //验证码固定为111111
+  };
+  // 密码
+  const editPaW = {
+    oldPassword: user.password,
+    newPassword: '',
+    passwordAgain: '',
+  };
+
   const {
     form: userForm,
     formFields: userFormFields = [],
     initialValues: userInitialValues,
   } = useUserForm({ user });
+
+  // 组件挂载后，强制设置表单初始值
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (userForm) {
+        userForm.setFieldsValue(userInitialValues);
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [userForm, userInitialValues]);
 
   // 获取个人信息修改表单
   const [editType, setEditType] = useState(1);
@@ -114,53 +125,57 @@ const Setting = () => {
     initialValues: paWInitialValues,
   } = usePaWEditForm(editPaW);
 
+  // 确保表单挂载后再设置值，以免表单还未挂载但初始值研究渲染完成
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (phoneForm) {
+        phoneForm.setFieldsValue(phoneInitialValues);
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [phoneForm, phoneInitialValues]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (paWForm) {
+        paWForm.setFieldsValue(paWInitialValues);
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  });
+
   // 控制个人信息修改弹窗开关
   const [isShowDialog, setIsShowDialog] = useState(false);
   // 游客的个人信息中的邮箱是否已经填写（是否有初始值）
   const touristsEmail = user.tourists.email;
-
-  // 封装根据弹窗类型获取表单配置的函数
-  const getFormConfig = useCallback(
-    (type) => {
-      if (type === 1) {
-        return {
-          form: phoneForm,
-          formFields: phoneFormFields,
-          initialValues: phoneInitialValues,
-          title: '手机号',
-        };
-      } else if (type === 2) {
-        return {
-          form: paWForm,
-          formFields: paWFormFields,
-          initialValues: paWInitialValues,
-          title: '密码',
-        };
-      } else return {};
-    },
-    [
-      phoneForm,
-      phoneFormFields,
-      phoneInitialValues,
-      paWForm,
-      paWFormFields,
-      paWInitialValues,
-    ],
-  );
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   // 个人信息修改弹窗数据
   const dialogData = useMemo(() => {
-    if (editType === 1 || editType === 2) {
-      const config = getFormConfig(editType);
-
+    if (editType === 1) {
       return {
         type: 1,
-        title: `修改${config.title}`,
+        title: '修改手机号',
         data: {
           formType: 'edit',
-          form: config.form,
-          initialValues: config.initialValues,
-          formFields: config.formFields,
+          form: phoneForm,
+          initialValues: phoneInitialValues,
+          formFields: phoneFormFields,
+          maxWidth: 500,
+        },
+
+        width: 500,
+      };
+    } else if (editType === 2) {
+      return {
+        type: 1,
+        title: '修改密码',
+        data: {
+          formType: 'edit',
+          form: paWForm,
+          initialValues: paWInitialValues,
+          formFields: paWFormFields,
           maxWidth: 500,
         },
 
@@ -176,8 +191,23 @@ const Setting = () => {
         },
         width: 400,
       };
+    } else {
+      return {
+        type: 2,
+        data: {},
+        width: 400,
+      };
     }
-  }, [editType, getFormConfig, touristsEmail]);
+  }, [
+    editType,
+    touristsEmail,
+    phoneForm,
+    phoneInitialValues,
+    phoneFormFields,
+    paWForm,
+    paWInitialValues,
+    paWFormFields,
+  ]);
 
   // 打开弹窗点击事件
   const handleOpenDialog = (type) => {
@@ -185,17 +215,61 @@ const Setting = () => {
     setIsShowDialog(true);
   };
 
+  const { contextHolder: userHolder, handleUserConfirm } = useUserConfirm(
+    userForm,
+    currentUser,
+    touristId,
+    userPrivacyData,
+  );
   // 保存个人信息表单
   const handleSaveForm = () => {
-    userForm.validateFields().then((values) => {
-      console.log('保存个人信息:', values);
-    });
+    try {
+      handleUserConfirm();
+    } catch (error) {
+      console.error('保存个人信息失败！请重试！', error);
+    }
   };
 
   // 隐私设置中的公开评论单选框
   const [privacyComment, setPrivacyComment] = useState(
     user.tourists.privacy_settings,
   );
+
+  // 弹窗关闭事件
+  const handleCancel = () => {
+    switch (editType) {
+      case 1:
+        phoneForm.resetFields();
+        break;
+      case 2:
+        paWForm.resetFields();
+        break;
+    }
+
+    setIsShowDialog(false);
+  };
+
+  const { contextHolder, phoneConfirm, passwordConfirm } = useEditConfirm(
+    phoneForm,
+    paWForm,
+    currentUser,
+    setConfirmLoading,
+    setIsShowDialog,
+  );
+  // 弹窗提交事件
+  const handleConfirm = async () => {
+    try {
+      if (editType === 1) {
+        phoneConfirm();
+      }
+
+      if (editType === 2) {
+        passwordConfirm();
+      }
+    } catch (error) {
+      console.error('表单提交失败', error);
+    }
+  };
 
   return (
     <div>
@@ -220,6 +294,8 @@ const Setting = () => {
         {/* 个人信息页面 */}
         {menuSelectedKey === 'personal' && (
           <div className="mt-10">
+            {userHolder}
+
             <div className="flex">
               <CommonForm
                 formType="user"
@@ -228,16 +304,16 @@ const Setting = () => {
                 initialValues={userInitialValues}
                 formFields={userFormFields || {}}
               />
-
+              {contextHolder}
               {/* 修改按钮 */}
               <div className="mt-57 ml-26">
                 <div
                   className="btn3 mb-5.5"
-                  onClick={() => handleOpenDialog(1)}
+                  onClick={() => handleOpenDialog(2)}
                 >
                   修改
                 </div>
-                <div className="btn3" onClick={() => handleOpenDialog(2)}>
+                <div className="btn3" onClick={() => handleOpenDialog(1)}>
                   修改
                 </div>
               </div>
@@ -314,12 +390,11 @@ const Setting = () => {
         {/* 个人信息修改弹窗和邮箱弹窗 */}
         <DialogCommon
           isShowDialog={isShowDialog}
-          onCancel={() => {
-            setIsShowDialog(false);
-          }}
+          onCancel={handleCancel}
           dialogData={dialogData}
-          onOk={() => setIsShowDialog(false)}
+          onOk={handleConfirm}
           initialValue={touristsEmail && touristsEmail}
+          confirmLoading={confirmLoading}
         />
       </div>
     </div>
