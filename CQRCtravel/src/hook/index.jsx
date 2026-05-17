@@ -12,6 +12,7 @@ import { useFavoriteStatus } from './useFavoriteStatus';
 import { useReserveConfirm } from './useResereConfirm';
 import { useEditConfirm } from './useEditConfirm';
 import { useAddItinerary } from './useAddItinerary';
+import { useIsTourist } from './useIsTourist';
 
 export {
   useFirstEnterNav,
@@ -27,4 +28,5 @@ export {
   useReserveConfirm,
   useEditConfirm,
   useAddItinerary,
+  useIsTourist,
 };

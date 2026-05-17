@@ -60,6 +60,8 @@ const Setting = () => {
   const { currentUser, userPrivacyData, touristId } = useSelector(
     (state) => state.user,
   );
+  // 邮箱的全局消息
+  const [messageApi, contextHolder] = message.useMessage();
 
   const user = {
     identity_type: currentUser.identity_type,
@@ -143,7 +145,7 @@ const Setting = () => {
     }, 0);
 
     return () => clearTimeout(timer);
-  });
+  }, [paWForm, paWInitialValues]);
 
   // 控制个人信息修改弹窗开关
   const [isShowDialog, setIsShowDialog] = useState(false);
@@ -151,8 +153,6 @@ const Setting = () => {
   const touristsEmail = user.tourists.email;
   const [confirmLoading, setConfirmLoading] = useState(false);
 
-  // 邮箱的全局消息
-  const [messageApi, emailHolder] = message.useMessage();
   // 通知设置的数组
   const [notifySettings, setNotifySettings] = useState(
     notify_settings || {
@@ -227,11 +227,12 @@ const Setting = () => {
     setIsShowDialog(true);
   };
 
-  const { contextHolder: userHolder, handleUserConfirm } = useUserConfirm(
+  const { handleUserConfirm } = useUserConfirm(
     userForm,
     currentUser,
     touristId,
     userPrivacyData,
+    messageApi,
   );
   // 保存个人信息表单
   const handleSaveForm = () => {
@@ -278,12 +279,13 @@ const Setting = () => {
     setIsShowDialog(false);
   };
 
-  const { contextHolder, phoneConfirm, passwordConfirm } = useEditConfirm(
+  const { phoneConfirm, passwordConfirm } = useEditConfirm(
     phoneForm,
     paWForm,
     currentUser,
     setConfirmLoading,
     setIsShowDialog,
+    messageApi,
   );
   // 弹窗提交事件
   const handleConfirm = (formValue) => {
@@ -371,12 +373,11 @@ const Setting = () => {
           mode="inline"
           items={items}
         />
+        {contextHolder}
 
         {/* 个人信息页面 */}
         {menuSelectedKey === 'personal' && (
           <div className="mt-10">
-            {userHolder}
-
             <div className="flex">
               <CommonForm
                 formType="user"
@@ -385,7 +386,6 @@ const Setting = () => {
                 initialValues={userInitialValues}
                 formFields={userFormFields || {}}
               />
-              {contextHolder}
               {/* 修改按钮 */}
               <div className="mt-57 ml-26">
                 <div
@@ -412,7 +412,6 @@ const Setting = () => {
         {/* 安全设置页面 */}
         {menuSelectedKey === 'security' && (
           <div className="ml-15 py-10">
-            {emailHolder}
             <div className="text-xl font-semibold">
               {touristsEmail ? '修改' : '绑定'}邮箱
             </div>

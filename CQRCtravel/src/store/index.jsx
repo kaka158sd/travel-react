@@ -29,6 +29,8 @@ import walletReducer from './modules/wallet';
 import { setWallet } from './modules/wallet';
 import customItemReducer from './modules/customItem';
 import { setCustomItem, setCustomLoading } from './modules/customItem';
+import heritageReducer from './modules/heritage';
+import { setHeritage, setHeritageLoading } from './modules/heritage';
 
 export default configureStore({
   reducer: {
@@ -36,6 +38,7 @@ export default configureStore({
     favorite: favoriteReducer,
     wallet: walletReducer,
     customItem: customItemReducer,
+    heritage: heritageReducer,
   },
 });
 
@@ -61,4 +64,6 @@ export {
   setWallet,
   setCustomItem,
   setCustomLoading,
+  setHeritage,
+  setHeritageLoading,
 };

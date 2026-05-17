@@ -245,6 +245,7 @@ export const useAddHeritageForm = (params = {}) => {
         isAllowClear: true,
         isShowSearch: true,
         options: heritageTypeOptions,
+        notFoundContent: '暂无非遗类型，请前往账户信息处设置您的从事领域！',
       },
       column: 'left',
     },
@@ -318,7 +319,6 @@ export const useAddHeritageForm = (params = {}) => {
       formConfig: {
         placeholder: '请输入需要提前预约的天数...',
         min: 1,
-        defaultValue: 1,
       },
       column: 'right',
     },

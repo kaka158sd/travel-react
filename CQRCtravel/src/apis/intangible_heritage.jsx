@@ -39,3 +39,44 @@ export function getIntangibleHeritageDetailAPI(id) {
     },
   });
 }
+
+// 新增非遗数据
+
+export function postIntangibleHeritageAPI(data) {
+  return request({
+    url: '/intangible_heritage',
+    method: 'POST',
+    data,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+// 编辑非遗数据
+
+export function updateIntangibleHeritageAPI(id, data) {
+  return request({
+    url: '/intangible_heritage',
+    method: 'PATCH',
+    params: {
+      heritage_id: `eq.${id}`,
+    },
+    data,
+    headers: {
+      Prefer: 'return=representation',
+    },
+  });
+}
+
+// 删除非遗数据
+
+export function deleteIntangibleHeritageAPI(id) {
+  return request({
+    url: '/intangible_heritage',
+    method: 'DELETE',
+    params: {
+      heritage_id: `eq.${id}`,
+    },
+  });
+}

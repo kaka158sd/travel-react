@@ -11,7 +11,7 @@ export function setItineraryStorage(value) {
 export function getItineraryStorage() {
   try {
     const item = localStorage.getItem('itineraryPlan');
-    return item ? JSON.parse(item) : null;
+    return JSON.parse(item);
   } catch (error) {
     console.error('取本地存储的规划行程方案失败！', error);
   }

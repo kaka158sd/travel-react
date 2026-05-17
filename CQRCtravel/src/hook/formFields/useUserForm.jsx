@@ -141,6 +141,8 @@ export const useUserForm = (params = {}) => {
                 ? `修改${labelText2}`
                 : `填写${labelText2}`,
               options: heritageTypeOptions,
+              mode: 2,
+              allowClear: true,
             },
           },
         },

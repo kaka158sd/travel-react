@@ -90,11 +90,43 @@ export function getInheritorsAPI() {
   });
 }
 
+// 更新文化传承人数据
+
+export function updateInheritorAPI(id, data) {
+  return request({
+    url: '/inheritors',
+    method: 'PATCH',
+    params: {
+      inheritor_id: `eq.${id}`,
+    },
+    data,
+    headers: {
+      Prefer: 'return=representation',
+    },
+  });
+}
+
 // 获取文旅局管理员列表
 
 export function getAdminsAPI() {
   return request({
     url: '/admins',
     method: 'GET',
+  });
+}
+
+// 更新文旅局管理员数据
+
+export function updateAdminAPI(id, data) {
+  return request({
+    url: '//admins',
+    method: 'PATCH',
+    params: {
+      tourist_id: `eq.${id}`,
+    },
+    data,
+    headers: {
+      Prefer: 'return=representation',
+    },
   });
 }

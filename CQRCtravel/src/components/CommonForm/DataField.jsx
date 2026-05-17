@@ -16,6 +16,7 @@ import {
   Popconfirm,
   TimePicker,
   Spin,
+  Tag,
 } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import { runes } from 'runes2';
@@ -436,7 +437,7 @@ const DataField = ({
             {...rest}
             value={value}
             onChange={onChange}
-            mode={formConfig.mode === 2 ? 'multiple' : undefined}
+            mode={formConfig.mode === 2 && 'multiple'}
             allowClear={formConfig.isAllowClear && formConfig.mode === 2}
             placeholder={formConfig.placeholder || ''}
             showSearch={
@@ -481,14 +482,21 @@ const DataField = ({
         {type === 'dialog' && (
           <div
             className="input-style flex justify-between relative cursor-default"
+            style={{ width: formConfig.width || 400 }}
             {...rest}
           >
             {/* 拿到值后渲染页面 */}
-            <p className={`${value || rest.value ? 'text-black' : ''}`}>
+            <div
+              className={`${value || rest.value ? 'text-black' : ''} ${Array.isArray(value || rest.value) && 'flex gap-1 flex-wrap'}`}
+            >
               {value || rest.value
-                ? value || rest.value
+                ? Array.isArray(value || rest.value)
+                  ? (value || rest.value).map((item, index) => (
+                      <Tag key={index}>{item}</Tag>
+                    ))
+                  : value || rest.value
                 : `请选择你的${formConfig.labelText}`}
-            </p>
+            </div>
 
             {/* 当第一次点击按钮时直接打开弹窗，之后都需要经过气泡确认框才能打开弹窗 */}
             {value || rest.value ? (

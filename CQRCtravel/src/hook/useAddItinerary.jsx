@@ -8,8 +8,11 @@ import {
 import { setCustomItem, setCustomLoading } from '@/store';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useIsTourist } from '.';
 
 export function useAddItinerary(touristId, processData, messageApi) {
+  const isTourist = useIsTourist();
+
   // 解构数据
   const { business_type, business_id, business_name, price } = processData;
   const dispatch = useDispatch();
@@ -58,16 +61,26 @@ export function useAddItinerary(touristId, processData, messageApi) {
 
   // 初始化，依赖变化时重新请求
   useEffect(() => {
+    // 非游客身份直接返回空对象，不执行任何逻辑
+    if (!isTourist) {
+      return;
+    }
+
     if (!touristId) {
       messageApi.error('游客id不存在！请登录！');
       return;
     }
 
     getCustomItem();
-  }, [getCustomItem, messageApi, touristId]);
+  }, [getCustomItem, messageApi, touristId, isTourist]);
 
   // 加入行程点击事件
   const handleAddItinerary = async () => {
+    // 非游客身份直接返回空对象，不执行任何逻辑
+    if (!isTourist) {
+      return;
+    }
+
     if (loading) {
       messageApi.error('操作太快了，请稍后！');
       return;

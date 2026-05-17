@@ -3,7 +3,7 @@
 import { Form } from 'antd';
 
 // 手机号
-export const usePhoneEditForm = (edit = {}) => {
+export const usePhoneEditForm = (editPhone = {}) => {
   const [form] = Form.useForm();
 
   const formFields = [
@@ -13,7 +13,7 @@ export const usePhoneEditForm = (edit = {}) => {
       rules: 'required phone',
       type: 'textInput',
       formConfig: {
-        placeholder: edit.oldPhone || '',
+        placeholder: editPhone.oldPhone || '原手机号',
         isDisabled: true,
         width: 250,
       },
@@ -43,12 +43,12 @@ export const usePhoneEditForm = (edit = {}) => {
   return {
     form,
     formFields,
-    initialValues: edit,
+    initialValues: editPhone,
   };
 };
 
 // 密码
-export const usePaWEditForm = (edit = {}) => {
+export const usePaWEditForm = (editPaW = {}) => {
   const [form] = Form.useForm();
 
   const formFields = [
@@ -89,6 +89,6 @@ export const usePaWEditForm = (edit = {}) => {
   return {
     form,
     formFields,
-    initialValues: edit,
+    initialValues: editPaW,
   };
 };

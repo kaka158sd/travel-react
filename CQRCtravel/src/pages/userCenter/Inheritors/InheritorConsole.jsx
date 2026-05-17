@@ -1,33 +1,40 @@
 import { Avatar, Tag } from 'antd';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { UserOutlined } from '@ant-design/icons';
-import { inheritLevelTagsConfig } from '@/store';
+import { defaultAvatar, inheritLevelTagsConfig } from '@/store';
 import { Card } from '@/components';
 
 const InheritorConsole = () => {
-  const { user = {} } = useOutletContext() || {};
+  const {
+    user = {},
+    orderList = [],
+    heritageLength = 0,
+  } = useOutletContext() || {};
 
   const navigate = useNavigate();
+
+  // 销售额计算
+  const totalMoney = orderList.reduce((num, item) => item.total_price + num, 0);
 
   // 数据卡片的配置
   const dataCardFields = [
     {
       iconColor: 0,
       icon: 'icon-renminbi',
-      title: '月销售额',
-      data: 2000,
+      title: '销售额',
+      data: totalMoney,
     },
     {
       iconColor: 1,
       icon: 'icon-survey',
-      title: '月订单量',
-      data: 22,
+      title: '订单量',
+      data: orderList.length,
     },
     {
       iconColor: 3,
       icon: 'icon-zhenshikexin',
       title: '传承项目数量',
-      data: 2,
+      data: heritageLength,
     },
   ];
 
@@ -38,7 +45,7 @@ const InheritorConsole = () => {
         <div className="flex items-center gap-4">
           <div className="border border-slate-100 w-fit">
             <Avatar
-              src={user.avatar}
+              src={user.avatar || defaultAvatar}
               size={120}
               icon={<UserOutlined />}
               shape="square"
@@ -57,11 +64,14 @@ const InheritorConsole = () => {
                       {item.text}
                     </Tag>
                   ))}
-              {user.privacyData[2] && (
-                <Tag variant="filled" color="#f50">
-                  {user.privacyData[2]}
-                </Tag>
-              )}
+              <span className="flex gap-1">
+                {user.privacyData[2] &&
+                  user.privacyData[2].map((item, index) => (
+                    <Tag variant="filled" color="#f50" key={index}>
+                      {item}
+                    </Tag>
+                  ))}
+              </span>
             </div>
           </div>
         </div>

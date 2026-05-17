@@ -9,6 +9,10 @@ import {
   setTouristIdStorage,
   getUserPrivacyData,
   setUserPrivacyData as setPrivacy,
+  getInheritorIdStorage,
+  setInheritorIdStorage,
+  getAdminIdStorage,
+  setAdminIdStorage,
 } from '@/utils';
 
 const userStore = createSlice({
@@ -17,6 +21,8 @@ const userStore = createSlice({
   initialState: () => ({
     token: getToken() || '',
     touristId: getTouristIdStorage() || '', // 游客ID（全局可用）
+    inheritorId: getInheritorIdStorage() || '', //传承人ID
+    adminId: getAdminIdStorage() || '', //管理员ID
     currentUser: getUserStorage() || {},
     userPrivacyData: getUserPrivacyData() || {},
   }),
@@ -31,6 +37,14 @@ const userStore = createSlice({
       state.touristId = action.payload;
       setTouristIdStorage(action.payload);
     },
+    setInheritorId(state, action) {
+      state.inheritorId = action.payload;
+      setInheritorIdStorage(action.payload);
+    },
+    setAdminId(state, action) {
+      state.adminId = action.payload;
+      setAdminIdStorage(action.payload);
+    },
     setCurrentUser(state, action) {
       state.currentUser = action.payload;
       // 在本地中存一份
@@ -44,6 +58,8 @@ const userStore = createSlice({
     clearUser(state) {
       ((state.token = ''),
         (state.touristId = ''),
+        (state.inheritorId = ''),
+        (state.adminId = ''),
         (state.currentUser = {}),
         (state.userPrivacyData = {}));
     },
@@ -54,6 +70,8 @@ const userStore = createSlice({
 const {
   setToken,
   setTouristId,
+  setInheritorId,
+  setAdminId,
   setCurrentUser,
   setUserPrivacyData,
   clearUser,
@@ -114,6 +132,8 @@ export {
   fetchLogin,
   setToken,
   setTouristId,
+  setInheritorId,
+  setAdminId,
   setCurrentUser,
   setUserPrivacyData,
   clearUser,

@@ -2,7 +2,6 @@
 
 import { updateUserAPI } from '@/apis/users';
 import { setCurrentUser } from '@/store';
-import { message } from 'antd';
 import { useDispatch } from 'react-redux';
 
 export const useEditConfirm = (
@@ -11,9 +10,9 @@ export const useEditConfirm = (
   currentUser,
   setConfirmLoading,
   setIsShowDialog,
+  messageApi,
 ) => {
   // 全局信息
-  const [messageApi, contextHolder] = message.useMessage();
   const dispatch = useDispatch();
   const userId = currentUser?.user_id;
 
@@ -23,6 +22,7 @@ export const useEditConfirm = (
     try {
       const values = await phoneForm.validateFields();
       const { newPhone, oldPhone, code } = values;
+      // console.log('Phone values:', values);
 
       // 新的手机号不能与旧的相同
       if (newPhone === oldPhone) {
@@ -63,6 +63,7 @@ export const useEditConfirm = (
     try {
       const values = await paWForm.validateFields();
       const { oldPassword, newPassword, passwordAgain } = values;
+      // console.log('修改密码表单：', values);
 
       // 新的密码不能与旧的相同
       if (newPassword === oldPassword) {
@@ -87,10 +88,10 @@ export const useEditConfirm = (
         }),
       );
 
-      messageApi.success('修改手机号成功！');
+      messageApi.success('修改密码成功！');
       setIsShowDialog(false);
     } catch (error) {
-      console.error('手机号表单提交失败', error);
+      console.error('密码表单提交失败', error);
       console.log('失败字段', error.errorFields);
     } finally {
       setConfirmLoading(false);
@@ -98,7 +99,6 @@ export const useEditConfirm = (
   };
 
   return {
-    contextHolder,
     phoneConfirm,
     passwordConfirm,
   };

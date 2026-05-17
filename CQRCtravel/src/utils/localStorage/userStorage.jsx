@@ -11,7 +11,7 @@ export function setUserStorage(value) {
 export function getUserStorage() {
   try {
     const item = localStorage.getItem('currentUser');
-    return item ? JSON.parse(item) : null;
+    return JSON.parse(item);
   } catch (error) {
     console.error(error);
   }

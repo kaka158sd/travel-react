@@ -21,6 +21,7 @@ import {
 import {
   useAddItinerary,
   useFavoriteStatus,
+  useIsTourist,
   useReservationForm,
   useReserveConfirm,
 } from '@/hook';
@@ -77,6 +78,7 @@ const IntangibleHeritageDetail = () => {
   const [comments, setComments] = useState([]);
   const { touristId: currentUserId } = useSelector((state) => state.user);
   const [messageApi, contextHolder] = message.useMessage();
+  const isTourist = useIsTourist();
 
   // 获取评论列表（复用你原有的逻辑）
   useEffect(() => {
@@ -178,7 +180,11 @@ const IntangibleHeritageDetail = () => {
     { label: '非遗地址', value: heritageData?.heritage_address },
     {
       label: '评分',
-      render: () => <>{heritageData?.score} 分</>,
+      render: () => (
+        <>
+          {heritageData?.score === 0 ? '暂无评分' : `${heritageData?.score} 分`}
+        </>
+      ),
     },
   ];
 
@@ -441,24 +447,26 @@ const IntangibleHeritageDetail = () => {
       </div>
 
       {/* 按钮 */}
-      <div className="absolute top-70 -left-40 flex flex-col gap-8">
-        {btnConfig.map((item) => (
-          <Tooltip title={item.title} key={item.title}>
-            {favLoading || customLoading ? (
-              <Loading size="small" className="my-1" />
-            ) : (
-              <Button
-                variant="solid"
-                color={item.color}
-                shape="circle"
-                icon={item.icon}
-                size="large"
-                onClick={item.onClick}
-              />
-            )}
-          </Tooltip>
-        ))}
-      </div>
+      {isTourist && (
+        <div className="absolute top-70 -left-40 flex flex-col gap-8">
+          {btnConfig.map((item) => (
+            <Tooltip title={item.title} key={item.title}>
+              {favLoading || customLoading ? (
+                <Loading size="small" className="my-1" />
+              ) : (
+                <Button
+                  variant="solid"
+                  color={item.color}
+                  shape="circle"
+                  icon={item.icon}
+                  size="large"
+                  onClick={item.onClick}
+                />
+              )}
+            </Tooltip>
+          ))}
+        </div>
+      )}
 
       {/* 立即预约弹窗 */}
       <DialogCommon

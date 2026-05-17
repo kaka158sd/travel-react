@@ -2,12 +2,12 @@
 
 // 存
 export function setTokenStorage(token) {
-  localStorage.setItem('token_key', token);
+  localStorage.setItem('token_key', JSON.stringify(token));
 }
 
 // 取
 export function getToken() {
-  return localStorage.getItem('token_key');
+  return JSON.parse(localStorage.getItem('token_key'));
 }
 
 // 删

@@ -8,7 +8,7 @@ export function setUserPrivacyData(data) {
 // 取
 export function getUserPrivacyData() {
   const data = localStorage.getItem('userPrivacyData');
-  return data ? JSON.parse(data) : {};
+  return JSON.parse(data);
 }
 
 // 删

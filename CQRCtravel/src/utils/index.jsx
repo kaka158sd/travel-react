@@ -6,7 +6,7 @@ import {
   getDetailActivityItems,
   getDetailNewItems,
   getDetailPeopleItems,
-} from './detailDialog/detailDialog';
+} from './dialog/detailDialog';
 import { setTokenStorage, getToken, removeToken } from './localStorage/token';
 import {
   setUserStorage,
@@ -23,7 +23,13 @@ import {
   getTouristIdStorage,
   setTouristIdStorage,
   removeTouristIdStorage,
-} from './localStorage/touristId';
+  setInheritorIdStorage,
+  getInheritorIdStorage,
+  removeInheritorIdStorage,
+  setAdminIdStorage,
+  getAdminIdStorage,
+  removeAdminIdStorage,
+} from './localStorage/userId';
 import {
   setUserPrivacyData,
   getUserPrivacyData,
@@ -38,6 +44,8 @@ import {
   removeItineraryStorage,
 } from './localStorage/itineraryStorage';
 import { isFirstVisitToday } from './isFirstVisitToday';
+import { strToArray, arrayToStr } from './format';
+import { compareHeritageLevel } from './compareHeritageLevel';
 
 export {
   request,
@@ -73,4 +81,13 @@ export {
   getItineraryStorage,
   removeItineraryStorage,
   isFirstVisitToday,
+  setInheritorIdStorage,
+  getInheritorIdStorage,
+  removeInheritorIdStorage,
+  setAdminIdStorage,
+  getAdminIdStorage,
+  removeAdminIdStorage,
+  strToArray,
+  arrayToStr,
+  compareHeritageLevel,
 };

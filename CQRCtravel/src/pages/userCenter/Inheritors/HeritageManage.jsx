@@ -1,57 +1,237 @@
+import {
+  getIntangibleHeritageDetailAPI,
+  postIntangibleHeritageAPI,
+  updateIntangibleHeritageAPI,
+} from '@/apis/intangible_heritage';
 import { Card, CommonForm, NoData } from '@/components';
 import { useAddHeritageForm } from '@/hook';
-import { useNavigate, useOutletContext } from 'react-router-dom';
-
-// 传承项目数据
-const addHeritage = {
-  heritage_id: 5,
-  heritage_name: '荣昌缠丝拳',
-  heritage_type: '传统武术',
-  heritage_tags: ['非遗', '武术', '健身'],
-  heritage_image:
-    'https://tse3-mm.cn.bing.net/th/id/OIP-C.LHTSPRtPI1ZcHyPfKg5--AHaEK?w=295&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
-  heritage_desc:
-    '荣昌缠丝拳是重庆市级非遗，民间传统武术，刚柔并济、攻防兼备，可强身健体，历史悠久，是地方民俗体育与传统武学文化重要载体。',
-  score: 4.5,
-  price: 58.0,
-  reserve_weeks: 5,
-  experience_duration: 60,
-  notice: '穿着舒适运动鞋，动作幅度适中，听从教练口令。',
-  suitable_people: '青少年、成人',
-  heritage_level: '市级',
-  heritage_address: '荣昌区体育馆',
-  story_id: 13,
-  inheritor_id: 1,
-  shelf_status: 1,
-  created_time: '2026-04-19T13:54:35.026635+00:00',
-  updated_time: '2026-04-19T13:54:35.026635+00:00',
-  comments: null,
-};
+import { compareHeritageLevel } from '@/utils';
+import { message } from 'antd';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 const HeritageManage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     inheritorNav = '/inheritorCenter/heritageManage/heritageAdd',
     heritageTypeOptions = [],
     heritageTagsOptions = [],
     humanStoriesOptions = [],
     myHeritageList = [],
+    inheritorId = 0,
+    userPrivacyData = {},
+    heritage = [],
+    getIntangibleHeritageList,
   } = useOutletContext() || {};
+
+  const query = new URLSearchParams(location.search);
+  const id = query.get('id');
+  // console.log('页面路由中是否有id：', id);
+
+  // 判断模式
+  const isEdit = !!id; // 有 id = 编辑模式
+
+  const [messageApi, contextHolder] = message.useMessage();
+  const [editItem, setEditItem] = useState(null);
 
   // 传承项目表单
   const { form, formFields, initialValues } = useAddHeritageForm({
-    addHeritage,
+    addHeritage: editItem ? editItem : {},
     heritageTypeOptions,
     heritageTagsOptions,
     humanStoriesOptions,
   });
 
+  // 如果是编辑 → 请求详情回显
+  useEffect(() => {
+    if (!isEdit) return; // 新增模式直接跳过
+
+    const getDetail = async () => {
+      // 请求详情接口
+      const res = await getIntangibleHeritageDetailAPI(id);
+      const data = res.data[0];
+
+      setEditItem(data);
+      form.setFieldsValue(data);
+    };
+
+    getDetail();
+  }, [id, isEdit, form]);
+
+  // 监听 editItem 变化，更新表单
+  useEffect(() => {
+    if (editItem) {
+      form.setFieldsValue(editItem);
+    }
+  }, [editItem, form]);
+
+  // console.log('编辑传承项目表单初始值：', initialValues);
+  // console.log('编辑传承项目editItem：', editItem);
+
+  // 干净、无残留、不占内存的 Promise 等待
+  const delay = (ms) => {
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        resolve();
+      }, ms);
+
+      // Promise 完成后自动清除定时器
+      return () => clearTimeout(timer);
+    });
+  };
+
+  function deepEqual(a, b) {
+    // 类型不同直接返回 false
+    if (typeof a !== typeof b) return false;
+
+    // 基本类型/ null/ undefined
+    if (a === null || typeof a !== 'object') return a === b;
+
+    // 数组
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) return false;
+      return a.every((item, i) => deepEqual(item, b[i]));
+    }
+
+    // 对象
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+
+    return keysA.every(
+      (key) => keysB.includes(key) && deepEqual(a[key], b[key]),
+    );
+  }
+
+  // 处理新增或者编辑按钮点击事件
+  const handleAddOrEdit = async () => {
+    try {
+      const values = await form.validateFields();
+      const { heritage_name, heritage_level } = values;
+      console.log('表单的值：', values);
+
+      // 获取非遗列表中所以的名称
+      const allHeritageNames = heritage.map((item) => item.heritage_name);
+
+      // 判断当前传承项目等级是否高于自身的传承级别
+      const isLevelOk = compareHeritageLevel(
+        userPrivacyData.inherit_level,
+        heritage_level,
+      );
+      if (isLevelOk === -1) {
+        messageApi.error(
+          '当前的传承项目等级大于您自身的传承级别，请修改项目的等级！',
+        );
+        return;
+      }
+
+      // 新增
+      if (!id) {
+        // 判断当前的传承项目名称是否已有记录
+        const isNameExisted = allHeritageNames.includes(heritage_name);
+        if (isNameExisted) {
+          messageApi.error('当前名称已注册，请更换非遗名称！');
+          return;
+        }
+
+        try {
+          await postIntangibleHeritageAPI({
+            ...values,
+            score: 0,
+            inheritor_id: inheritorId,
+            shelf_status: 0,
+          });
+
+          messageApi.success('新增传承项目成功！可前往传承项目列表查看~');
+
+          // 清空表单
+          form.resetFields();
+
+          await getIntangibleHeritageList();
+        } catch (error) {
+          console.error('新增传承项目接口请求失败！', error);
+          messageApi.error('新增传承项目接口请求失败！');
+          if (error.response?.data) {
+            console.error('Supabase 错误详情:', error.response.data);
+            // 提示用户具体错误
+            messageApi.error(
+              `保存失败：${error.response.data.message || '数据格式错误'}`,
+            );
+          } else {
+            messageApi.error('保存失败，请检查表单数据');
+          }
+        }
+      }
+
+      // 编辑
+      try {
+        // 过滤editItem数据
+        const itemData = {
+          experience_duration: editItem.experience_duration,
+          heritage_address: editItem.heritage_address,
+          heritage_desc: editItem.heritage_desc,
+          heritage_image: editItem.heritage_image,
+          heritage_level: editItem.heritage_level,
+          heritage_name: editItem.heritage_name,
+          heritage_tags: editItem.heritage_tags,
+          heritage_type: editItem.heritage_type,
+          notice: editItem.notice,
+          price: editItem.price,
+          reserve_weeks: editItem.reserve_weeks,
+          story_id: editItem.story_id,
+          suitable_people: editItem.suitable_people,
+        };
+
+        // 数据改变了，则为true
+        const isContextChange = deepEqual(values, itemData);
+        // console.log('isContextChange', isContextChange);
+        // console.log('values', values);
+        // console.log('editItem', itemData);
+        // 数据未发生改变
+        if (isContextChange) {
+          messageApi.info('未发现修改内容，请修改后再保存！');
+          return;
+        }
+
+        // 更新数据
+        await updateIntangibleHeritageAPI(id, values);
+        // 刷新
+        await getIntangibleHeritageList();
+        messageApi.info('编辑成功！');
+
+        await delay(1000);
+        navigate('/inheritorCenter/heritageManage');
+        setEditItem(null);
+        window.location.reload();
+      } catch (error) {
+        console.error('编辑传承项目失败！', error);
+        messageApi.error('编辑传承项目失败！请重试！');
+        if (error.response?.data) {
+          console.error('Supabase 错误详情:', error.response.data);
+          // 提示用户具体错误
+          messageApi.error(
+            `保存失败：${error.response.data.message || '数据格式错误'}`,
+          );
+        }
+      }
+
+      // 编辑
+    } catch (error) {
+      console.error('新增传承项目失败！', error);
+      messageApi.error('新增传承项目失败！请重试！');
+    }
+  };
+
   return (
     <div>
-      {/* 新增页面 */}
+      {/* 新增/编辑页面 */}
       {inheritorNav === '/inheritorCenter/heritageManage/heritageAdd' && (
         <div>
-          <div className="text-2xl font-semibold mb-4">新增传承项目</div>
+          {contextHolder}
+          <div className="text-2xl font-semibold mb-4">
+            {id ? '编辑' : '新增'}传承项目
+          </div>
 
           {/* 新增表单 */}
           <div className="w-310 py-6 border border-slate-200 bg-white rounded-2xl">
@@ -65,7 +245,9 @@ const HeritageManage = () => {
 
             {/* 新增/编辑按钮 */}
             <div className="w-30 mx-auto">
-              <div className="btn2">新增</div>
+              <div className="btn2" onClick={handleAddOrEdit}>
+                {id ? '保存编辑' : '新增'}
+              </div>
             </div>
           </div>
         </div>
@@ -107,12 +289,26 @@ const HeritageManage = () => {
                   btn: [3, 4],
                 };
 
+                // 删除数据
+                const deleteData = {
+                  type: 1,
+                  id: item.heritage_id,
+                };
+
+                // 编辑所需数据
+                const editData = {
+                  type: 1,
+                  id: item.heritage_id,
+                };
+
                 // 给每个Card传递对象并添加key
                 return (
                   <Card
                     key={item.heritage_id}
                     boxStyle={boxStyle}
                     cardData={cardData}
+                    deleteData={deleteData}
+                    editData={editData}
                     onClick={() =>
                       navigate(`/intangibleHeritageDetail/${item.heritage_id}`)
                     }

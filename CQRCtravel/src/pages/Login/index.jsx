@@ -3,10 +3,17 @@ import { Carousel, Typography, Button, Form, Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { HomeOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-import { getTouristsAPI, getUsersAPI } from '@/apis/users';
+import {
+  getAdminsAPI,
+  getInheritorsAPI,
+  getTouristsAPI,
+  getUsersAPI,
+} from '@/apis/users';
 import {
   fetchLogin,
+  setAdminId,
   setCurrentUser,
+  setInheritorId,
   setToken,
   setTouristId,
   setUserPrivacyData,
@@ -65,6 +72,8 @@ const Login = () => {
   const [loginForm] = Form.useForm();
   const [users, setUsers] = useState([]);
   const [tourists, setTourists] = useState([]);
+  const [inheritors, setInheritors] = useState([]);
+  const [admins, setAdmins] = useState([]);
   const [messageApi, contextHolder] = message.useMessage();
   const dispatch = useDispatch();
 
@@ -87,9 +96,27 @@ const Login = () => {
         console.error('获取游客列表失败', error);
       }
     };
+    const getInheritorsList = async () => {
+      try {
+        const res = await getInheritorsAPI();
+        setInheritors(res.data);
+      } catch (error) {
+        console.error('获取传承人列表失败', error);
+      }
+    };
+    const getAdminsList = async () => {
+      try {
+        const res = await getAdminsAPI();
+        setAdmins(res.data);
+      } catch (error) {
+        console.error('获取管理员列表失败', error);
+      }
+    };
 
     getUsersList();
     getTouristsList();
+    getInheritorsList();
+    getAdminsList();
   }, []);
 
   const handleLogin = async (values) => {
@@ -102,6 +129,7 @@ const Login = () => {
       // 登录成功，存储 token 、用户信息、游客id
       dispatch(setToken(token));
       dispatch(setCurrentUser(user));
+
       // 获取游客ID
       if (user?.identity_type === 1) {
         const touristItem = tourists.find(
@@ -116,11 +144,35 @@ const Login = () => {
           messageApi.error('游客信息异常，请联系管理员');
           return; // 终止流程，不跳转
         }
-      } else {
-        // 非游客用户，清空游客ID
-        dispatch(setTouristId(''));
       }
-
+      // 获取传承人ID
+      else if (user?.identity_type === 2) {
+        const inheritorItem = inheritors.find(
+          (item) => item.user_id === user?.user_id,
+        );
+        if (inheritorItem) {
+          dispatch(setInheritorId(inheritorItem.inheritor_id));
+          dispatch(setUserPrivacyData(inheritorItem));
+        } else {
+          console.error('❌ 未找到对应的传承人数据:', user.user_id);
+          messageApi.error('传承人信息异常，请联系管理员');
+          return; // 终止流程，不跳转
+        }
+      }
+      // 获取管理员ID
+      else if (user?.identity_type === 3) {
+        const adminItem = admins.find((item) => item.user_id === user?.user_id);
+        if (adminItem) {
+          dispatch(setAdminId(adminItem.admin_id));
+          dispatch(setUserPrivacyData(adminItem));
+        } else {
+          console.error('❌ 未找到对应的管理员数据:', user.user_id);
+          messageApi.error('管理员信息异常，请联系文旅局系统管理员！');
+          return; // 终止流程，不跳转
+        }
+      } else {
+        messageApi.error('当前用户身份异常！请联系客服或者重试！');
+      }
       messageApi.success('登录成功');
 
       const matchedNav = navCenter.find(

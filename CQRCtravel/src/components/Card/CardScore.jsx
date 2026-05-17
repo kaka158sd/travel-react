@@ -4,8 +4,12 @@ const CardScore = ({ scoreRate }) => {
       {/* 评分 */}
       <div className="flex justify-between">
         <div className="flex items-center">
-          <i className="iconfont icon-favorite-filling text-amber-500 mr-0.5" />
-          <span>{scoreRate.score}分</span>
+          {scoreRate.score !== 0 && (
+            <i className="iconfont icon-favorite-filling text-amber-500 mr-0.5" />
+          )}
+          <span>
+            {scoreRate.score === 0 ? '暂无评分' : `${scoreRate.score} 分`}
+          </span>
         </div>
         {/* 价格-number + string / 已体验人数-number */}
         <div>

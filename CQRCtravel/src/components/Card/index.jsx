@@ -17,56 +17,13 @@ import {
   useReserveConfirm,
   useAddItinerary,
 } from '@/hook';
-
-// 设置卡片的宽高、背景色、图片高度
-// const boxStyle = {
-//   width: 'w-[350px]',
-//   height: 'h-[800px]',
-//   bgColor: 'bg-slate-100',
-//   imgHeight: 'h-[200px]',
-// };
-
-// 模型1的数据示例
-// const cardData = {
-//   mode: 1,
-//   iconType: 2, //图标类型：1：没有背景色（如首页卡片）；2：有背景色（如交通卡片）；3：图标在左（如功能卡片）
-//   icon: 'icon-hot-for-ux-fill',
-//   title: '古镇人文',
-//   desc: '结合价洁通用、适合命最优统一单词',
-//   content: [
-//     'asasasasa阿还差我画荻和丸i好好玩ID好哇i',
-//     'ssssssss服务费服务',
-//     'ssssssssssss',
-//   ],
-// };
-
-// 模型2的数据示例
-// const cardData = {
-//   mode: 2,
-//   img: 'https://tse2-mm.cn.bing.net/th/id/OIP-C._sCwb2964-lNV5AVQGHlOwHaFD?w=271&h=185&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
-//   type: '非遗古镇',
-//   title: '安陶小镇',
-//   desc: '结合价洁通用、适合命最优统一单词结合价洁通用、适合命最优统一单词结合价洁通用、适合命最优统一单词结合价洁通用、适合命最优统一单词结合价洁通用、适合命最优统一单词',
-//   tags: ['免费入园', '陶艺体验'],
-//   score: 4.8,
-//   rate: '10',
-//   category: 3, //1：价格-number；2：价格-string；3：已体验人数-number
-//   content: {
-//     label: ['预约周期', '体验时长', '适合人群'],
-//     contents: ['提前2天', '90分钟', '年轻人、亲子年轻人、亲子'], //若为数字则与相应文字拼接变成字符串
-//   },
-//   btn: [5], //1:行程；2：预约；3：编辑；4：删除；5：收藏（最好按顺序写，因为当第一项为5时不显示1-4按钮）
-// };
-
-// 模型3的数据示例
-// const cardData = {
-//   mode: 3,
-//   iconType: 2, //1：游客的数据卡片（没有背景色,图标在上）；2：管理员数据卡片（有背景色,图标在右）
-//   iconColor: 0,
-//   icon: 'icon-hot-for-ux-fill',
-//   title: '待支付',
-//   data: 1,
-// };
+import {
+  deleteIntangibleHeritageAPI,
+  getIntangibleHeritageAPI,
+} from '@/apis/intangible_heritage';
+import { useDispatch } from 'react-redux';
+import { setHeritage } from '@/store';
+import { useNavigate } from 'react-router-dom';
 
 // 传递的reservationForm需要时一个订单的空表单 + 点击的相关数据，一旦提交则生成一个新的order并存入这个用户的订单中
 const Card = ({
@@ -77,6 +34,8 @@ const Card = ({
   favoriteData = {},
   reservationData = {},
   processData = {},
+  deleteData = {},
+  editData = {},
 }) => {
   // 图标配置
   const iconfont = [
@@ -105,6 +64,8 @@ const Card = ({
   const [confirmLoading, setConfirmLoading] = useState(false);
   // 全局消息
   const [messageApi, contextHolder] = message.useMessage();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // 预约弹窗传参数据
   const { form, formFields, initialValues } = useReservationForm(
@@ -152,6 +113,53 @@ const Card = ({
     loading: customLoading,
     handleAddItinerary,
   } = useAddItinerary(favoriteData?.touristId, processData, messageApi);
+
+  // 处理删除按钮点击事件
+  const handleBtnDelete = async () => {
+    if (!deleteData.id) {
+      messageApi.error('未获取需要删除的卡片，请重试！');
+      return;
+    }
+
+    try {
+      const confirm = window.confirm('是否要删除点击的传承项目？');
+
+      // 删除非遗
+      if (deleteData.type === 1 && confirm) {
+        try {
+          await deleteIntangibleHeritageAPI(deleteData.id);
+          const res = await getIntangibleHeritageAPI();
+          dispatch(setHeritage(res.data));
+
+          messageApi.success('删除成功！');
+        } catch (error) {
+          console.error('删除非遗请求失败！', error);
+          messageApi.error('删除非遗请求失败！');
+        }
+      }
+    } catch (error) {
+      console.error('删除失败！', error);
+      messageApi.error('删除失败！');
+    }
+  };
+
+  // 处理编辑按钮点击事件
+  const handleBtnEdit = async () => {
+    if (!editData.id) {
+      messageApi.error('未获取需要编辑的数据，请重试！');
+      return;
+    }
+
+    try {
+      // 非遗编辑
+      if (editData.type === 1) {
+        // 跳转至传承项目管理页面（默认是新增/编辑页面）
+        navigate(`/inheritorCenter/heritageManage?id=${editData.id}`);
+      }
+    } catch (error) {
+      console.error('编辑失败！', error);
+    }
+  };
 
   return (
     <div className={`${boxStyle.width} ${boxStyle.height}`}>
@@ -221,7 +229,9 @@ const Card = ({
             )}
 
             {/* 评分价格 */}
-            {cardData.score && <CardScore scoreRate={scoreRate} />}
+            {(cardData.score || cardData.score === 0) && (
+              <CardScore scoreRate={scoreRate} />
+            )}
 
             {/* 内容 */}
             {cardData.content && (
@@ -291,6 +301,7 @@ const Card = ({
                       className="btn2"
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleBtnEdit();
                       }}
                     >
                       <FormOutlined className="mr-2" />
@@ -303,6 +314,7 @@ const Card = ({
                       className="btn2"
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleBtnDelete();
                       }}
                     >
                       <DeleteOutlined className="mr-2 text-base" />

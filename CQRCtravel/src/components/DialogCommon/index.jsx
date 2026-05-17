@@ -98,7 +98,12 @@ const DialogCommon = ({
                 style={{ width: '100%' }}
                 options={dialogData?.data.options || []}
                 value={formValue}
-                onChange={(value) => setFormValue(value)}
+                onChange={(value) => {
+                  setFormValue(value);
+                  // console.log('下拉框的值：', value);
+                }}
+                mode={dialogData?.data.mode === 2 && 'multiple'}
+                allowClear={dialogData?.data.allowClear || false}
               />
             ) : (
               <Input
