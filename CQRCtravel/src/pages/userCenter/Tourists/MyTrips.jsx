@@ -1,5 +1,11 @@
-import { Title } from '@/components';
-import { rulesParse } from '@/utils';
+import { NoData, Title } from '@/components';
+import {
+  generateItinerary,
+  getItineraryStorage,
+  isFirstVisitToday,
+  rulesParse,
+  setItineraryStorage,
+} from '@/utils';
 import {
   Checkbox,
   DatePicker,
@@ -11,16 +17,22 @@ import {
   Tooltip,
   Tag,
   Divider,
+  message,
 } from 'antd';
 import {
-  StarOutlined,
   DeleteOutlined,
   FolderOpenOutlined,
   SendOutlined,
   ClearOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getCustomItemsAPI, updateCustomItemAPI } from '@/apis/trip';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCustomItem } from '@/store';
+import { useWatch } from 'antd/es/form/Form';
+import { getScenicSpotsAPI } from '@/apis/scenic_spots';
+import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
 
 // 标题数据
 const titleData = {
@@ -28,90 +40,319 @@ const titleData = {
   desc: '',
 };
 
-// 定制行程方案表单数据
-const tripFromData = {
-  trip_id: 7,
-  tourist_id: 1,
-  travel_days: 2,
-  interest_preferences: [1, 2],
-  crowd_type: 1,
-  planned_departure_time: '2025-10-01',
-  people_count: 2,
-  created_time: '2026-04-20T14:27:43.516169+00:00',
-};
-// 行程方案生成数据
-const tripData = {
-  plan_id: 3,
-  trip_id: 7,
-  business_items: [
-    {
-      sort_num: 1,
-      trip_day: 1,
-      item_name: '古佛山',
-      item_time: '8:00-11:00',
-      is_custom_item: false,
-    },
-    {
-      sort_num: 2,
-      trip_day: 1,
-      item_name: '万灵古镇',
-      item_time: '14:00-17:00',
-      is_custom_item: true,
-    },
-  ],
-  trip_start_time: '2025-10-01',
-  trip_end_time: '2025-10-02',
-  trip_name: '2天荣昌文化之旅',
-  created_time: '2026-04-20T14:27:43.516169+00:00',
-};
-// 自定义项目数据
-const customItemsData = [
-  {
-    custom_item_id: 7,
-    tourist_id: 1,
-    business_type: 1,
-    business_id: 1,
-    business_name: '万灵古镇',
-    is_added_to_custom: true,
-    is_added_to_trip: true,
-  },
-  {
-    custom_item_id: 8,
-    tourist_id: 1,
-    business_type: 2,
-    business_id: 1,
-    business_name: '荣昌陶烧制技艺',
-    is_added_to_custom: true,
-    is_added_to_trip: false,
-  },
-];
-
-// 行程预览区的按钮配置
-const tripPlanBtnConfig = [
-  { title: '收藏', color: 'primary', icon: <StarOutlined /> },
-  { title: '清空行程', color: 'danger', icon: <DeleteOutlined /> },
-];
-
-// 自定义项目景点、非遗相关配置
-const customTypeConfig = [
-  {
-    icon: 'icon-jingdian',
-    title: '景点',
-    items: customItemsData.filter((item) => item.business_type === 1),
-  },
-  {
-    icon: 'icon-hot-for-atmosphere',
-    title: '非遗',
-    items: customItemsData.filter((item) => item.business_type === 2),
-  },
-];
-
 const MyTrips = () => {
   const [tripForm] = Form.useForm();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  // 获取规划行程相关的数据
+  const { customItem = [] } = useSelector((state) => state.customItem);
+  // 选择的人群类型，控制人数的输入禁止与否
+  const crowdType = useWatch('crowd_type', tripForm);
+  // 判断是否为单人模式
+  const isSinglePerson = crowdType === 4;
+
+  const [spotList, setSpotList] = useState([]);
+  const [heritageList, setHeritageList] = useState([]);
+  const [messageApi, contextHolder] = message.useMessage();
+
+  // 行程方案
+  const [generatedItinerary, setGeneratedItinerary] = useState(null);
+  // 每天第一次进入清空，否则读取本地
+  useEffect(() => {
+    let timer;
+
+    // 判断是否是今天第一次进入
+    const firstVisit = isFirstVisitToday();
+
+    if (firstVisit) {
+      console.log('今天第一次进入页面->清空行程');
+      timer = setTimeout(() => {
+        setGeneratedItinerary(null);
+        setItineraryStorage('');
+      }, 0);
+    } else {
+      console.log('读取本地存储');
+      const localData = getItineraryStorage();
+      if (localData) {
+        timer = setTimeout(() => {
+          setGeneratedItinerary(localData);
+        }, 0);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, []);
+  // 监听方案变化，从本地中读取
+  useEffect(() => {
+    let timer;
+    const item = getItineraryStorage();
+    if (generatedItinerary !== item) {
+      timer = setTimeout(() => {
+        setGeneratedItinerary(item);
+      }, 0);
+    }
+
+    return () => clearTimeout(timer);
+  }, [generatedItinerary]);
+
+  // 获取接口数据
+  useEffect(() => {
+    const getSpotList = async () => {
+      try {
+        const res = await getScenicSpotsAPI();
+        setSpotList(res.data);
+      } catch (error) {
+        console.error('获取景点列表失败！', error);
+      }
+    };
+    const getHeritageList = async () => {
+      try {
+        const res = await getIntangibleHeritageAPI();
+        setHeritageList(res.data);
+      } catch (error) {
+        console.error('获取非遗列表失败！', error);
+      }
+    };
+
+    getSpotList();
+    getHeritageList();
+  }, []);
+
+  // 在页面渲染之前给自定义全局变量赋值
+  useEffect(() => {
+    const getCustomItemsList = async () => {
+      try {
+        const res = await getCustomItemsAPI();
+        dispatch(setCustomItem(res.data));
+        // console.log(res.data);
+      } catch (err) {
+        console.error('获取自定义接口数据失败！', err);
+      }
+    };
+
+    getCustomItemsList();
+  }, [dispatch]);
+
+  // 监听表单的人群类型是否为独自，实则设置人数为 1
+  useEffect(() => {
+    if (isSinglePerson) {
+      tripForm.setFieldValue('people_count', 1);
+    }
+  }, [isSinglePerson, tripForm]);
+
+  // 自定义项目景点、非遗相关配置
+  const customTypeConfig = [
+    {
+      icon: 'icon-jingdian',
+      title: '景点',
+      items: Array.isArray(customItem)
+        ? customItem
+            .filter(
+              (item) => item.business_type === 1 && item.is_added_to_custom,
+            )
+            .map((item) => ({ ...item, key: item.custom_item_id }))
+        : [],
+    },
+    {
+      icon: 'icon-hot-for-atmosphere',
+      title: '非遗',
+      items: Array.isArray(customItem)
+        ? customItem
+            .filter(
+              (item) => item.business_type === 2 && item.is_added_to_custom,
+            )
+            .map((item) => ({ ...item, key: item.custom_item_id }))
+        : [],
+    },
+  ];
 
   // 自定义项目中的标签多选
   const [multipleSelectedTags, setMultipleSelectedTags] = useState([]);
+  useEffect(() => {
+    let timer;
+
+    if (Array.isArray(customItem)) {
+      const selectedIds = customItem
+        .filter((item) => item.is_added_to_trip === true)
+        .map((item) => item.custom_item_id);
+
+      timer = setTimeout(() => {
+        setMultipleSelectedTags(selectedIds);
+      }, 0);
+    }
+
+    return () => clearTimeout(timer);
+  }, [customItem]);
+
+  // 封装更新数据的接口请求，并异步全局变量
+  async function fetchData(id, data) {
+    // 自定义项目
+    try {
+      await updateCustomItemAPI(id, data);
+
+      const updatedItems = customItem.map((item) =>
+        item.custom_item_id === id ? { ...item, ...data } : item,
+      );
+
+      dispatch(setCustomItem(updatedItems));
+    } catch (error) {
+      console.error('更新自定义数据失败！', error);
+    }
+  }
+
+  // 处理需要传递的数据
+  const customData =
+    customItem.length > 0
+      ? customItem.map((item) => {
+          return {
+            ...item,
+            is_custom_item: true,
+          };
+        })
+      : [];
+  const spotData = spotList.map((item) => {
+    return {
+      business_type: 1,
+      business_id: item.spot_id,
+      business_name: item.spot_name,
+      price: item.ticket_price,
+      is_custom_item: false,
+    };
+  });
+  const heritageData = heritageList.map((item) => {
+    return {
+      business_type: 2,
+      business_id: item.heritage_id,
+      business_name: item.heritage_name,
+      price: item.price,
+      is_custom_item: false,
+    };
+  });
+  const systemData = [...spotData, ...heritageData];
+
+  // 生成生成点击事件:获取生成行程表单数据
+  const handleGenerateIhinerary = async () => {
+    try {
+      const values = await tripForm.validateFields();
+      // console.log('生成行程表单的全部值', values);
+      // console.log('实际传递给生成器的自定义项目：', customData);
+
+      const itinerary = await generateItinerary(values, customData, systemData);
+
+      if (itinerary) {
+        // console.log('最终行程：', itinerary);
+        setGeneratedItinerary(itinerary);
+        setItineraryStorage(itinerary);
+      }
+    } catch (error) {
+      console.error('生成行程表单操作失败！', error);
+    }
+  };
+
+  // 自定义项目区的onChange事件
+  const handleCheckTag = (value) => {
+    setMultipleSelectedTags(value);
+
+    // 拿到上一次的选中状态
+    const prevSelected = multipleSelectedTags;
+
+    // 找到新增的项
+    const clickedTagValue = value.find((v) => !prevSelected.includes(v));
+    // 找到移除的项
+    const removedTagValue = prevSelected.find((v) => !value.includes(v));
+
+    // console.log('你点击的标签ID：', clickedTagValue);
+    // console.log('你点击removedTagValue：', removedTagValue);
+    if (clickedTagValue) {
+      fetchData(clickedTagValue, { is_added_to_trip: true });
+    }
+    if (removedTagValue) {
+      fetchData(removedTagValue, { is_added_to_trip: false });
+    }
+    // console.log('value', value);
+    // console.log('标签：', multipleSelectedTags);
+  };
+
+  // 行程预览区的按钮配置
+  const tripPlanBtnConfig = [
+    {
+      title: '清空行程',
+      color: 'danger',
+      icon: <DeleteOutlined />,
+      onClick: () => {
+        setGeneratedItinerary(null);
+        setItineraryStorage(null);
+      },
+    },
+  ];
+
+  // 处理导出行程方案点击事件
+  const handleExportPlan = () => {
+    if (!generatedItinerary) {
+      messageApi.info('还未生成行程方案，请点击左侧「生成行程」按钮');
+      return;
+    }
+
+    // 自定义文本格式
+    let text = `${generatedItinerary.trip_name}\n`;
+    text += `出行人数：${generatedItinerary.people_count}人\n`;
+    text += `总价：${generatedItinerary.totalPrice}元\n`;
+    text += `出行日期：${generatedItinerary.trip_start_time} ~ ${generatedItinerary.trip_end_time}\n`;
+    text += `\n===== 行程明细 =====\n`;
+
+    // 按天数分组整理
+    const days = {};
+    generatedItinerary.business_items.forEach((item) => {
+      if (!days[item.trip_day]) days[item.trip_day] = [];
+      days[item.trip_day].push(item);
+    });
+
+    // 生成按天的行程文本
+    Object.keys(days)
+      .sort()
+      .forEach((day) => {
+        text += `\n第${day}天：\n`;
+        days[day].forEach((item) => {
+          const priceStr = item.price === 0 ? '免费' : `￥${item.price}元`;
+          text += `📅  ${item.item_time} ${item.item_name} (${priceStr})\n`;
+        });
+      });
+
+    // 创建 Blob
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+
+    // 创建下载链接并触发下载
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${generatedItinerary.trip_name}.txt`;
+    a.click();
+
+    // 释放内存
+    URL.revokeObjectURL(url);
+  };
+
+  // 处理自定义项目区的清空自定义项目点击事件
+  const handleClearCustom = async (title, items) => {
+    // 提示框
+    const confirm = window.confirm(`是否要清空自定义区的${title}项目?`);
+
+    // 需要清空则将该类型下的所有数据都进行修改
+    // console.log('items', items);
+
+    if (confirm) {
+      await Promise.all(
+        items.map((item) =>
+          fetchData(item.custom_item_id, {
+            is_added_to_custom: false,
+            is_added_to_trip: false,
+          }),
+        ),
+      );
+
+      messageApi.success(`清空${title}自定义项目成功！`);
+    }
+  };
 
   return (
     <div>
@@ -197,26 +438,36 @@ const MyTrips = () => {
                   rules={rulesParse('required')}
                   initialValue={1}
                 >
-                  <InputNumber min={1} precision={0} style={{ width: 140 }} />
+                  <InputNumber
+                    min={1}
+                    precision={0}
+                    style={{ width: 140 }}
+                    disabled={isSinglePerson}
+                  />
+                </Form.Item>
+
+                <Form.Item>
+                  {/* 按钮 */}
+                  <div className="w-50 flex items-center gap-8 mx-auto">
+                    {/* 生成行程 */}
+                    <div className="btn2" onClick={handleGenerateIhinerary}>
+                      生成行程
+                    </div>
+
+                    {/* 重置 */}
+                    <Button onClick={() => tripForm.resetFields()}>重置</Button>
+                  </div>
                 </Form.Item>
               </Form>
-
-              {/* 按钮 */}
-              <div className="w-50 flex items-center gap-8 mx-auto">
-                {/* 生成行程 */}
-                <div className="btn2">生成行程</div>
-
-                {/* 重置 */}
-                <Button>重置</Button>
-              </div>
             </div>
           </div>
 
           {/* 行程预览 */}
           <div className="flex-1 border-2 rounded-xl border-amber-600 px-6 py-4">
+            {contextHolder}
+
             <div className="flex justify-between">
               <div className="text-lg font-semibold">行程预览</div>
-
               {/* 操作按钮：收藏、清空 */}
               <div className="flex gap-2">
                 {tripPlanBtnConfig.map((item) => (
@@ -227,6 +478,7 @@ const MyTrips = () => {
                       variant="solid"
                       size="large"
                       icon={item.icon}
+                      onClick={() => item.onClick()}
                     />
                   </Tooltip>
                 ))}
@@ -234,9 +486,106 @@ const MyTrips = () => {
             </div>
 
             {/* 预览区 */}
-            <div className="w-full h-100 border rounded-lg bg-neutral-50 p-4 mt-4">
+            <div className="w-full h-100 border rounded-lg bg-neutral-50 p-4 mt-4 overflow-y-auto">
               {/* 打印行程方案 */}
-              <div></div>
+              {/* 预览区 */}
+              {generatedItinerary ? (
+                <div className="space-y-4">
+                  {/* 行程标题 */}
+                  <div className="text-center border-b pb-3">
+                    <h2 className="text-xl font-bold text-gray-800">
+                      {generatedItinerary.trip_name}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      旅行时间：{generatedItinerary.trip_start_time} -{' '}
+                      {generatedItinerary.trip_end_time}
+                    </p>
+                  </div>
+
+                  {/* 按天分组的行程列表 */}
+                  <div className="space-y-6">
+                    {
+                      // 先按 trip_day 分组
+                      Object.entries(
+                        generatedItinerary.business_items.reduce(
+                          (acc, item) => {
+                            if (!acc[item.trip_day]) acc[item.trip_day] = [];
+                            acc[item.trip_day].push(item);
+                            return acc;
+                          },
+                          {},
+                        ),
+                      ).map(([day, items]) => (
+                        <div key={day} className="space-y-2">
+                          {/* 第几天的标题 */}
+                          <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                            <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-sm">
+                              第{day}天
+                            </span>
+                          </h3>
+                          {/* 当天项目列表 */}
+                          <div className="space-y-2 pl-4">
+                            {items.map((item) => (
+                              <div
+                                key={item.sort_num}
+                                className="flex justify-between items-center py-2 border-b border-gray-100"
+                              >
+                                <div className="flex items-center gap-3">
+                                  {/* 时间 + 项目名 */}
+                                  <span className="text-gray-600 text-sm">
+                                    📅 {item.item_time}
+                                  </span>
+                                  <span className="text-gray-800">
+                                    {item.item_name}
+                                    {item.is_custom_item && (
+                                      <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                                        自定义
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                {/* 价格 */}
+                                {item.price > 0 ? (
+                                  <span className="text-gray-600 text-sm">
+                                    ￥{item.price}/人
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-600 text-sm">
+                                    免费
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+
+                  {/* 总价区域 */}
+                  <div className="pt-4 border-t mt-4">
+                    <div className="flex justify-between items-center text-gray-700">
+                      <span className="font-medium">
+                        行程项目总价：
+                        {generatedItinerary.business_items
+                          .map((item) => `${item.item_name} ¥${item.price}`)
+                          .join(' + ')}
+                        {'  '}x
+                        <span className="text-base text-blue-400 ml-2">
+                          {generatedItinerary.people_count} 人
+                        </span>
+                      </span>
+                      <span className="font-bold text-lg text-amber-700">
+                        = ￥{generatedItinerary.totalPrice}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full h-full text-gray-400 flex justify-center items-center text-base">
+                  请点击「生成行程」按钮预览行程方案
+                </div>
+              )}
             </div>
 
             {/* 导出行程、路线推荐 */}
@@ -246,6 +595,7 @@ const MyTrips = () => {
                 shape="round"
                 icon={<FolderOpenOutlined />}
                 variant="outlined"
+                onClick={handleExportPlan}
               >
                 导出行程
               </Button>
@@ -270,45 +620,57 @@ const MyTrips = () => {
           </div>
 
           <div className="px-4">
-            {customTypeConfig.map((item) =>
-              item.items.length > 0 ? (
-                <div key={item.title}>
-                  {/* 自定义项目类型 */}
-                  <div className="flex items-center gap-10">
-                    <div className="w-20 flex justify-center items-center text-base cursor-pointer border-b-2 border-b-amber-200 hover:border hover:border-amber-500 hover:rounded-lg hover:shadow-lg hover:shadow-amber-200">
-                      <i
-                        className={`iconfont ${item.icon} text-color1`}
-                        style={{ fontSize: 22 }}
-                      />
-                      <span>{item.title}</span>
+            {customTypeConfig
+              .filter((item) => item.items.length > 0)
+              .map((item) =>
+                item.items.length > 0 ? (
+                  <div key={item.title}>
+                    {/* 自定义项目类型 */}
+                    <div className="flex items-center gap-10">
+                      <div className="w-20 flex justify-center items-center text-base cursor-pointer border-b-2 border-b-amber-200 hover:border hover:border-amber-500 hover:rounded-lg hover:shadow-lg hover:shadow-amber-200">
+                        <i
+                          className={`iconfont ${item.icon} text-color1`}
+                          style={{ fontSize: 22 }}
+                        />
+                        <span>{item.title}</span>
+                      </div>
+                      <Tooltip title="清除全部项目">
+                        <ClearOutlined
+                          className="cursor-pointer text-xl text-color1"
+                          onClick={() =>
+                            handleClearCustom(item.title, item.items)
+                          }
+                        />
+                      </Tooltip>
                     </div>
-                    <Tooltip title="清除全部项目">
-                      <ClearOutlined className="cursor-pointer text-xl text-color1" />
-                    </Tooltip>
-                  </div>
 
-                  {/* 自定义项目内容 */}
-                  <div className="flex gap-8 my-4">
-                    <Tag.CheckableTagGroup
-                      multiple
-                      options={item.items.map((item) => item.business_name)}
-                      value={multipleSelectedTags}
-                      onChange={setMultipleSelectedTags}
-                      styles={{ item: { fontSize: 14, padding: '4px 10px' } }}
+                    {/* 自定义项目内容,只能清空全部 */}
+                    <div className="flex gap-8 my-4">
+                      <Tag.CheckableTagGroup
+                        multiple
+                        options={item.items.map((item) => {
+                          return {
+                            label: item.business_name,
+                            value: item.custom_item_id,
+                          };
+                        })}
+                        value={multipleSelectedTags}
+                        onChange={handleCheckTag}
+                        styles={{ item: { fontSize: 14, padding: '4px 10px' } }}
+                      />
+                    </div>
+
+                    <Divider
+                      style={{
+                        borderColor:
+                          'rgb(203 213 225 / var(--tw-text-opacity, 1))',
+                      }}
                     />
                   </div>
-
-                  <Divider
-                    style={{
-                      borderColor:
-                        'rgb(203 213 225 / var(--tw-text-opacity, 1))',
-                    }}
-                  />
-                </div>
-              ) : (
-                <></>
-              ),
-            )}
+                ) : (
+                  <NoData key={item.title} />
+                ),
+              )}
           </div>
         </div>
       </div>

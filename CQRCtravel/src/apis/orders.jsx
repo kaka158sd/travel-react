@@ -32,6 +32,9 @@ export function updateOrderstAPI(id, data) {
       order_id: `eq.${id}`,
     },
     data: data,
+    headers: {
+      Prefer: 'return=representation',
+    },
   });
 }
 

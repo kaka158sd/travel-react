@@ -11,8 +11,8 @@ import {
   clearLocalStorage,
   setNavActiveKey,
 } from '@/utils';
-import { clearUser, defaultAvatar } from '@/store';
-import { useDispatch } from 'react-redux';
+import { clearUser, defaultAvatar, setCurrentUser } from '@/store';
+import { useDispatch, useSelector } from 'react-redux';
 
 // 顶部导航列表
 const tabs = [
@@ -41,6 +41,8 @@ const LogoutIcon = (
 
 const Layout = () => {
   const dispatch = useDispatch();
+  // 获取当前用户
+  const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation(); // 获取当前路由路径
 
@@ -105,18 +107,11 @@ const Layout = () => {
     navigate(tab.path);
   };
 
-  // 获取当前用户
-  // 用 useState 存储用户状态
-  const [currentUser, setCurrentUser] = useState(() => {
-    // 组件挂载时，先从 localStorage 读取一次
-    return getUserStorage() || null;
-  });
-
   // 监听 localStorage 变化，实现同步更新
   useEffect(() => {
     const handleStorageChange = () => {
       const user = getUserStorage() || null;
-      setCurrentUser(user);
+      dispatch(setCurrentUser(user));
     };
 
     // 监听 storage 事件（跨标签页也会触发）
@@ -129,7 +124,7 @@ const Layout = () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('userStorageChange', handleStorageChange);
     };
-  }, []);
+  }, [dispatch]);
 
   // 退出登陆
   const logout = useCallback(() => {

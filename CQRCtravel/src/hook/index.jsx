@@ -11,6 +11,7 @@ import { useUserForm } from './formFields/useUserForm';
 import { useFavoriteStatus } from './useFavoriteStatus';
 import { useReserveConfirm } from './useResereConfirm';
 import { useEditConfirm } from './useEditConfirm';
+import { useAddItinerary } from './useAddItinerary';
 
 export {
   useFirstEnterNav,
@@ -25,4 +26,5 @@ export {
   useFavoriteStatus,
   useReserveConfirm,
   useEditConfirm,
+  useAddItinerary,
 };

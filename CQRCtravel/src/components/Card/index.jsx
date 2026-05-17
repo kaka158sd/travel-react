@@ -1,9 +1,11 @@
-import { Tag } from 'antd';
+import { message, Tag, Spin } from 'antd';
 import {
   MedicineBoxOutlined,
   BookOutlined,
   FormOutlined,
   DeleteOutlined,
+  CarryOutOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import CardIcon from './CardIcon';
 import CardScore from './CardScore';
@@ -13,6 +15,7 @@ import {
   useReservationForm,
   useFavoriteStatus,
   useReserveConfirm,
+  useAddItinerary,
 } from '@/hook';
 
 // 设置卡片的宽高、背景色、图片高度
@@ -73,6 +76,7 @@ const Card = ({
   reservationForm,
   favoriteData = {},
   reservationData = {},
+  processData = {},
 }) => {
   // 图标配置
   const iconfont = [
@@ -99,6 +103,8 @@ const Card = ({
   const [isShowReservationDialog, setIsShowReservationDialog] = useState(false);
   // 控制提交按钮的异步关闭
   const [confirmLoading, setConfirmLoading] = useState(false);
+  // 全局消息
+  const [messageApi, contextHolder] = message.useMessage();
 
   // 预约弹窗传参数据
   const { form, formFields, initialValues } = useReservationForm(
@@ -119,7 +125,7 @@ const Card = ({
     width: 750,
   };
 
-  const { submitReservation, reserveContextHolder } = useReserveConfirm();
+  const { submitReservation } = useReserveConfirm(messageApi);
 
   // 预约表单提交
   const handleReserveConfirm = () =>
@@ -132,16 +138,20 @@ const Card = ({
     );
 
   // 获取收藏状态
-  const {
-    isFavorite,
-    loading,
-    handleFavClick,
-    contextHolder: favContextHolder,
-  } = useFavoriteStatus(
+  const { isFavorite, loading, handleFavClick } = useFavoriteStatus(
     favoriteData?.touristId,
     favoriteData?.businessType,
     favoriteData?.businessId,
+    messageApi,
   );
+
+  // 获取项目与行程的数据
+  const {
+    isExisted,
+    existItem,
+    loading: customLoading,
+    handleAddItinerary,
+  } = useAddItinerary(favoriteData?.touristId, processData, messageApi);
 
   return (
     <div className={`${boxStyle.width} ${boxStyle.height}`}>
@@ -233,16 +243,32 @@ const Card = ({
             {/* 按钮(1:行程；2：预约；3：编辑；4：删除；5：收藏) */}
             {cardData.btn ? (
               <div>
+                {contextHolder}
                 <div className="flex py-6 gap-4 w-full">
                   {cardData.btn.includes(1) && (
                     <button
                       className="btn2"
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleAddItinerary();
                       }}
                     >
-                      <MedicineBoxOutlined className="mr-2" />
-                      加入行程
+                      {customLoading ? (
+                        <Spin
+                          indicator={<LoadingOutlined spin />}
+                          size="small"
+                        />
+                      ) : isExisted && existItem.is_added_to_custom ? (
+                        <>
+                          <CarryOutOutlined className="mr-2" />
+                          已加入行程
+                        </>
+                      ) : (
+                        <>
+                          <MedicineBoxOutlined className="mr-2" />
+                          加入行程
+                        </>
+                      )}
                     </button>
                   )}
 
@@ -255,7 +281,6 @@ const Card = ({
                         setIsShowReservationDialog(true);
                       }}
                     >
-                      {reserveContextHolder}
                       <BookOutlined className="mr-2" />
                       立即预约
                     </button>
@@ -296,7 +321,6 @@ const Card = ({
                         <Loading size="small" className="my-8" />
                       ) : (
                         <div>
-                          {favContextHolder}
                           <i
                             className={`iconfont ${isFavorite ? 'icon-favorite-filling' : 'icon-favorite visibility'}  text-color1`}
                             style={{ fontSize: '24px' }}

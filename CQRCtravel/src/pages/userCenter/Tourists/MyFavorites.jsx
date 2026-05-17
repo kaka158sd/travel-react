@@ -7,20 +7,17 @@ import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
 import { getFoodsAPI } from '@/apis/foods';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 
 // 导航配置项
 const menuItems = [
   { key: 'spot', label: '景点' },
   { key: 'heritage', label: '非遗' },
   { key: 'food', label: '美食' },
-  { key: 'trip', label: '行程' },
 ];
 
 const MyFavorites = () => {
   const { favoritesData = [], touristId = 1 } = useOutletContext() || {};
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -312,13 +309,6 @@ const MyFavorites = () => {
             ) : (
               <NoData />
             )}
-          </>
-        )}
-
-        {/* 行程列表渲染 */}
-        {selectedMenu === 'trip' && (
-          <>
-            <NoData />
           </>
         )}
       </div>

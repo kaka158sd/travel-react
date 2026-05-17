@@ -131,6 +131,14 @@ const ScenicSpotsPage = () => {
             businessId: item.spot_id,
           };
 
+          // 处理的用于加入行程的数据
+          const processData = {
+            business_type: 1,
+            business_id: item.spot_id,
+            business_name: item.spot_name,
+            price: item.ticket_price,
+          };
+
           // 给每个Card传递对象并添加key
           return (
             <Card
@@ -144,6 +152,7 @@ const ScenicSpotsPage = () => {
               }}
               onClick={() => navigate(`/scenicSpotsDetail/${item.spot_id}`)}
               favoriteData={favoriteData}
+              processData={processData}
             />
           );
         })}

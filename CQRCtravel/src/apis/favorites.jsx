@@ -32,6 +32,9 @@ export function updateFavoriteAPI(id, data) {
       favorite_id: `eq.${id}`,
     },
     data: data,
+    headers: {
+      Prefer: 'return=representation',
+    },
   });
 }
 

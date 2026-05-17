@@ -71,7 +71,7 @@ const DataField = ({
 
   // 上传图片
   const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState();
+  const [imageUrl, setImageUrl] = useState('');
 
   // 用useRef存住form实例，以防customRequest 函数执行时，form 实例已经丢失 / 未定义了
   const formRef = useRef(form);
@@ -82,8 +82,12 @@ const DataField = ({
   useEffect(() => {
     // 每次form更新时，同步到ref中
     formRef.current = form;
-    if (type === 'upload' && srcRef.current) setImageUrl(srcRef.current);
-  }, [form, type]); //补全依赖
+    srcRef.current = formConfig?.src;
+    if (type === 'upload' && srcRef.current) {
+      const newUrl = value || srcRef.current || '';
+      setImageUrl(newUrl);
+    }
+  }, [form, type, formConfig?.src, value]); //补全依赖
 
   // 防止空项渲染
   if (!formConfig || !type) return <div style={{ display: 'none' }} />;
@@ -309,9 +313,7 @@ const DataField = ({
             // formConfig.name 不存在时，传空字符串或固定值，避免 undefined
             name={formConfig.name || 'avatar'}
             value={value}
-            onChange={(e) => {
-              onChange?.(e.target.value);
-            }}
+            onChange={() => {}}
             listType={
               formConfig.listType === 1 ? 'picture-card' : 'picture-circle'
             }
@@ -351,17 +353,17 @@ const DataField = ({
                   .getPublicUrl(uploadPath);
 
                 const publicUrl = urlData.publicUrl;
-                // console.log('生成的 URL：', publicUrl);
+                console.log('生成的 URL：', publicUrl);
 
                 // 4. 更新预览图 & 通知组件上传成功
                 if (isMounted.current) setImageUrl(publicUrl);
+                // 通知表单值更新
+                onChange?.(publicUrl);
 
                 // 只有form存在才赋值
                 const formInstance = formRef.current;
                 if (formInstance && formConfig?.name)
-                  formInstance.setFieldValue({
-                    [formConfig.name]: publicUrl,
-                  });
+                  formInstance.setFieldValue(formConfig.name, publicUrl);
 
                 // 通知 antd 上传完成
                 onSuccess(publicUrl);

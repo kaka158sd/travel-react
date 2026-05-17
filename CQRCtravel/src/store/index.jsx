@@ -27,12 +27,15 @@ import favoriteReducer from './modules/favorites';
 import { setFavoritesList, setLoading } from './modules/favorites';
 import walletReducer from './modules/wallet';
 import { setWallet } from './modules/wallet';
+import customItemReducer from './modules/customItem';
+import { setCustomItem, setCustomLoading } from './modules/customItem';
 
 export default configureStore({
   reducer: {
     user: userReducer,
     favorite: favoriteReducer,
     wallet: walletReducer,
+    customItem: customItemReducer,
   },
 });
 
@@ -56,4 +59,6 @@ export {
   setLoading,
   tagsColor,
   setWallet,
+  setCustomItem,
+  setCustomLoading,
 };

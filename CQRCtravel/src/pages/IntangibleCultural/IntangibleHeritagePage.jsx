@@ -140,6 +140,14 @@ const IntangibleHeritagePage = () => {
               inheritor_id: item.inheritor_id,
             };
 
+            // 处理的用于加入行程的数据
+            const processData = {
+              business_type: 2,
+              business_id: item.heritage_id,
+              business_name: item.heritage_name,
+              price: item.price,
+            };
+
             return (
               <Card
                 key={item.heritage_id}
@@ -152,6 +160,7 @@ const IntangibleHeritagePage = () => {
                 }}
                 favoriteData={favoriteData}
                 reservationData={reservationData}
+                processData={processData}
                 onClick={() =>
                   navigate(`/intangibleHeritageDetail/${item.heritage_id}`)
                 }

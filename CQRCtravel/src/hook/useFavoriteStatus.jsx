@@ -6,13 +6,17 @@ import {
   updateFavoriteAPI,
 } from '@/apis/favorites';
 import { setFavoritesList, setLoading } from '@/store';
-import { message } from 'antd';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 // 判断某个数据是否被收藏
 // 传入参数：当前用户id，业务类型，业务id
-export function useFavoriteStatus(touristId, businessType, businessId) {
+export function useFavoriteStatus(
+  touristId,
+  businessType,
+  businessId,
+  messageApi,
+) {
   // 收藏状态
   const [isFavorite, setIsFavorite] = useState(null);
   // 收藏列表
@@ -22,9 +26,8 @@ export function useFavoriteStatus(touristId, businessType, businessId) {
   const favorites = useSelector((state) => state.favorite.favoritesList);
   const loading = useSelector((state) => state.favorite.loading);
   const dispatch = useDispatch();
-  const [messageApi, contextHolder] = message.useMessage();
 
-  const getFavoritesList = async () => {
+  const getFavoritesList = useCallback(async () => {
     if (!touristId) return;
     dispatch(setLoading(true));
 
@@ -56,12 +59,12 @@ export function useFavoriteStatus(touristId, businessType, businessId) {
     } finally {
       dispatch(setLoading(false));
     }
-  };
+  }, [touristId, businessId, businessType, dispatch]);
 
   // 初始化，依赖变化时重新请求
   useEffect(() => {
     getFavoritesList();
-  }, [touristId, businessId, businessType]);
+  }, [getFavoritesList]);
 
   // 收藏点击方法
   const handleFavClick = async () => {
@@ -80,8 +83,8 @@ export function useFavoriteStatus(touristId, businessType, businessId) {
 
         // 给用户反馈
         newStatus
-          ? messageApi.success('收藏成功！')
-          : messageApi.info('已取消收藏！');
+          ? messageApi.success('收藏成功！', { key: 'fav-success' })
+          : messageApi.info('已取消收藏！', { key: 'fav-cancel' });
 
         // 刷新收藏列表
         await getFavoritesList();
@@ -93,13 +96,13 @@ export function useFavoriteStatus(touristId, businessType, businessId) {
           business_id: businessId,
         });
 
-        messageApi.success('收藏成功！');
+        messageApi.success('收藏成功！', { key: 'fav-add' });
 
         await getFavoritesList();
       }
     } catch (error) {
       console.error('收藏按钮点击发生错误', error);
-      messageApi.error('操作失败，请重试！');
+      messageApi.error('操作失败，请重试！', { key: 'fav-error' });
     }
   };
 
@@ -114,7 +117,6 @@ export function useFavoriteStatus(touristId, businessType, businessId) {
     loading, //加载状态
     favoriteItem, //收藏的具体项或者表示未在收藏数据库中找到
     favorites, //收藏列表
-    contextHolder, // 消息提示
     refreshFavorite, //刷新收藏
     handleFavClick, // 点击事件
   };

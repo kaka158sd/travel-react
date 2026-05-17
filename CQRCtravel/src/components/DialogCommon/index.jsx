@@ -3,56 +3,6 @@ import './index.less';
 import { useEffect, useState } from 'react';
 import { CommonForm } from '..';
 
-// 详情弹窗配置
-// 新闻详情弹窗配置
-// const news = {
-//   news_id: 1,
-//   news_title: '荣昌卤鹅文化节盛大开幕，打响“中国鹅城”品牌',
-//   news_image:
-//     'https://tse2-mm.cn.bing.net/th/id/OIP-C.kLFnXz5TrBdLv4U-u-8RoQHaDt?w=341&h=175&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
-//   publisher: '文旅宣传科',
-//   publish_unit: '荣昌区文旅委',
-//   news_content:
-//     '荣昌区举办首届卤鹅文化节，活动包含卤鹅美食大赛、非遗展示、文艺演出等，吸引上万游客打卡。',
-//   publish_time: '2026-04-19T11:51:42.195248+00:00',
-// };
-
-// const orders = {
-//   order_id: 2,
-//   tourist_id: 1,
-//   inheritor_id: 1,
-//   business_type: 2,
-//   business_id: 1,
-//   item_name: '荣昌陶烧制技艺',
-//   single_price: 128.0,
-//   reserve_time: '2026-05-01',
-//   reserve_period: '14:00-16:00',
-//   contact_people: '刘六',
-//   contact_phone: '13800001111',
-//   total_price: 256.0,
-//   people_num: 2,
-//   remark:
-//     '师傅您好！我本次专程前来体验荣昌陶制作技艺，内心十分期待沉浸式感受非遗手工的独特魅力。我零基础入门，陶艺动手经验比较欠缺，操作起来可能会有些生疏笨拙，麻烦您教学时可以多一些耐心，放慢讲解节奏，细致示范每一步制作流程。\r\n我希望本次体验以**红色主题**为创作核心，亲手制作一款陶瓷水杯。希望在塑形、雕花、装饰与配色设计上，融入红色文化元素，贴合主题风格。过程中若我操作有误，还请您及时指正、耐心引导，帮我完成这款专属的红色主题陶杯，用心感受荣昌陶千年匠心与红色文化结合的独特韵味。',
-//   order_status: 0,
-//   order_time: '2026-04-19T13:54:35.026635+00:00',
-// };
-
-// 用户详情弹窗配置
-// const users = {
-//   user_id: 1,
-//   identity_type: 1,
-//   user_name: '荣昌游客',
-//   phone: '13800001111',
-//   password: '123456a',
-//   avatar:
-//     'https://tse4-mm.cn.bing.net/th/id/OIP-C.dL40B4NwCkdjug6poBJ6bQAAAA?w=198&h=198&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
-//   created_time: '2026-04-20T10:19:55.337782+00:00',
-//   privacyData: [
-//     '我是一名热爱旅行、尤其钟情于重庆荣昌文旅风光的游客。喜欢打卡每一处古镇老街，探寻非遗背后的匠人故事，品尝地道的荣昌卤鹅、黄凉粉等特色美食，感受山水间的烟火气。每次来到荣昌，都能被这里的历史文化、自然风光和热情的民风打动，希望用脚步丈量荣昌的每一寸土地，用镜头记录这座城市的独特魅力，也期待在旅途中遇见更多志同道合的朋友，一起解锁更多荣昌的隐藏宝藏。',
-//     'visitor@rc.com',
-//   ],
-// };
-
 // // 详情弹窗数据
 // // 人员
 // const dialogData = {
@@ -125,6 +75,7 @@ const DialogCommon = ({
           title={dialogData?.data.title || ''}
           open={isShowDialog}
           onCancel={onCancel}
+          confirmLoading={confirmLoading}
           onOk={() => onOk?.(formValue)} //把值暴露出去
           style={{
             width: dialogData?.width || 500,
@@ -154,7 +105,7 @@ const DialogCommon = ({
                 placeholder={dialogData?.data.placeholder || ''}
                 style={{ width: '100%' }}
                 value={formValue}
-                onChange={(value) => setFormValue(value)}
+                onChange={(e) => setFormValue(e.target.value)}
               />
             )}
           </div>

@@ -1,11 +1,8 @@
 import { postOrderAPI } from '@/apis/orders';
 import { isReserveFeasible } from '@/utils';
-import { message } from 'antd';
 
 // 处理预约弹窗提交事件
-export const useReserveConfirm = () => {
-  const [messageApi, reserveContextHolder] = message.useMessage();
-
+export const useReserveConfirm = (messageApi) => {
   const submitReservation = async (
     form,
     favoriteData,
@@ -79,5 +76,5 @@ export const useReserveConfirm = () => {
     }
   };
 
-  return { submitReservation, reserveContextHolder };
+  return { submitReservation };
 };

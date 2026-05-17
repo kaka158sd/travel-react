@@ -26,7 +26,6 @@ const TouristCenterLayout = () => {
   );
   const { wallet = 0 } = useSelector((state) => state.wallet, shallowEqual);
 
-  // const timerRef = useRef(null);
   // 请求锁，防止并发/重复请求
   const isFetchingRef = useRef(false);
 

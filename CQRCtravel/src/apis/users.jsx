@@ -20,6 +20,9 @@ export function updateUserAPI(id, data) {
       user_id: `eq.${id}`,
     },
     data,
+    headers: {
+      Prefer: 'return=representation',
+    },
   });
 }
 
@@ -72,6 +75,9 @@ export function updateTouristApi(id, data) {
       tourist_id: `eq.${id}`,
     },
     data: data,
+    headers: {
+      Prefer: 'return=representation',
+    },
   });
 }
 

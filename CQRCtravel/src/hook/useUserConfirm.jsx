@@ -16,8 +16,12 @@ export const useUserConfirm = (
 
   const handleUserConfirm = async () => {
     try {
-      const values = userForm.validateFields();
-      const { avatar, password, phone, user_name, privacyData } = values;
+      const values = await userForm.validateFields();
+      const { avatar, user_name, privacyData } = values;
+
+      // 打印调试：确认拿到的表单值
+      console.log('表单原始值:', values);
+
       // 给 privacyData 做空值保护，默认设为空数组
       const newSignature = privacyData?.[0] ?? '';
 
@@ -26,24 +30,30 @@ export const useUserConfirm = (
       const isUserNameChanged = user_name !== currentUser.user_name;
       const isSignatureChanged =
         newSignature !== (currentUser.privacyData?.[0] ?? '');
+
       if (!isAvatarChanged && !isUserNameChanged && !isSignatureChanged) {
         messageApi.info('未检测到修改的信息，请修改后再保存！');
         return;
       }
 
+      // 构建用户更新数据（只传修改的字段）
       const userData = {
-        ...currentUser,
         avatar,
-        password,
-        phone,
         user_name,
       };
+
       await updateUserAPI(currentUser.user_id, userData);
       await updateTouristApi(touristId, {
         signature: newSignature,
       });
 
-      dispatch(setCurrentUser(userData));
+      dispatch(
+        setCurrentUser({
+          ...currentUser,
+          avatar,
+          user_name,
+        }),
+      );
       dispatch(
         setUserPrivacyData({
           ...userPrivacyData,
@@ -55,8 +65,16 @@ export const useUserConfirm = (
       console.log('保存个人信息:', values);
     } catch (error) {
       console.error('保存用户信息失败！', error);
-      if (error.errorFields) {
+      // 打印 Supabase 返回的详细错误信息
+      if (error.response) {
+        console.error('Supabase 错误详情:', error.response.data);
+        messageApi.error(
+          `保存失败：${error.response.data.message || '请求错误'}`,
+        );
+      } else if (error.errorFields) {
         messageApi.error('表单校验失败，请检查输入！');
+      } else {
+        messageApi.error('保存失败，请稍后重试！');
       }
     }
   };

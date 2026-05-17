@@ -31,6 +31,13 @@ import {
 } from './localStorage/userPrivacyData';
 import { matchRelateActivities } from './matchRelateActivities';
 import { isOrderExpired, isReserveFeasible } from './isExpired';
+import { buildItinerary, generateItinerary } from './buildItinerary';
+import {
+  setItineraryStorage,
+  getItineraryStorage,
+  removeItineraryStorage,
+} from './localStorage/itineraryStorage';
+import { isFirstVisitToday } from './isFirstVisitToday';
 
 export {
   request,
@@ -60,4 +67,10 @@ export {
   matchRelateActivities,
   isOrderExpired,
   isReserveFeasible,
+  buildItinerary,
+  generateItinerary,
+  setItineraryStorage,
+  getItineraryStorage,
+  removeItineraryStorage,
+  isFirstVisitToday,
 };

@@ -8,7 +8,7 @@ import {
   Loading,
   LoadingSkeleton,
 } from '@/components';
-import { Button, Card, Image, Tag, Tooltip } from 'antd';
+import { Button, Card, Image, message, Tag, Tooltip } from 'antd';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
@@ -17,9 +17,9 @@ import {
   StarOutlined,
   StarFilled,
   CheckOutlined,
-  CheckSquareOutlined,
 } from '@ant-design/icons';
 import {
+  useAddItinerary,
   useFavoriteStatus,
   useReservationForm,
   useReserveConfirm,
@@ -76,6 +76,7 @@ const IntangibleHeritageDetail = () => {
   // 获取评论列表
   const [comments, setComments] = useState([]);
   const { touristId: currentUserId } = useSelector((state) => state.user);
+  const [messageApi, contextHolder] = message.useMessage();
 
   // 获取评论列表（复用你原有的逻辑）
   useEffect(() => {
@@ -216,7 +217,7 @@ const IntangibleHeritageDetail = () => {
     heritageData.heritage_id,
   );
 
-  const { submitReservation, reserveContextHolder } = useReserveConfirm();
+  const { submitReservation } = useReserveConfirm(messageApi);
 
   const favoriteData = {
     touristId: currentUserId,
@@ -225,6 +226,13 @@ const IntangibleHeritageDetail = () => {
   };
   const reservationData = {
     inheritor_id: heritageData?.inheritor_id,
+  };
+  // 处理的用于加入行程的数据
+  const processData = {
+    business_type: 2,
+    business_id: heritageData?.heritage_id,
+    business_name: heritageData?.heritage_name,
+    price: heritageData?.price,
   };
   // 预约表单提交
   const handleReserveConfirm = () =>
@@ -244,15 +252,29 @@ const IntangibleHeritageDetail = () => {
     isFavorite,
     loading: favLoading,
     handleFavClick,
-    contextHolder,
-  } = useFavoriteStatus(currentUserId, 2, heritageData?.heritage_id);
+  } = useFavoriteStatus(
+    currentUserId,
+    2,
+    heritageData?.heritage_id,
+    messageApi,
+  );
+
+  // 获取加入行程方法
+  const {
+    isExisted,
+    existItem,
+    loading: customLoading,
+    handleAddItinerary,
+  } = useAddItinerary(currentUserId, processData, messageApi);
+  const isAddToCustom = isExisted && existItem.is_added_to_custom;
 
   // 按钮配置
   const btnConfig = [
     {
-      title: '加入行程',
+      title: isAddToCustom ? '已加入行程' : '加入行程',
       color: 'volcano',
-      icon: <PlusOutlined />,
+      icon: isAddToCustom ? <CheckOutlined /> : <PlusOutlined />,
+      onClick: () => handleAddItinerary(),
     },
     {
       title: '立即预约',
@@ -297,6 +319,7 @@ const IntangibleHeritageDetail = () => {
 
   return (
     <div className="max-w-300 h-fit mx-auto py-4 relative">
+      {contextHolder}
       <div className="flex gap-4">
         <span>非遗编号：{heritageData?.heritage_id}</span>
         <span className="flex gap-2">
@@ -419,11 +442,9 @@ const IntangibleHeritageDetail = () => {
 
       {/* 按钮 */}
       <div className="absolute top-70 -left-40 flex flex-col gap-8">
-        {contextHolder}
-
         {btnConfig.map((item) => (
           <Tooltip title={item.title} key={item.title}>
-            {favLoading ? (
+            {favLoading || customLoading ? (
               <Loading size="small" className="my-1" />
             ) : (
               <Button
@@ -440,7 +461,6 @@ const IntangibleHeritageDetail = () => {
       </div>
 
       {/* 立即预约弹窗 */}
-      {reserveContextHolder}
       <DialogCommon
         isShowDialog={isShowReservationDialog}
         onCancel={() => {

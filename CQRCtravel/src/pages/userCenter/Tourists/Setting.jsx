@@ -1,3 +1,4 @@
+import { updateTouristApi } from '@/apis/users';
 import { CommonForm, DialogCommon } from '@/components';
 import { useEditConfirm, useFirstEnterNav } from '@/hook';
 import {
@@ -6,9 +7,10 @@ import {
 } from '@/hook/formFields/useEditForm';
 import { useUserForm } from '@/hook/formFields/useUserForm';
 import { useUserConfirm } from '@/hook/useUserConfirm';
-import { Menu, Radio, Switch } from 'antd';
+import { setUserPrivacyData } from '@/store';
+import { Menu, message, Radio, Switch } from 'antd';
 import { useState, useMemo, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 // 导航菜单项
 const items = [
@@ -45,13 +47,6 @@ const notifySwitchItems = [
   { key: 'activity', text: '活动通知' },
   { key: 'comment', text: '评论回复' },
 ];
-// 通知设置的数组
-const notifySettings = {
-  system: true,
-  order: true,
-  activity: true,
-  comment: true,
-};
 
 const Setting = () => {
   // 当前激活的导航
@@ -60,11 +55,11 @@ const Setting = () => {
     'personal',
     'touristNav',
   );
+  const dispatch = useDispatch();
   // 获取个人信息表单
   const { currentUser, userPrivacyData, touristId } = useSelector(
     (state) => state.user,
   );
-  // const userId = currentUser?.user_id;
 
   const user = {
     identity_type: currentUser.identity_type,
@@ -80,6 +75,11 @@ const Setting = () => {
       notify_settings: userPrivacyData.notify_settings,
     },
   };
+
+  // 通知设置于隐私设置单独赋予值给一个常量
+  const notify_settings = user.tourists.notify_settings;
+  const privacy_settings = user.tourists.privacy_settings;
+
   // 修改表单
   // 手机号
   const editPhone = {
@@ -150,6 +150,18 @@ const Setting = () => {
   // 游客的个人信息中的邮箱是否已经填写（是否有初始值）
   const touristsEmail = user.tourists.email;
   const [confirmLoading, setConfirmLoading] = useState(false);
+
+  // 邮箱的全局消息
+  const [messageApi, emailHolder] = message.useMessage();
+  // 通知设置的数组
+  const [notifySettings, setNotifySettings] = useState(
+    notify_settings || {
+      system: true,
+      order: true,
+      activity: true,
+      comment: true,
+    },
+  );
 
   // 个人信息修改弹窗数据
   const dialogData = useMemo(() => {
@@ -230,9 +242,26 @@ const Setting = () => {
     }
   };
 
+  // 封装修改游客的特殊身份信息的方法，同步本地和全局变量
+  async function fetchTouristData(key, newData) {
+    try {
+      await updateTouristApi(touristId, {
+        [key]: newData,
+      });
+      dispatch(
+        setUserPrivacyData({
+          ...userPrivacyData,
+          [key]: newData,
+        }),
+      );
+    } catch (error) {
+      console.error('修改游客数据的方法调用失败！', error);
+    }
+  }
+
   // 隐私设置中的公开评论单选框
   const [privacyComment, setPrivacyComment] = useState(
-    user.tourists.privacy_settings,
+    privacy_settings || true,
   );
 
   // 弹窗关闭事件
@@ -257,7 +286,7 @@ const Setting = () => {
     setIsShowDialog,
   );
   // 弹窗提交事件
-  const handleConfirm = async () => {
+  const handleConfirm = (formValue) => {
     try {
       if (editType === 1) {
         phoneConfirm();
@@ -266,8 +295,60 @@ const Setting = () => {
       if (editType === 2) {
         passwordConfirm();
       }
+
+      if (editType === 3) {
+        try {
+          setConfirmLoading(true);
+          // console.log(formValue);
+
+          const oldEmail = userPrivacyData.email;
+
+          // 新的邮箱不能与旧的相同
+          if (formValue === oldEmail) {
+            messageApi.info('新的邮箱与旧的邮箱相同，未发生改变！');
+            return;
+          }
+
+          fetchTouristData('email', formValue);
+          messageApi.success(`${touristsEmail ? '修改' : '添加'}邮箱成功!`);
+          setIsShowDialog(false);
+        } catch (error) {
+          console.error(('保存邮箱数据失败！', error));
+        } finally {
+          setConfirmLoading(false);
+        }
+      }
     } catch (error) {
       console.error('表单提交失败', error);
+    }
+  };
+
+  // 通知开关的onChange事件
+  const handleNotifyConfirm = (key) => {
+    try {
+      const item = notifySettings[key];
+      const updateData = {
+        ...notifySettings,
+        [key]: !item,
+      };
+      setNotifySettings(updateData);
+
+      fetchTouristData('notify_settings', updateData);
+
+      // console.log('updateData', updateData);
+    } catch (error) {
+      console.error('修改通知开关失败！', error);
+    }
+  };
+
+  // 隐私设置的多选框onChange事件
+  const handlePrivacyConfirm = (e) => {
+    try {
+      // console.log(e.target.value);
+      setPrivacyComment(e.target.value);
+      fetchTouristData('privacy_settings', e.target.value);
+    } catch (error) {
+      console.error('修改隐私失败', error);
     }
   };
 
@@ -331,6 +412,7 @@ const Setting = () => {
         {/* 安全设置页面 */}
         {menuSelectedKey === 'security' && (
           <div className="ml-15 py-10">
+            {emailHolder}
             <div className="text-xl font-semibold">
               {touristsEmail ? '修改' : '绑定'}邮箱
             </div>
@@ -359,7 +441,8 @@ const Setting = () => {
                   <span className="mr-5">{item.text}</span>
                   <Switch
                     defaultChecked
-                    onChange={() => !notifySettings[item.key]}
+                    value={notifySettings[item.key]}
+                    onChange={() => handleNotifyConfirm(item.key)}
                   />
                 </div>
               ))}
@@ -376,7 +459,7 @@ const Setting = () => {
               <Radio.Group
                 size="large"
                 value={privacyComment}
-                onChange={(e) => setPrivacyComment(e.target.value)}
+                onChange={handlePrivacyConfirm}
                 defaultValue={true}
                 options={[
                   { value: true, label: '所有人可见' },

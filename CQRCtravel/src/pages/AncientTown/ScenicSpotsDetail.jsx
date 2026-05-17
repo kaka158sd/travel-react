@@ -9,7 +9,7 @@ import {
   Loading,
   LoadingSkeleton,
 } from '@/components';
-import { Button, Card, Image, Tag, Tooltip } from 'antd';
+import { Button, Card, Image, message, Tag, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -18,10 +18,10 @@ import {
   CalendarOutlined,
   StarOutlined,
   CheckOutlined,
-  CheckSquareOutlined,
   StarFilled,
 } from '@ant-design/icons';
 import {
+  useAddItinerary,
   useFavoriteStatus,
   useReservationForm,
   useReserveConfirm,
@@ -70,6 +70,7 @@ const activitiesKeywords = [
 const ScenicSpotsDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [messageApi, globalHolder] = message.useMessage();
 
   // 获取详情id
   const { id } = useParams();
@@ -219,7 +220,7 @@ const ScenicSpotsDetail = () => {
     width: 750,
   };
 
-  const { submitReservation, reserveContextHolder } = useReserveConfirm();
+  const { submitReservation } = useReserveConfirm(messageApi);
 
   const favoriteData = {
     touristId: currentUserId,
@@ -227,6 +228,13 @@ const ScenicSpotsDetail = () => {
     businessId: spotData?.spot_id,
   };
   const reservationData = {};
+  // 处理的用于加入行程的数据
+  const processData = {
+    business_type: 1,
+    business_id: spotData?.spot_id,
+    business_name: spotData?.spot_name,
+    price: spotData?.ticket_price,
+  };
   // 预约表单提交
   const handleReserveConfirm = () =>
     submitReservation(
@@ -242,16 +250,24 @@ const ScenicSpotsDetail = () => {
     isFavorite,
     loading: favLoading,
     handleFavClick,
-    contextHolder,
-  } = useFavoriteStatus(currentUserId, 1, spotData?.spot_id);
+  } = useFavoriteStatus(currentUserId, 1, spotData?.spot_id, messageApi);
+
+  // 获取加入行程方法
+  const {
+    isExisted,
+    existItem,
+    loading: customLoading,
+    handleAddItinerary,
+  } = useAddItinerary(currentUserId, processData, messageApi);
+  const isAddToCustom = isExisted && existItem.is_added_to_custom;
 
   // 按钮配置
   const btnConfig = [
     {
-      title: '加入行程',
+      title: isAddToCustom ? '已加入行程' : '加入行程',
       color: 'volcano',
-      icon: <PlusOutlined />,
-      icon2: <CheckOutlined />,
+      icon: isAddToCustom ? <CheckOutlined /> : <PlusOutlined />,
+      onClick: () => handleAddItinerary(),
     },
     {
       title: '立即预约',
@@ -298,6 +314,7 @@ const ScenicSpotsDetail = () => {
 
   return (
     <div className="max-w-300 h-fit mx-auto py-4 relative">
+      {globalHolder}
       <div className="flex gap-4">
         <span>景点编号：{spotData?.spot_id}</span>
         <span className="flex gap-2">
@@ -425,11 +442,9 @@ const ScenicSpotsDetail = () => {
 
       {/* 按钮 */}
       <div className="absolute top-70 -left-40 flex flex-col gap-8">
-        {contextHolder}
-
         {btnConfig.map((item) => (
           <Tooltip title={item.title} key={item.title}>
-            {favLoading ? (
+            {favLoading || customLoading ? (
               <Loading size="small" className="my-2" />
             ) : (
               <Button
@@ -445,7 +460,6 @@ const ScenicSpotsDetail = () => {
         ))}
       </div>
 
-      {reserveContextHolder}
       {/* 立即预约弹窗 */}
       <DialogCommon
         isShowDialog={isShowReservationDialog}
