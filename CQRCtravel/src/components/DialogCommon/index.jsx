@@ -3,14 +3,6 @@ import './index.less';
 import { useEffect, useState } from 'react';
 import { CommonForm } from '..';
 
-// // 详情弹窗数据
-// // 人员
-// const dialogData = {
-//   items:
-//   title: `${identity[users.identity_type].identity}-${users.user_name}`,
-//   width: 1000,
-// };
-
 const DialogCommon = ({
   dialogData,
   isShowDialog,
@@ -130,6 +122,7 @@ const DialogCommon = ({
             title={dialogData.title}
             bordered
             items={dialogData.items}
+            column={dialogData.column || 3}
           />
         </Modal>
       )}

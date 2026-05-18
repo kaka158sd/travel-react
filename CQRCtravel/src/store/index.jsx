@@ -31,6 +31,8 @@ import customItemReducer from './modules/customItem';
 import { setCustomItem, setCustomLoading } from './modules/customItem';
 import heritageReducer from './modules/heritage';
 import { setHeritage, setHeritageLoading } from './modules/heritage';
+import spotReducer from './modules/spot';
+import { setSpotList, setSpotLoading } from './modules/spot';
 
 export default configureStore({
   reducer: {
@@ -39,6 +41,7 @@ export default configureStore({
     wallet: walletReducer,
     customItem: customItemReducer,
     heritage: heritageReducer,
+    spot: spotReducer,
   },
 });
 
@@ -66,4 +69,6 @@ export {
   setCustomLoading,
   setHeritage,
   setHeritageLoading,
+  setSpotList,
+  setSpotLoading,
 };

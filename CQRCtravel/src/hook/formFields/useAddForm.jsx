@@ -113,8 +113,7 @@ export const useAddSpotForm = (params = {}) => {
       rules: 'required',
       type: 'number',
       formConfig: {
-        placeholder: addSpot.is_ticket ? '请输入门票价格...' : '免费',
-        isDisabled: addSpot.is_ticket ? false : true,
+        placeholder: '请输入门票价格...',
         prefix: '￥',
       },
       column: 'right',
@@ -543,7 +542,7 @@ export const useAddActivityForm = (params = {}) => {
 
 // 新增新闻
 export const useAddNewsForm = (params = {}) => {
-  const { addNew = {}, userData } = params;
+  const { addNew = {} } = params;
 
   const [form] = Form.useForm();
 
@@ -551,7 +550,7 @@ export const useAddNewsForm = (params = {}) => {
     {
       name: 'news_title',
       label: '新闻标题',
-      rules: 'required string',
+      rules: 'required',
       type: 'textInput',
       formConfig: {
         placeholder: '请输入新闻标题...',
@@ -578,7 +577,7 @@ export const useAddNewsForm = (params = {}) => {
       rules: 'required',
       type: 'textInput',
       formConfig: {
-        placeholder: userData.userName,
+        placeholder: addNew.publisher,
         isDisabled: true,
       },
       column: 'left',
@@ -589,7 +588,7 @@ export const useAddNewsForm = (params = {}) => {
       rules: 'required',
       type: 'textInput',
       formConfig: {
-        placeholder: userData.department,
+        placeholder: addNew.publish_unit,
         isDisabled: true,
       },
       column: 'left',

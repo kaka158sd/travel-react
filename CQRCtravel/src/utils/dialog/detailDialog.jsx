@@ -170,9 +170,10 @@ export const getDetailNewItems = (dialogItem) => {
 export const getDetailPeopleItems = (dialogItem) => {
   // 增加默认值以避免被判成understand
   const item = dialogItem || {};
+  const type = item.identity_type;
 
   // 当前用户的身份对应的 identity 中的数据
-  const currentIdentity = identity[item.identity_type] || identity[1];
+  const currentIdentity = identity[type] || identity[1];
 
   const peopleLabel = [
     '用户ID',
@@ -189,12 +190,13 @@ export const getDetailPeopleItems = (dialogItem) => {
       key: '1',
       label: peopleLabel[0],
       children: item.user_id,
-      span: 3,
+      span: 5,
     },
     {
       key: '2',
       label: peopleLabel[1],
       children: item.user_name,
+      span: 2,
     },
     {
       key: '3',
@@ -202,25 +204,38 @@ export const getDetailPeopleItems = (dialogItem) => {
       children: (
         <DataField type="avatar" formConfig={{ size: 60, src: item.avatar }} />
       ),
+      span: 1,
     },
-    { key: '4', label: peopleLabel[3], children: item.phone },
+    {
+      key: '4',
+      label: peopleLabel[3],
+      children: item.phone,
+      span: 2,
+    },
     {
       key: '5',
       label: peopleLabel[4],
       children: (
-        <div className="w-134 line-clamp-1">{item?.privacyData[0] || '-'}</div>
+        <div className="w-134 line-clamp-1">
+          {type === 1
+            ? item?.privacyData[0] || '-'
+            : item?.privacyData[1] || '-'}
+        </div>
       ),
-      span: 2,
+      span: 3,
     },
     {
       key: '6',
       label: peopleLabel[5],
-      children: item?.privacyData[1] || '-',
+      children:
+        type === 1 ? item?.privacyData[1] || '-' : item?.privacyData[0] || '-',
+      span: 2,
     },
     {
       key: '7',
       label: peopleLabel[6],
       children: dayjs(item.created_time).format('YYYY-MM-DD HH:mm:ss'),
+      span: 5,
     },
   ];
 };

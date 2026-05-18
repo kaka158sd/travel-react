@@ -1,38 +1,42 @@
 import { getDetailNewItems } from '@/utils';
-import { ConfigProvider, Divider } from 'antd';
+import { ConfigProvider, Divider, message } from 'antd';
 import dayjs from 'dayjs';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DialogCommon } from '@/components';
 import { useAddNewsForm } from '@/hook';
 import { useOutletContext } from 'react-router-dom';
-
-// 新闻数据
-const addNew = {
-  // news_id: 1,
-  // news_title: '荣昌卤鹅文化节盛大开幕，打响“中国鹅城”品牌',
-  // news_image:
-  //   'https://tse2-mm.cn.bing.net/th/id/OIP-C.kLFnXz5TrBdLv4U-u-8RoQHaDt?w=341&h=175&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3',
-  // publisher: '文旅宣传科',
-  // publish_unit: '荣昌区文旅委',
-  // news_content:
-  //   '荣昌区举办首届卤鹅文化节，活动包含卤鹅美食大赛、非遗展示、文艺演出等，吸引上万游客打卡。',
-  // publish_time: '2026-04-19T11:51:42.195248+00:00',
-};
-// 管理员的名字
-const userData = {
-  userName: '管理员',
-  department: '宣传科',
-};
+import { deleteNewsAPI, postNewsAPI } from '@/apis/news';
 
 const NewsManage = () => {
-  const { news } = useOutletContext() || {};
+  const {
+    news = [],
+    currentUser = {},
+    userPrivacyData = {},
+    refreshNews,
+  } = useOutletContext() || {};
   // 控制弹窗的开关和类型
   const [isShowDialog, setIsShowDialog] = useState(false);
   const [dialogType, setDialogType] = useState(1); //1：详情；2：新增；
   const [dialogItem, setDialogItem] = useState({});
+  const [messageApi, contextHolder] = message.useMessage();
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const timerRef = useRef(null); // 用 ref 保存定时器ID
+
+  const addNew = {
+    publisher: currentUser.user_name,
+    publish_unit: userPrivacyData.department,
+  };
 
   // 获取新闻新增表单
-  const { form, formFields } = useAddNewsForm({ addNew, userData });
+  const { form, formFields, initialValues } = useAddNewsForm({
+    addNew: addNew || {},
+  });
+
+  useEffect(() => {
+    if (form) {
+      form.setFieldsValue(initialValues);
+    }
+  }, [form, initialValues]);
 
   const dialogData = useMemo(() => {
     if (dialogType === 1) {
@@ -50,7 +54,7 @@ const NewsManage = () => {
         data: {
           formType: 'add',
           form,
-          initialValues: {},
+          initialValues,
           formFields,
         },
         width: 800,
@@ -62,22 +66,19 @@ const NewsManage = () => {
       items: [],
       title: '',
     };
-  }, [dialogItem, dialogType, form, formFields]);
+  }, [dialogItem, dialogType, form, formFields, initialValues]);
 
   // 按 publish_time 时间戳从新到旧排序
   const sortedNewsList = useMemo(() => {
     if (!news.length) return [];
     return [...news]
+      .sort((a, b) => new Date(b.publish_time) - new Date(a.publish_time))
       .map((item) => {
         return {
           ...item,
           publish_time: dayjs(item.publish_time).format('YYYY-MM-DD'),
         };
-      })
-      .sort(
-        (a, b) =>
-          new Date(b.pulish_time).getTime() - new Date(a.pulish_time).getTime(),
-      );
+      });
   }, [news]);
 
   // 点击打开详情弹窗事件
@@ -85,6 +86,77 @@ const NewsManage = () => {
     setDialogType(1);
     setDialogItem(item);
     setIsShowDialog(true);
+  };
+
+  // 新增弹窗提交事件
+  const handleAddConfiem = async () => {
+    setConfirmLoading(true);
+    try {
+      const values = await form.validateFields();
+      console.log('表单的值：', values);
+
+      // 标题是否已有记录
+      const isExisted = news.some(
+        (item) => item.news_title === values.news_title,
+      );
+      if (isExisted) {
+        messageApi.error('新闻标题已存在，请重新填写！');
+        return;
+      }
+
+      await postNewsAPI(values);
+      await refreshNews();
+
+      messageApi.success('发表成功！');
+    } catch (error) {
+      console.error('新增新闻公告失败！', error);
+      messageApi.error('新增新闻公告失败！');
+    } finally {
+      setIsShowDialog(false);
+      setConfirmLoading(false);
+    }
+  };
+
+  // 新闻删除事件
+  const handleDeleteNews = async (id) => {
+    // 先清理之前的定时器，防止重复调用
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    if (!id) {
+      messageApi.error('获取需要删除新闻的id错误，请重试！');
+      return;
+    }
+
+    try {
+      const confirm = window.confirm('是否要删除该新闻？');
+
+      if (confirm) {
+        messageApi.open({
+          type: 'loading',
+          content: '正在删除中..',
+          duration: 0,
+        });
+        timerRef.current = setTimeout(() => {
+          messageApi.destroy();
+          timerRef.current = null; // 执行后清空引用
+        }, 2000);
+
+        await deleteNewsAPI(id);
+        await refreshNews();
+
+        messageApi.success('下架新闻成功！');
+      }
+    } catch (error) {
+      console.error('删除新闻失败！', error);
+      messageApi.error('删除新闻失败！');
+    } finally {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        messageApi.destroy(); // 同时销毁消息实例
+      }
+    }
   };
 
   return (
@@ -96,7 +168,7 @@ const NewsManage = () => {
       }}
     >
       <div className="text-xl font-semibold">新闻管理</div>
-
+      {contextHolder}
       <div className="flex justify-between py-4">
         {/* 搜索框和筛选框 */}
         <div></div>
@@ -131,6 +203,7 @@ const NewsManage = () => {
                 <i
                   className="iconfont icon-close cursor-pointer hover:text-orange-500 hover:scale-115"
                   style={{ fontSize: 22 }}
+                  onClick={() => handleDeleteNews(item.news_id)}
                 />
               </div>
               <Divider size="small" />
@@ -143,8 +216,12 @@ const NewsManage = () => {
       <DialogCommon
         isShowDialog={isShowDialog}
         dialogData={dialogData}
-        onCancel={() => setIsShowDialog(false)}
-        onOk={() => setIsShowDialog(false)}
+        confirmLoading={confirmLoading}
+        onCancel={() => {
+          setIsShowDialog(false);
+          form.resetFields();
+        }}
+        onOk={handleAddConfiem}
       />
     </ConfigProvider>
   );

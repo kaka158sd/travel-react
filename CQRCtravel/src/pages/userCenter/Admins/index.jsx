@@ -8,8 +8,11 @@ import { getNewsAPI } from '@/apis/news';
 import { getUsersAPI } from '@/apis/users';
 import { getActivitiesAPI } from '@/apis/activities';
 import dayjs from 'dayjs';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useNavKey } from '@/hook/useNavKey';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearUser, setHeritage, setSpotList } from '@/store';
+import { clearLocalStorage } from '@/utils';
 
 // 导航菜单栏的导航项
 const inlineNavItems = [
@@ -77,6 +80,13 @@ const inlineNavItems = [
 const AdminCenter = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const dispatch = useDispatch();
+
+  const { currentUser, adminId, userPrivacyData } = useSelector(
+    (state) => state.user,
+  );
+  const { heritage = [] } = useSelector((state) => state.heritage);
+  const { spotList = [] } = useSelector((state) => state.spot);
   // 导航菜单
   const { activeNav: adminNav, updateActiveNav: setAdminNav } = useNavKey(
     inlineNavItems,
@@ -85,55 +95,22 @@ const AdminCenter = () => {
   );
 
   const [spotNav, setSpotNav] = useState('spotAdd');
-  // 展开的父菜单
-  const location = useLocation();
   const navigate = useNavigate();
   // 获取接口数据
-  const [scenicSpots, setScenicSpots] = useState([]);
-  const [intangibleHeritage, setIntangibleHeritage] = useState([]);
   const [news, setNews] = useState([]);
   const [users, setUsers] = useState([]);
   const [activities, setActivities] = useState([]);
 
   useEffect(() => {
     let timer = [];
-    const getScenicSpotsList = async () => {
-      try {
-        setLoading(true);
-        const res = await getScenicSpotsAPI();
-        setScenicSpots(res.data);
-      } catch (error) {
-        console.error('获取景点列表失败', error);
-        setError(true);
-      } finally {
-        timer = setTimeout(() => {
-          setLoading(false);
-        }, 200);
-      }
-    };
-    const getIntangibleHeritageList = async () => {
-      try {
-        setLoading(true);
+    setLoading(true);
 
-        const res = await getIntangibleHeritageAPI();
-        setIntangibleHeritage(res.data);
-      } catch (error) {
-        console.error('获取景点列表失败', error);
-        setError(true);
-      } finally {
-        timer = setTimeout(() => {
-          setLoading(false);
-        }, 200);
-      }
-    };
     const getNewsList = async () => {
       try {
-        setLoading(true);
-
         const res = await getNewsAPI();
         setNews(res.data);
       } catch (error) {
-        console.error('获取景点列表失败', error);
+        console.error('获取新闻列表失败', error);
         setError(true);
       } finally {
         timer = setTimeout(() => {
@@ -143,8 +120,6 @@ const AdminCenter = () => {
     };
     const getUsersList = async () => {
       try {
-        setLoading(true);
-
         const res = await getUsersAPI();
         setUsers(res.data);
       } catch (error) {
@@ -158,8 +133,6 @@ const AdminCenter = () => {
     };
     const getActivitiesList = async () => {
       try {
-        setLoading(true);
-
         const res = await getActivitiesAPI();
         setActivities(res.data);
       } catch (error) {
@@ -172,29 +145,105 @@ const AdminCenter = () => {
       }
     };
 
-    getScenicSpotsList();
-    getIntangibleHeritageList();
     getNewsList();
     getUsersList();
     getActivitiesList();
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, []);
 
+  // 给全局变量赋值
+  useEffect(() => {
+    let timer = [];
+    setLoading(true);
+
+    const getScenicSpotsList = async () => {
+      try {
+        const res = await getScenicSpotsAPI();
+        dispatch(setSpotList(res.data));
+      } catch (error) {
+        console.error('获取景点列表失败', error);
+        setError(true);
+      } finally {
+        timer = setTimeout(() => {
+          setLoading(false);
+        }, 200);
+      }
+    };
+    const getIntangibleHeritageList = async () => {
+      try {
+        const res = await getIntangibleHeritageAPI();
+        dispatch(setHeritage(res.data));
+      } catch (error) {
+        console.error('获取景点列表失败', error);
+        setError(true);
+      } finally {
+        timer = setTimeout(() => {
+          setLoading(false);
+        }, 200);
+      }
+    };
+
+    getScenicSpotsList();
+    getIntangibleHeritageList();
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [dispatch]);
+
+  // 封装刷新景点列表的方法
+  async function refreshSpotList() {
+    try {
+      const res = await getScenicSpotsAPI();
+      dispatch(setSpotList(res.data));
+    } catch (error) {
+      console.error('获取景点列表失败', error);
+      setError(true);
+    }
+  }
+
+  // 封装刷新活动列表的方法
+  async function refreshActivities() {
+    try {
+      const res = await getActivitiesAPI();
+      setActivities(res.data);
+    } catch (error) {
+      console.error('获取景点列表失败', error);
+      setError(true);
+    }
+  }
+
+  // 封装刷新新闻列表的方法
+  async function refreshNews() {
+    try {
+      const res = await getNewsAPI();
+      setNews(res.data);
+    } catch (error) {
+      console.error('获取新闻列表失败', error);
+      setError(true);
+    }
+  }
+
   // 适于select的options
-  const scenicSpotsOptions = scenicSpots?.map((item) => ({
+  const scenicSpotsOptions = spotList?.map((item) => ({
     value: item.spot_id,
     label: item.spot_name,
   }));
-  const intangibleHeritageOptions = intangibleHeritage?.map((item) => ({
+  const intangibleHeritageOptions = heritage?.map((item) => ({
     value: item.heritage_id,
     label: item.heritage_name,
   }));
 
   // 数据卡片需要的data
   const cardData = {
-    spots: scenicSpots?.length || 0,
-    heritage: intangibleHeritage?.length || 0,
+    spots: spotList?.length || 0,
+    heritage: heritage?.length || 0,
     news: news?.length || 0,
     user: users?.length || 0,
   };
@@ -209,61 +258,16 @@ const AdminCenter = () => {
         end_time: dayjs(item.end_time).format('YYYY-MM-DD'),
       };
     })
-    .reverse();
-
-  // 根据二级路由，传递不同参数
-  const getShareData = () => {
-    // 控制台需要的数据
-    if (
-      location.pathname === '/adminCenter' ||
-      location.pathname === '/adminCenter/'
-    ) {
-      return { cardData: cardData || {}, activitiesData: activitiesData || [] };
-    }
-
-    // 景点管理需要的数据
-    if (location.pathname.startsWith('/adminCenter/spotManage')) {
-      return {
-        adminNav: spotNav || 'spotAdd',
-        scenicSpots: scenicSpots || [],
-      };
-    }
-
-    // 活动管理需要的数据
-    if (location.pathname.startsWith('/adminCenter/activityManage')) {
-      return {
-        activities: activities || [],
-        activitiesData: activitiesData || [],
-        scenicSpotsOptions: scenicSpotsOptions || [],
-        intangibleHeritageOptions: intangibleHeritageOptions || [],
-      };
-    }
-
-    // 新闻管理需要的数据
-    if (location.pathname.startsWith('/adminCenter/newsManage')) {
-      return { news: news || [] };
-    }
-
-    // 人员管理需要的数据
-    if (location.pathname.startsWith('/adminCenter/peopleManage')) {
-      return { users: users || [] };
-    }
-
-    // 个人资料需要的数据
-    if (location.pathname.startsWith('/adminCenter/account')) {
-      return {};
-    }
-
-    // 其他情况
-    return {};
-  };
+    .sort((a, b) => b.activity_id - a.activity_id);
 
   // 处理导航点击事件，包含退出登陆
   const handleMenuClick = (e) => {
     const key = e.key;
 
     if (key === 'layout') {
-      console.log('退出登陆');
+      clearLocalStorage();
+      dispatch(clearUser());
+      navigate('/');
       return;
     }
 
@@ -302,14 +306,21 @@ const AdminCenter = () => {
 
         {/* 返回首页按钮 */}
         <div className="w-20 h-8">
-          <div className="btn1 flex items-center justify-center">首页</div>
+          <div
+            className="btn1 flex items-center justify-center"
+            onClick={() => navigate('/')}
+          >
+            首页
+          </div>
         </div>
       </div>
 
       {/* 侧边栏 */}
       <div className="w-full flex py-1">
         <Menu
-          selectedKeys={[adminNav]}
+          selectedKeys={
+            adminNav === '/adminCenter/spotManage' ? spotNav : adminNav
+          }
           style={{ width: 240, fontSize: 16 }}
           mode="inline"
           items={inlineNavItems}
@@ -318,7 +329,25 @@ const AdminCenter = () => {
         />
 
         <div className="py-8 flex-1 px-10 mr-6">
-          <Outlet context={getShareData()} />
+          <Outlet
+            context={{
+              cardData,
+              activitiesData,
+              adminNav: spotNav || 'spotAdd',
+              scenicSpots: spotList || [],
+              activities,
+              scenicSpotsOptions,
+              intangibleHeritageOptions,
+              news,
+              users,
+              refreshSpotList,
+              refreshActivities,
+              currentUser,
+              adminId,
+              userPrivacyData,
+              refreshNews,
+            }}
+          />
         </div>
       </div>
     </div>

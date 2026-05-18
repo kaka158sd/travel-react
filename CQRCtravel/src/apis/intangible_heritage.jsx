@@ -62,7 +62,10 @@ export function updateIntangibleHeritageAPI(id, data) {
     params: {
       heritage_id: `eq.${id}`,
     },
-    data,
+    data: {
+      ...data,
+      updated_time: new Date(),
+    },
     headers: {
       Prefer: 'return=representation',
     },

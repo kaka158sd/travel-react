@@ -16,14 +16,16 @@ import {
   useFavoriteStatus,
   useReserveConfirm,
   useAddItinerary,
+  useIsTourist,
 } from '@/hook';
 import {
   deleteIntangibleHeritageAPI,
   getIntangibleHeritageAPI,
 } from '@/apis/intangible_heritage';
 import { useDispatch } from 'react-redux';
-import { setHeritage } from '@/store';
+import { setHeritage, setSpotList } from '@/store';
 import { useNavigate } from 'react-router-dom';
+import { deleteScenicSpotAPI, getScenicSpotsAPI } from '@/apis/scenic_spots';
 
 // 传递的reservationForm需要时一个订单的空表单 + 点击的相关数据，一旦提交则生成一个新的order并存入这个用户的订单中
 const Card = ({
@@ -66,6 +68,7 @@ const Card = ({
   const [messageApi, contextHolder] = message.useMessage();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isTourist = useIsTourist();
 
   // 预约弹窗传参数据
   const { form, formFields, initialValues } = useReservationForm(
@@ -137,6 +140,20 @@ const Card = ({
           messageApi.error('删除非遗请求失败！');
         }
       }
+
+      // 删除景点
+      if (deleteData.type === 2 && confirm) {
+        try {
+          await deleteScenicSpotAPI(deleteData.id);
+          const res = await getScenicSpotsAPI();
+          dispatch(setSpotList(res.data));
+
+          messageApi.success('删除成功！');
+        } catch (error) {
+          console.error('删除景点请求失败！', error);
+          messageApi.error('删除景点请求失败！');
+        }
+      }
     } catch (error) {
       console.error('删除失败！', error);
       messageApi.error('删除失败！');
@@ -150,14 +167,26 @@ const Card = ({
       return;
     }
 
+    // 非遗编辑
     try {
-      // 非遗编辑
       if (editData.type === 1) {
         // 跳转至传承项目管理页面（默认是新增/编辑页面）
         navigate(`/inheritorCenter/heritageManage?id=${editData.id}`);
+        window.location.reload();
       }
     } catch (error) {
-      console.error('编辑失败！', error);
+      console.error('传承项目编辑失败！', error);
+    }
+
+    // 景点编辑
+    try {
+      if (editData.type === 2) {
+        // 跳转至景点管理页面（默认是新增/编辑页面）
+        navigate(`/adminCenter/spotManage?id=${editData.id}`);
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('景点编辑失败！', error);
     }
   };
 
@@ -288,6 +317,11 @@ const Card = ({
                       onClick={(e) => {
                         // 阻止事件冒泡到父级卡片
                         e.stopPropagation();
+
+                        if (!isTourist) {
+                          messageApi.info('您当前不是游客，无法预约！');
+                          return;
+                        }
                         setIsShowReservationDialog(true);
                       }}
                     >
@@ -322,7 +356,7 @@ const Card = ({
                     </button>
                   )}
 
-                  {cardData.btn.includes(5) && (
+                  {cardData.btn.includes(5) && isTourist && (
                     <button
                       className="absolute top-0 right-0 z-20 mx-3 my-2 cursor-pointer"
                       onClick={(e) => {

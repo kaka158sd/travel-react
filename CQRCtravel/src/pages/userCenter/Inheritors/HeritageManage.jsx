@@ -5,7 +5,7 @@ import {
 } from '@/apis/intangible_heritage';
 import { Card, CommonForm, NoData } from '@/components';
 import { useAddHeritageForm } from '@/hook';
-import { compareHeritageLevel } from '@/utils';
+import { compareHeritageLevel, deepEqual, delay } from '@/utils';
 import { message } from 'antd';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
@@ -68,41 +68,6 @@ const HeritageManage = () => {
 
   // console.log('编辑传承项目表单初始值：', initialValues);
   // console.log('编辑传承项目editItem：', editItem);
-
-  // 干净、无残留、不占内存的 Promise 等待
-  const delay = (ms) => {
-    return new Promise((resolve) => {
-      const timer = setTimeout(() => {
-        resolve();
-      }, ms);
-
-      // Promise 完成后自动清除定时器
-      return () => clearTimeout(timer);
-    });
-  };
-
-  function deepEqual(a, b) {
-    // 类型不同直接返回 false
-    if (typeof a !== typeof b) return false;
-
-    // 基本类型/ null/ undefined
-    if (a === null || typeof a !== 'object') return a === b;
-
-    // 数组
-    if (Array.isArray(a) && Array.isArray(b)) {
-      if (a.length !== b.length) return false;
-      return a.every((item, i) => deepEqual(item, b[i]));
-    }
-
-    // 对象
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    if (keysA.length !== keysB.length) return false;
-
-    return keysA.every(
-      (key) => keysB.includes(key) && deepEqual(a[key], b[key]),
-    );
-  }
 
   // 处理新增或者编辑按钮点击事件
   const handleAddOrEdit = async () => {
@@ -183,7 +148,7 @@ const HeritageManage = () => {
           suitable_people: editItem.suitable_people,
         };
 
-        // 数据改变了，则为true
+        // 数据改变了，则为 false
         const isContextChange = deepEqual(values, itemData);
         // console.log('isContextChange', isContextChange);
         // console.log('values', values);
@@ -198,11 +163,12 @@ const HeritageManage = () => {
         await updateIntangibleHeritageAPI(id, values);
         // 刷新
         await getIntangibleHeritageList();
-        messageApi.info('编辑成功！');
+        messageApi.success('编辑成功！可前往传承项目列表查看！');
 
         await delay(1000);
         navigate('/inheritorCenter/heritageManage');
         setEditItem(null);
+        // 刷新页面
         window.location.reload();
       } catch (error) {
         console.error('编辑传承项目失败！', error);
@@ -215,8 +181,6 @@ const HeritageManage = () => {
           );
         }
       }
-
-      // 编辑
     } catch (error) {
       console.error('新增传承项目失败！', error);
       messageApi.error('新增传承项目失败！请重试！');
@@ -225,10 +189,11 @@ const HeritageManage = () => {
 
   return (
     <div>
+      {contextHolder}
+
       {/* 新增/编辑页面 */}
       {inheritorNav === '/inheritorCenter/heritageManage/heritageAdd' && (
         <div>
-          {contextHolder}
           <div className="text-2xl font-semibold mb-4">
             {id ? '编辑' : '新增'}传承项目
           </div>
@@ -289,14 +254,8 @@ const HeritageManage = () => {
                   btn: [3, 4],
                 };
 
-                // 删除数据
-                const deleteData = {
-                  type: 1,
-                  id: item.heritage_id,
-                };
-
-                // 编辑所需数据
-                const editData = {
+                // 删除数据和编辑所需数据
+                const deleteAndEditData = {
                   type: 1,
                   id: item.heritage_id,
                 };
@@ -307,8 +266,8 @@ const HeritageManage = () => {
                     key={item.heritage_id}
                     boxStyle={boxStyle}
                     cardData={cardData}
-                    deleteData={deleteData}
-                    editData={editData}
+                    deleteData={deleteAndEditData}
+                    editData={deleteAndEditData}
                     onClick={() =>
                       navigate(`/intangibleHeritageDetail/${item.heritage_id}`)
                     }

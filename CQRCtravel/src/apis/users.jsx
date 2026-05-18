@@ -119,10 +119,10 @@ export function getAdminsAPI() {
 
 export function updateAdminAPI(id, data) {
   return request({
-    url: '//admins',
+    url: '/admins',
     method: 'PATCH',
     params: {
-      tourist_id: `eq.${id}`,
+      admin_id: `eq.${id}`,
     },
     data,
     headers: {

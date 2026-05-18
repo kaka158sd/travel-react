@@ -78,6 +78,7 @@ export function useAddItinerary(touristId, processData, messageApi) {
   const handleAddItinerary = async () => {
     // 非游客身份直接返回空对象，不执行任何逻辑
     if (!isTourist) {
+      messageApi.info('加入行程功能只有游客才能操作！您并非游客，请勿点击！');
       return;
     }
 

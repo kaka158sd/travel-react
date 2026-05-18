@@ -182,7 +182,9 @@ const InheritorCenter = () => {
     // 先判断是否为数组
     if (!Array.isArray(heritage)) return [];
     // 匹配当前传承人的id的传承项目
-    return heritage?.filter((item) => item.inheritor_id === inheritorId);
+    return heritage
+      ?.filter((item) => item.inheritor_id === inheritorId)
+      .sort((a, b) => b.heritage_id - a.heritage_id);
   }, [heritage, inheritorId]);
 
   const heritageLength = myHeritageList?.length;

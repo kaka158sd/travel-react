@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 const PeopleManage = () => {
-  const { users } = useOutletContext() || {};
+  const { users = {} } = useOutletContext() || {};
   // 获取三种身份的列表数据
   const [tourists, setTourists] = useState([]);
   const [inheritors, setInheritors] = useState([]);
@@ -89,12 +89,14 @@ const PeopleManage = () => {
   ];
 
   // 处理的用于渲染表格的用户数据
-  const peopleData = users.map((item) => {
-    return {
-      ...item,
-      key: item.user_id,
-    };
-  });
+  const peopleData = users
+    .map((item) => {
+      return {
+        ...item,
+        key: item.user_id,
+      };
+    })
+    .sort((a, b) => b.user_id - a.user_id);
 
   // 打开详情弹窗
   const handleOpenDialog = (id) => {
@@ -157,6 +159,7 @@ const PeopleManage = () => {
       items,
       title: `${identity}-${dialogItem.user_name}`,
       width: 1000,
+      column: 5,
     };
   }, [dialogItem, tourists, inheritors, admins]);
 
@@ -164,7 +167,7 @@ const PeopleManage = () => {
     <div>
       <div className="text-xl font-semibold">人员管理</div>
 
-      {/* 筛选框和搜索框 */}
+      {/* 筛选框 */}
 
       {/* 人员列表渲染 */}
       <div className="w-full px-4 py-8">

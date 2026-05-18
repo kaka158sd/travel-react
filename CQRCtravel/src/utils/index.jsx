@@ -36,7 +36,11 @@ import {
   removeUserPrivacyData,
 } from './localStorage/userPrivacyData';
 import { matchRelateActivities } from './matchRelateActivities';
-import { isOrderExpired, isReserveFeasible } from './isExpired';
+import {
+  isOrderExpired,
+  isReserveFeasible,
+  isTimeBeforeToday,
+} from './isExpired';
 import { buildItinerary, generateItinerary } from './buildItinerary';
 import {
   setItineraryStorage,
@@ -46,6 +50,8 @@ import {
 import { isFirstVisitToday } from './isFirstVisitToday';
 import { strToArray, arrayToStr } from './format';
 import { compareHeritageLevel } from './compareHeritageLevel';
+import { delay } from './delay';
+import { deepEqual } from './deepEqual';
 
 export {
   request,
@@ -90,4 +96,7 @@ export {
   strToArray,
   arrayToStr,
   compareHeritageLevel,
+  isTimeBeforeToday,
+  delay,
+  deepEqual,
 };

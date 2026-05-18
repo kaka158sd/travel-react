@@ -28,3 +28,22 @@ export function isReserveFeasible(reserve_time, reserve_period) {
     return true;
   }
 }
+
+// 在管理员的控制台的table表格上，判断最近活动的开始时间是否晚于今天
+// 判断结束时间是否早于今天
+
+export function isTimeBeforeToday(time) {
+  if (!time) return false;
+  // 今天
+  const now = new Date();
+  const timeDate = new Date(time);
+
+  // 处理无效日期（比如格式错误的字符串）
+  if (isNaN(timeDate.getTime())) return false;
+
+  // 清空时分秒
+  now.setHours(0, 0, 0, 0);
+  timeDate.setHours(0, 0, 0, 0);
+
+  return timeDate <= now;
+}

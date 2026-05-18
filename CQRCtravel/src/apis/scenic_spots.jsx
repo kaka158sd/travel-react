@@ -31,10 +31,54 @@ export function getSpotTagsAPI() {
 // 获取景点详情请求
 export function getScenicSpotDetailAPI(spotId) {
   return request({
-    url: `/scenic_spots`,
+    url: '/scenic_spots',
     method: 'GET',
     params: {
       spot_id: `eq.${spotId}`,
+    },
+  });
+}
+
+// 新增景点请求
+
+export function postScenicSpotAPI(data) {
+  return request({
+    url: '/scenic_spots',
+    method: 'POST',
+    data,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+// 更新景点数据
+
+export function updateScenicSpotAPI(id, data) {
+  return request({
+    url: '/scenic_spots',
+    method: 'PATCH',
+    data: {
+      ...data,
+      updated_time: new Date(),
+    },
+    params: {
+      spot_id: `eq.${id}`,
+    },
+    headers: {
+      Prefer: 'return=representation',
+    },
+  });
+}
+
+// 删除景点
+
+export function deleteScenicSpotAPI(id) {
+  return request({
+    url: '/scenic_spots',
+    method: 'DELETE',
+    params: {
+      spot_id: `eq.${id}`,
     },
   });
 }

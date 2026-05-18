@@ -1,4 +1,5 @@
 import { Card } from '@/components';
+import { isTimeBeforeToday } from '@/utils';
 import { Table } from 'antd';
 import { useOutletContext } from 'react-router-dom';
 
@@ -13,6 +14,7 @@ const activityColumns = [
     title: '活动名称',
     dataIndex: 'activity_name',
     key: 'activity_name',
+    render: (text) => <div className="text-amber-400">{text}</div>,
   },
   {
     title: '关联名称',
@@ -23,11 +25,31 @@ const activityColumns = [
     title: '开始时间',
     dataIndex: 'start_time',
     key: 'start_time',
+    render: (_, record) => (
+      <div
+        className={
+          isTimeBeforeToday(record.end_time)
+            ? 'text-red-400'
+            : isTimeBeforeToday(record.start_time)
+              ? 'text-blue-400'
+              : ''
+        }
+      >
+        {record.start_time}
+      </div>
+    ),
   },
   {
     title: '结束时间',
     dataIndex: 'end_time',
     key: 'end_time',
+    render: (end_time) => (
+      <div
+        className={isTimeBeforeToday(end_time) ? 'text-red-400' : 'text-black'}
+      >
+        {end_time}
+      </div>
+    ),
   },
   {
     title: '活动地址',
@@ -100,7 +122,11 @@ const AdminsConsole = () => {
         <div className="px-4 mr-4">
           <Table
             columns={activityColumns}
-            dataSource={activitiesData?.slice(0, 10) || []}
+            dataSource={
+              activitiesData
+                ?.sort((a, b) => b.activity_id - a.activity_id)
+                .slice(0, 10) || []
+            }
             pagination={false}
           />
         </div>
