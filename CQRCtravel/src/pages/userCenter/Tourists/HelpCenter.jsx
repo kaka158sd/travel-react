@@ -1,7 +1,9 @@
-import { Input, Tabs, Collapse, Pagination, Space } from 'antd';
+import { Tabs, Collapse, Pagination, Space } from 'antd';
 import { PhoneOutlined } from '@ant-design/icons';
 import './index.less';
 import { useState } from 'react';
+import { usePageList } from '@/hook';
+import { SearchAndFilter } from '@/components';
 
 // 全部问题列表
 const questionsList = [
@@ -374,55 +376,58 @@ const HelpCenter = () => {
   // 当前的tab标签和页面数据列表
   const [currentDataList, setCurrentDataList] = useState(questionsList || []);
 
-  // 当前页和每页展示条数
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const [inputValue, setInputValue] = useState('');
 
-  // 搜索关键词
-  const [searchKey, setSearchKey] = useState('');
-  const keyword = searchKey.trim().toLowerCase();
+  // 搜索和筛选
+  const { currentPage, currentData, total, setCurrentPage, setSearchText } =
+    usePageList(currentDataList, 10, ['label', 'children']);
 
-  // 先根据关键词过滤数据
-  const filterData = currentDataList.filter(
-    (item) => item.label.includes(keyword) || item.children.includes(keyword),
-  );
-  // 再对过滤后的数据进行分页处理
-  const pageData = filterData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  // 下拉菜单 / 搜索框配置
+  const searchConfig = {
+    search: {
+      placeholder: '请输入您的问题...',
+      width: 500,
+      value: inputValue,
+      onChange: (e) => setInputValue(e.target.value),
+      onSearch: (value) => setSearchText(value),
+      onClear: () => {
+        setInputValue('');
+        setSearchText('');
+      },
+    },
+  };
 
   // 问题标签配置
   const tabItems = [
     {
       key: 'all',
       label: '全部问题',
-      children: collapseStyle(pageData),
+      children: collapseStyle(currentData),
     },
     {
       key: 'order',
       label: '订单相关',
-      children: collapseStyle(pageData),
+      children: collapseStyle(currentData),
     },
     {
       key: 'pay',
       label: '支付相关',
-      children: collapseStyle(pageData),
+      children: collapseStyle(currentData),
     },
     {
       key: 'favorite',
       label: '收藏相关',
-      children: collapseStyle(pageData),
+      children: collapseStyle(currentData),
     },
     {
       key: 'account',
       label: '账户相关',
-      children: collapseStyle(pageData),
+      children: collapseStyle(currentData),
     },
     {
       key: 'itinerary',
       label: '行程相关',
-      children: collapseStyle(pageData),
+      children: collapseStyle(currentData),
     },
   ];
 
@@ -432,17 +437,9 @@ const HelpCenter = () => {
       <p className="py-3">为您解答使用过程中遇到的常见问题</p>
 
       {/* 搜索框 */}
-      <Input.Search
-        size="large"
-        placeholder="请输入您的问题..."
-        allowClear
-        style={{ width: 500 }}
-        className="py-3"
-        onChange={(e) => {
-          setSearchKey(e.target.value);
-          setCurrentPage(1);
-        }}
-      />
+      <div>
+        <SearchAndFilter fieldConfig={searchConfig} />
+      </div>
 
       {/* 问题展示:顶部标签和分页 */}
       <div className="w-full px-8 mb-16">
@@ -458,8 +455,8 @@ const HelpCenter = () => {
           <Pagination
             defaultCurrent={1}
             current={currentPage}
-            pageSize={pageSize}
-            total={filterData.length}
+            pageSize={10}
+            total={total}
             align="end"
             onChange={(page) => setCurrentPage(page)}
           />

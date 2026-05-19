@@ -276,7 +276,7 @@ const PracticalTips = () => {
               <div className="rounded-xl" key={item.news_id}>
                 <img
                   src={item.news_image}
-                  className="w-full h-87.5 rounded-xl"
+                  className="w-full h-87.5 rounded-xl object-cover"
                 />
               </div>
             ))}

@@ -6,12 +6,12 @@ import {
   postScenicSpotAPI,
   updateScenicSpotAPI,
 } from '@/apis/scenic_spots';
-import { CommonForm, Card } from '@/components';
-import { useAddSpotForm } from '@/hook';
+import { CommonForm, Card, SearchAndFilter } from '@/components';
+import { useAddSpotForm, usePageList } from '@/hook';
 import { deepEqual, delay } from '@/utils';
-import { message } from 'antd';
+import { message, Pagination } from 'antd';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 
 const SpotManage = () => {
@@ -34,6 +34,10 @@ const SpotManage = () => {
   const [spotType, setSpotType] = useState([]);
   const [spotTags, setSpotTags] = useState([]);
   const [humanStories, setHumanStories] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+  // 多选值状态
+  const [selectedValues, setSelectedValues] = useState([]);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     const getSpotType = async () => {
@@ -115,9 +119,21 @@ const SpotManage = () => {
 
   // 处理新增或者编辑按钮点击事件
   const handleAddOrEdit = async () => {
+    // 先清理之前的定时器，防止重复调用
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
     try {
       const values = await form.validateFields();
-      const { area, spot_name, open_time, close_time, ticket_price } = values;
+      const {
+        area,
+        spot_name,
+        open_time,
+        close_time,
+        ticket_price,
+        spot_desc,
+      } = values;
 
       // 处理可以用于接口请求的数据
       const postData = {
@@ -147,13 +163,31 @@ const SpotManage = () => {
             (item) => item.spot_name === spot_name,
           );
           // console.log('是否存在景点名称相同：', isExistedName);
-
           if (isExistedName) {
             messageApi.error(
               '该景点名称已存在于数据库中！请确认景点名称是否书写错误！',
             );
             return;
           }
+
+          // 判断描述是否已有记录
+          const isDescExisted = scenicSpots.some(
+            (item) => item.spot_desc === spot_desc,
+          );
+          if (isDescExisted) {
+            messageApi.error('该描述已有一摸一样的记录，请修改景点的描述！');
+            return;
+          }
+
+          messageApi.open({
+            type: 'loading',
+            content: '正在新增中..',
+            duration: 0,
+          });
+          timerRef.current = setTimeout(() => {
+            messageApi.destroy();
+            timerRef.current = null; // 执行后清空引用
+          }, 2000);
 
           await postScenicSpotAPI(postData);
           // 刷新列表
@@ -171,6 +205,11 @@ const SpotManage = () => {
             messageApi.error(
               `保存失败：${error.response.data.message || '数据格式错误'}`,
             );
+          }
+        } finally {
+          if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            messageApi.destroy(); // 同时销毁消息实例
           }
         }
       }
@@ -202,6 +241,16 @@ const SpotManage = () => {
           return;
         }
 
+        messageApi.open({
+          type: 'loading',
+          content: '正在保存编辑中..',
+          duration: 0,
+        });
+        timerRef.current = setTimeout(() => {
+          messageApi.destroy();
+          timerRef.current = null; // 执行后清空引用
+        }, 2000);
+
         await updateScenicSpotAPI(id, postData);
         await refreshSpotList();
 
@@ -221,6 +270,11 @@ const SpotManage = () => {
             `保存失败：${error.response.data.message || '数据格式错误'}`,
           );
         }
+      } finally {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          messageApi.destroy(); // 同时销毁消息实例
+        }
       }
     } catch (error) {
       console.error('新增或者编辑失败！', error);
@@ -233,6 +287,51 @@ const SpotManage = () => {
         );
       }
     }
+  };
+
+  // 搜索和筛选
+  const {
+    currentPage,
+    currentData,
+    total,
+    setCurrentPage,
+    changeFilter,
+    setSearchText,
+  } = usePageList(
+    [...scenicSpots]?.sort((a, b) => b.spot_id - a.spot_id),
+    6,
+    ['spot_name'],
+  );
+
+  // 切换筛选框选中状态
+  const handleFilter = (value) => {
+    // console.log('当前选中的值：', value);
+    setSelectedValues(value);
+    changeFilter('spot_type', value); // 筛选 type 字段
+  };
+
+  // 下拉菜单 / 搜索框配置
+  const heritageListConfig = {
+    select: {
+      width: 360,
+      optionsItem: spotTypeOptions,
+      placeholder: '选择景点类型...',
+      showSearch: true,
+      mode: 'multiple',
+      value: selectedValues,
+      onChange: handleFilter,
+    },
+    search: {
+      placeholder: '搜索景点名称...',
+      width: 360,
+      value: inputValue,
+      onChange: (e) => setInputValue(e.target.value),
+      onSearch: (value) => setSearchText(value),
+      onClear: () => {
+        setInputValue('');
+        setSearchText('');
+      },
+    },
   };
 
   return (
@@ -273,10 +372,13 @@ const SpotManage = () => {
           <div className="text-xl font-semibold">景点列表</div>
 
           {/* 搜索框和筛选框 */}
+          <div className="py-4">
+            <SearchAndFilter fieldConfig={heritageListConfig} />
+          </div>
 
           {/* 景点列表 */}
           <div className="grid grid-cols-3 gap-y-6 gap-x-10 px-4 py-6">
-            {[...scenicSpots]
+            {[...currentData]
               .sort((a, b) => b.spot_id - a.spot_id)
               .map((item) => {
                 // 组装Card组件需要的数据
@@ -315,6 +417,19 @@ const SpotManage = () => {
                   />
                 );
               })}
+          </div>
+
+          {/* 分页组件 */}
+          <div className="my-4">
+            <Pagination
+              defaultCurrent={1}
+              current={currentPage}
+              pageSize={6}
+              total={total}
+              align="end"
+              onChange={(page) => setCurrentPage(page)}
+              size="large"
+            />
           </div>
         </div>
       )}

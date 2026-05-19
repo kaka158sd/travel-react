@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { getFoodsAPI } from '@/apis/foods';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
 import { useSelector } from 'react-redux';
+import { Pagination } from 'antd';
+import { usePageList } from '@/hook';
 
 const FoodsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +35,12 @@ const FoodsPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const { currentData, currentPage, total, setCurrentPage } = usePageList(
+    foodsList.sort((a, b) => b.food_id - a.food_id),
+    6,
+    [''],
+  );
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
@@ -45,7 +53,7 @@ const FoodsPage = () => {
       <Title titleData={{ title: '荣昌美食' }} />
 
       <div className="w-full mx-auto grid grid-cols-3 gap-17.5 justify-content-stretch mb-25 mt-4">
-        {foodsList
+        {currentData
           .sort((a, b) => b.food_id - a.food_id)
           .map((item) => {
             const boxStyle = {
@@ -87,6 +95,19 @@ const FoodsPage = () => {
               />
             );
           })}
+      </div>
+
+      {/* 分页组件 */}
+      <div>
+        <Pagination
+          defaultCurrent={1}
+          current={currentPage}
+          pageSize={6}
+          total={total}
+          align="end"
+          onChange={(page) => setCurrentPage(page)}
+          size="large"
+        />
       </div>
     </div>
   );

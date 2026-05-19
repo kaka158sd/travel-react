@@ -243,6 +243,7 @@ const MyTrips = () => {
         // console.log('最终行程：', itinerary);
         setGeneratedItinerary(itinerary);
         setItineraryStorage(itinerary);
+        messageApi.success('生成行程成功！');
       }
     } catch (error) {
       console.error('生成行程表单操作失败！', error);

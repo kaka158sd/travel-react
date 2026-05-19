@@ -1,9 +1,10 @@
 import { getNewsAPI } from '@/apis/news';
-import { DataField, DialogCommon, Title } from '@/components';
-import { useEffect, useState, useMemo } from 'react';
-import { Splitter } from 'antd';
+import { DialogCommon, SearchAndFilter, Title } from '@/components';
+import { useEffect, useState } from 'react';
+import { Pagination, Splitter } from 'antd';
 import { LoadError, LoadingSkeleton } from '@/components/EmptyStates';
 import { getDetailNewItems } from '@/utils';
+import { usePageList } from '@/hook';
 
 const NewsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -14,6 +15,7 @@ const NewsPage = () => {
   const [isShowDialog, setIsShowDialog] = useState(false);
   // 弹窗数据：通过点击事件将处理的数据传递给弹窗组件
   const [newsDialogData, setNewsDialogData] = useState({});
+  const [inputValue, setInputValue] = useState('');
 
   useEffect(() => {
     let timer;
@@ -38,13 +40,9 @@ const NewsPage = () => {
   }, []);
 
   // 按 publish_time 时间戳从新到旧排序
-  const sortedNewsList = useMemo(() => {
-    if (!newsList.length) return [];
-    return [...newsList].sort(
-      (a, b) =>
-        new Date(b.pulish_time).getTime() - new Date(a.pulish_time).getTime(),
-    );
-  }, [newsList]);
+  const sortedNewsList = [...newsList].sort(
+    (a, b) => new Date(b.publish_time) - new Date(a.publish_time),
+  );
 
   // 左右两侧的新闻列表
   const sortedNewsSixItems = sortedNewsList.slice(0, 6);
@@ -67,11 +65,33 @@ const NewsPage = () => {
     setIsShowDialog(true);
   };
 
+  const { currentData: leftCurrentData, setSearchText: setLeftText } =
+    usePageList(sortedNewsSixItems, 6, ['news_title']);
+  const { currentPage, currentData, total, setCurrentPage, setSearchText } =
+    usePageList(sortedNewsOthersItems, 12, ['news_title']);
+
+  const newsSearchConfig = {
+    search: {
+      placeholder: '输入搜索内容...',
+      width: 600,
+      value: inputValue,
+      size: 'large',
+      onChange: (e) => setInputValue(e.target.value),
+      onSearch: (value) => {
+        setSearchText(value);
+        setLeftText(value);
+      },
+      onClear: () => {
+        setInputValue('');
+        setSearchText('');
+        setLeftText('');
+      },
+    },
+  };
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
-
-  // 错误状态
   if (error) {
     return <LoadError />;
   }
@@ -82,14 +102,7 @@ const NewsPage = () => {
 
       {/* 搜索框 */}
       <div className="mt-6">
-        <DataField
-          type="search"
-          formConfig={{
-            size: 'large',
-            placeholder: '输入搜索内容...',
-            width: 600,
-          }}
-        />
+        <SearchAndFilter fieldConfig={newsSearchConfig} />
       </div>
 
       {/* 新闻数据渲染 */}
@@ -97,24 +110,28 @@ const NewsPage = () => {
         <Splitter
           style={{
             width: 1300,
-            height: 'auto',
+            height: 464,
             boxShadow: '0 0 10px rgba(217, 119, 6, 0.3)',
             borderRadius: 12,
           }}
         >
           {/* 左侧面板 */}
           <Splitter.Panel defaultSize="40%" min="20%" max="60%">
-            {sortedNewsSixItems.map((item) => (
-              <div key={item.news_id} className="text-lg flex p-4 space-y-3">
-                <i className="iconfont icon-hot-for-atmosphere text-color1 px-2 cursor-pointer" />
-                <div
-                  onClick={() => handleOpenDialog(item)}
-                  className="hover:text-orange-500 hover:underline hover:decoration-orange-500 cursor-pointer"
-                >
-                  {item?.news_title}
+            {leftCurrentData
+              .sort(
+                (a, b) => new Date(b.publish_time) - new Date(a.publish_time),
+              )
+              .map((item) => (
+                <div key={item.news_id} className="text-lg flex p-4 space-y-3">
+                  <i className="iconfont icon-hot-for-atmosphere text-color1 px-2 cursor-pointer" />
+                  <div
+                    onClick={() => handleOpenDialog(item)}
+                    className="hover:text-orange-500 hover:underline hover:decoration-orange-500 cursor-pointer"
+                  >
+                    {item?.news_title}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </Splitter.Panel>
 
           {/* 右侧面板 */}
@@ -129,27 +146,50 @@ const NewsPage = () => {
               }}
             >
               {/* 所有新闻项只写一次，CSS会自动分到左右两列 */}
-              {sortedNewsOthersItems.map((item) => (
-                <div key={item.news_id} className="text-lg flex p-4 space-y-3">
-                  <i className="iconfont icon-map-filling text-[#ff9671] px-2 cursor-pointer" />
+              {currentData
+                .sort(
+                  (a, b) => new Date(b.publish_time) - new Date(a.publish_time),
+                )
+                .map((item) => (
                   <div
-                    onClick={() => handleOpenDialog(item)}
-                    className="hover:text-orange-500 hover:underline hover:decoration-orange-500 cursor-pointer"
+                    key={item.news_id}
+                    className="text-lg flex p-4 space-y-3"
                   >
-                    {item?.news_title}
+                    <i className="iconfont icon-map-filling text-[#ff9671] px-2 cursor-pointer" />
+                    <div
+                      onClick={() => handleOpenDialog(item)}
+                      className="hover:text-orange-500 hover:underline hover:decoration-orange-500 cursor-pointer"
+                    >
+                      {item?.news_title}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </Splitter.Panel>
         </Splitter>
+
+        {/* 分页组件 */}
+        <div className="my-4">
+          <Pagination
+            defaultCurrent={1}
+            current={currentPage}
+            pageSize={12}
+            total={total}
+            align="end"
+            onChange={(page) => setCurrentPage(page)}
+            size="large"
+          />
+        </div>
       </div>
 
       {/* 新闻弹窗 */}
       <DialogCommon
         isShowDialog={isShowDialog}
         dialogData={newsDialogData}
-        onCancel={() => setIsShowDialog(false)}
+        onCancel={() => {
+          setIsShowDialog(false);
+          setNewsDialogData({});
+        }}
       />
     </div>
   );

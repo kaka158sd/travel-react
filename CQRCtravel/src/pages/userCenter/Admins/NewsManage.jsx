@@ -1,9 +1,9 @@
 import { getDetailNewItems } from '@/utils';
-import { ConfigProvider, Divider, message } from 'antd';
+import { ConfigProvider, Divider, message, Pagination } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DialogCommon } from '@/components';
-import { useAddNewsForm } from '@/hook';
+import { DialogCommon, SearchAndFilter } from '@/components';
+import { useAddNewsForm, usePageList } from '@/hook';
 import { useOutletContext } from 'react-router-dom';
 import { deleteNewsAPI, postNewsAPI } from '@/apis/news';
 
@@ -21,6 +21,7 @@ const NewsManage = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [confirmLoading, setConfirmLoading] = useState(false);
   const timerRef = useRef(null); // 用 ref 保存定时器ID
+  const [inputValue, setInputValue] = useState('');
 
   const addNew = {
     publisher: currentUser.user_name,
@@ -159,6 +160,26 @@ const NewsManage = () => {
     }
   };
 
+  // 搜索和筛选
+  const { currentPage, currentData, total, setCurrentPage, setSearchText } =
+    usePageList(sortedNewsList, 8, ['news_title']);
+
+  // 下拉菜单 / 搜索框配置
+  const newsConfig = {
+    search: {
+      placeholder: '搜索新闻标题...',
+      width: 460,
+      value: inputValue,
+      size: 'large',
+      onChange: (e) => setInputValue(e.target.value),
+      onSearch: (value) => setSearchText(value),
+      onClear: () => {
+        setInputValue('');
+        setSearchText('');
+      },
+    },
+  };
+
   return (
     <ConfigProvider
       theme={{
@@ -171,7 +192,9 @@ const NewsManage = () => {
       {contextHolder}
       <div className="flex justify-between py-4">
         {/* 搜索框和筛选框 */}
-        <div></div>
+        <div className="ml-6">
+          <SearchAndFilter fieldConfig={newsConfig} />
+        </div>
 
         {/* 新增按钮 */}
         <div className="w-22">
@@ -191,25 +214,40 @@ const NewsManage = () => {
       {/* 新闻列表,需要分页 */}
       <div className="pr-12 pl-6">
         <div className="w-full border border-slate-200 rounded-xl shadow shadow-amber-300">
-          {sortedNewsList.map((item) => (
-            <div key={item.news_id}>
-              <div className="text-base flex items-center justify-between px-4 py-2">
-                <div
-                  onClick={() => handleOpenDialog(item)}
-                  className="hover:text-orange-500 hover:underline hover:decoration-orange-500 cursor-pointer"
-                >
-                  {item.publish_time}&emsp;{item.news_title}
+          {[...currentData]
+            .sort((a, b) => new Date(b.publish_time) - new Date(a.publish_time))
+            .map((item) => (
+              <div key={item.news_id}>
+                <div className="text-base flex items-center justify-between px-4 py-2">
+                  <div
+                    onClick={() => handleOpenDialog(item)}
+                    className="hover:text-orange-500 hover:underline hover:decoration-orange-500 cursor-pointer"
+                  >
+                    {item.publish_time}&emsp;{item.news_title}
+                  </div>
+                  <i
+                    className="iconfont icon-close cursor-pointer hover:text-orange-500 hover:scale-115"
+                    style={{ fontSize: 22 }}
+                    onClick={() => handleDeleteNews(item.news_id)}
+                  />
                 </div>
-                <i
-                  className="iconfont icon-close cursor-pointer hover:text-orange-500 hover:scale-115"
-                  style={{ fontSize: 22 }}
-                  onClick={() => handleDeleteNews(item.news_id)}
-                />
+                <Divider size="small" />
               </div>
-              <Divider size="small" />
-            </div>
-          ))}
+            ))}
         </div>
+      </div>
+
+      {/* 分页组件 */}
+      <div className="my-4">
+        <Pagination
+          defaultCurrent={1}
+          current={currentPage}
+          pageSize={8}
+          total={total}
+          align="end"
+          onChange={(page) => setCurrentPage(page)}
+          size="large"
+        />
       </div>
 
       {/* 新闻弹窗 */}
@@ -219,7 +257,7 @@ const NewsManage = () => {
         confirmLoading={confirmLoading}
         onCancel={() => {
           setIsShowDialog(false);
-          form.resetFields();
+          setDialogItem({});
         }}
         onOk={handleAddConfiem}
       />

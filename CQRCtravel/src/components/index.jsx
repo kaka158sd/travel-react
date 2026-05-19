@@ -6,6 +6,7 @@ export { default as CommonForm } from './CommonForm';
 export { default as DialogCommon } from './DialogCommon';
 export { default as HighlightKeywords } from './HighlightKeywords';
 export { default as CommentSection } from './Comment';
+export { default as SearchAndFilter } from './SearchAndFilter';
 import {
   AuthRouter,
   AuthTourist,

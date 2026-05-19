@@ -1,7 +1,8 @@
 // 处理修改弹窗的提交保存事件
 
-import { updateUserAPI } from '@/apis/users';
+import { getUsersAPI, updateUserAPI } from '@/apis/users';
 import { setCurrentUser } from '@/store';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 export const useEditConfirm = (
@@ -15,6 +16,20 @@ export const useEditConfirm = (
   // 全局信息
   const dispatch = useDispatch();
   const userId = currentUser?.user_id;
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const getUsersList = async () => {
+      try {
+        const res = await getUsersAPI();
+        setUsers(res.data);
+      } catch (error) {
+        console.error('获取用户列表失败！', error);
+      }
+    };
+
+    getUsersList();
+  }, []);
 
   // 修改手机号表单提交事件
   const phoneConfirm = async () => {
@@ -27,6 +42,13 @@ export const useEditConfirm = (
       // 新的手机号不能与旧的相同
       if (newPhone === oldPhone) {
         messageApi.error('新的手机号与旧的手机号相同！');
+        return;
+      }
+
+      // 手机号不能与其他用户的手机号冲突
+      const isPhoneExist = users.some((item) => item.phone === newPhone);
+      if (isPhoneExist) {
+        messageApi.error('当前手机号已被注册，请重新填写手机号！');
         return;
       }
 

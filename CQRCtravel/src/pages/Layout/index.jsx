@@ -42,7 +42,7 @@ const LogoutIcon = (
 const Layout = () => {
   const dispatch = useDispatch();
   // 获取当前用户
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser = null } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation(); // 获取当前路由路径
 
@@ -111,7 +111,11 @@ const Layout = () => {
   useEffect(() => {
     const handleStorageChange = () => {
       const user = getUserStorage() || null;
-      dispatch(setCurrentUser(user));
+      if (user) {
+        dispatch(setCurrentUser(user));
+      } else {
+        dispatch(clearUser());
+      }
     };
 
     // 监听 storage 事件（跨标签页也会触发）
@@ -136,7 +140,7 @@ const Layout = () => {
   // 用户登陆后悬停在顶部栏的头像显示的下拉菜单
   const userItems = useMemo(() => {
     // 用户未登录，不应该执行这里的逻辑，所以先判断
-    if (!currentUser) return [];
+    if (!currentUser || !currentUser.identity_type) return [];
 
     //  根据身份类型返回不同菜单
     switch (currentUser.identity_type) {

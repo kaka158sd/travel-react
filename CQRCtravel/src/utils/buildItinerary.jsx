@@ -40,9 +40,12 @@ export function buildItinerary(items, params) {
     ];
   }
 
+  // 随机打乱项目顺序
+  const shuffledItems = [...items].sort(() => Math.random() - 0.5);
+
   const business_items = [];
   let itemIndex = 0;
-  const totalItems = items.length;
+  const totalItems = shuffledItems.length;
   // 自定义项目
   const customItems =
     items.filter((item) => item.is_custom_item === true) || [];
@@ -58,7 +61,7 @@ export function buildItinerary(items, params) {
 
     // 逐个分配
     for (let i = 0; i < todayCount && itemIndex < totalItems; i++) {
-      const item = items[itemIndex];
+      const item = shuffledItems[itemIndex];
       business_items.push({
         sort_num: itemIndex + 1,
         trip_day: day,
@@ -104,8 +107,8 @@ export function buildItinerary(items, params) {
 // 生成行程方案
 // values：生成行程表单值；customItem：自定义项目；allSystemItems：景点、非遗项目
 export async function generateItinerary(values, customItem, allSystemItems) {
-  console.log('进入生成器时的自定义项目：', customItem);
-  console.log('自定义项目数量：', customItem.length);
+  // console.log('进入生成器时的自定义项目：', customItem);
+  // console.log('自定义项目数量：', customItem.length);
   try {
     // 获取表单参数
     const {
@@ -123,7 +126,7 @@ export async function generateItinerary(values, customItem, allSystemItems) {
     const customItems = customItem.filter(
       (item) => item.is_added_to_trip === true,
     );
-    console.log('进入生成算法的自定义项目：', customItems);
+    // console.log('进入生成算法的自定义项目：', customItems);
 
     const totalCustomCount = customItems.length;
     const MAX_SLOTS_PRE_DAY = 3; //每天最多3个正常项目

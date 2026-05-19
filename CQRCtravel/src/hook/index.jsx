@@ -13,6 +13,7 @@ import { useReserveConfirm } from './useResereConfirm';
 import { useEditConfirm } from './useEditConfirm';
 import { useAddItinerary } from './useAddItinerary';
 import { useIsTourist } from './useIsTourist';
+import { usePageList } from './usePageList';
 
 export {
   useFirstEnterNav,
@@ -29,4 +30,5 @@ export {
   useEditConfirm,
   useAddItinerary,
   useIsTourist,
+  usePageList,
 };

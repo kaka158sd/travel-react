@@ -138,7 +138,7 @@ export const getDetailNewItems = (dialogItem) => {
     {
       key: '1',
       label: newLabel[0],
-      children: <img src={dialogItem.news_image} />,
+      children: <img src={dialogItem.news_image} style={{ height: 320 }} />,
       span: 3,
     },
     {

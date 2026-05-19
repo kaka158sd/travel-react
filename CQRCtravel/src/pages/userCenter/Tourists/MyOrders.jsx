@@ -1,12 +1,13 @@
-import { Tag, Badge, Collapse, Steps, Button, message } from 'antd';
+import { Tag, Badge, Collapse, Steps, Button, message, Pagination } from 'antd';
 import dayjs from 'dayjs';
 import './index.less';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { statusStyle } from '@/store';
-import { DialogCommon, Loading } from '@/components';
+import { DialogCommon, Loading, NoData, SearchAndFilter } from '@/components';
 import { useState } from 'react';
 import { isOrderExpired } from '@/utils';
 import { useSelector } from 'react-redux';
+import { usePageList } from '@/hook';
 
 // 订单操作按钮样式
 const actionsStyle = [
@@ -182,6 +183,10 @@ const MyOrders = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const { wallet = 0 } = useSelector((state) => state.wallet);
 
+  const [inputValue, setInputValue] = useState('');
+  // 多选值状态
+  const [selectedValues, setSelectedValues] = useState([]);
+
   // 订单表格的操作
   const handleOrderActions = (key, id, price, type, businessId) => {
     setConfirmLoading(false);
@@ -355,6 +360,50 @@ const MyOrders = () => {
     }
   };
 
+  // 搜索和筛选
+  const {
+    currentPage,
+    currentData,
+    total,
+    setCurrentPage,
+    changeFilter,
+    setSearchText,
+  } = usePageList(myOrderData, 5, ['item_name']);
+
+  // 切换筛选框选中状态
+  const handleFilter = (value) => {
+    // console.log('当前选中的值：', value);
+    setSelectedValues(value);
+    changeFilter('business_type', value); // 筛选 type 字段
+  };
+
+  // 下拉菜单 / 搜索框配置
+  const orderConfig = {
+    select: {
+      width: 360,
+      optionsItem: [
+        { value: 1, label: '景点' },
+        { value: 2, label: '非遗' },
+      ],
+      placeholder: '选择订单类型',
+      showSearch: true,
+      mode: 'multiple',
+      value: selectedValues,
+      onChange: handleFilter,
+    },
+    search: {
+      placeholder: '搜索订单的业务名称...',
+      width: 360,
+      value: inputValue,
+      onChange: (e) => setInputValue(e.target.value),
+      onSearch: (value) => setSearchText(value),
+      onClear: () => {
+        setInputValue('');
+        setSearchText('');
+      },
+    },
+  };
+
   return (
     <div>
       <div className="max-w-280 min-h-200 mx-auto border-x-2 border-x-amber-400 py-1 px-6">
@@ -364,171 +413,194 @@ const MyOrders = () => {
           我的订单
         </div>
         {/* 筛选框和搜索框 */}
+        <div className="mt-6 px-8">
+          <SearchAndFilter fieldConfig={orderConfig} />
+        </div>
 
         {/* 订单列表 */}
-        {myOrderData.length > 0 ? (
+        {currentData.length > 0 ? (
           <div className="my-8 px-3 flex flex-col gap-y-4">
-            {myOrderData.map((item) => {
-              const currentStatus = item.order_status;
-              const currentType = item.business_type;
-              const isFree = item.single_price === 0;
-              const stepsItems = getOrderStepItems(currentStatus, isFree);
-              const totalPrice = item.total_price;
-              const orderId = item.order_id;
-              const businessId = item.business_id;
+            {currentData
+              .sort((a, b) => b.order_id - a.order_id)
+              .map((item) => {
+                const currentStatus = item.order_status;
+                const currentType = item.business_type;
+                const isFree = item.single_price === 0;
+                const stepsItems = getOrderStepItems(currentStatus, isFree);
+                const totalPrice = item.total_price;
+                const orderId = item.order_id;
+                const businessId = item.business_id;
 
-              // 判断是否过期
-              const isExpired = isOrderExpired(
-                item.reserve_time,
-                item.reserve_period,
-              );
-              if (isExpired) updateOrderData(item.order_id, 4);
+                // 判断是否过期
+                const isExpired = isOrderExpired(
+                  item.reserve_time,
+                  item.reserve_period,
+                );
+                if (isExpired) updateOrderData(item.order_id, 4);
 
-              return (
-                <div className="flex justify-between gap-4" key={item.order_id}>
-                  {/* 订单展示部分 */}
-                  <div className="w-full">
-                    <Badge.Ribbon
-                      text={
-                        statusStyle.find(
-                          (item) => item.status === currentStatus,
-                        )?.text || '待支付'
-                      }
-                      color={
-                        statusStyle.find(
-                          (item) => item.status === currentStatus,
-                        )?.color || 'cyan'
-                      }
-                    >
-                      <div
-                        className={`w-full border border-olive-300 rounded-lg px-4 py-2 ${item.business_type === 1 ? 'order-bgimage1' : 'order-bgimage2'}`}
+                return (
+                  <div
+                    className="flex justify-between gap-4"
+                    key={item.order_id}
+                  >
+                    {/* 订单展示部分 */}
+                    <div className="w-full">
+                      <Badge.Ribbon
+                        text={
+                          statusStyle.find(
+                            (item) => item.status === currentStatus,
+                          )?.text || '待支付'
+                        }
+                        color={
+                          statusStyle.find(
+                            (item) => item.status === currentStatus,
+                          )?.color || 'cyan'
+                        }
                       >
-                        {/* 订单第一行：业务类型+ 项目名称     订单状态 */}
-                        <div className="mb-2">
-                          <Tag
-                            color={currentType === 1 ? '#87d068' : '#2db7f5'}
-                            variant="solid"
-                          >
-                            {currentType === 1 ? '景点' : '非遗'}
-                          </Tag>
-                          <span className="ml-2 text-lg font-semibold opacity-85">
-                            {item.item_name}
-                          </span>
-                        </div>
-
-                        {/* 订单第二行：单人价格  预约时间 + 预约时段 */}
-                        <div className="flex justify-between">
-                          <span>
-                            {currentType === 1 ? '门票' : '非遗体验'}
-                            价格：
-                            {item.single_price > 0
-                              ? `￥${item.single_price}元/人`
-                              : '免费'}
-                          </span>
-                          <div>
-                            预约时间：
-                            <span className="mr-2">{item.reserve_time}</span>
-                            <span>{item.reserve_period}</span>
-                          </div>
-                        </div>
-
-                        {/* 订单第三行：联系人 + 联系电话 + 预约人数 */}
-                        <div className="flex justify-between items-center">
-                          <span className="text-base py-2">
-                            <span className="mr-2">{item.contact_people}</span>
-                            <span>{item.contact_phone}</span>
-                          </span>
-                          {item.business_type === 2 && (
-                            <span>预约人数：{item.people_num}</span>
-                          )}
-                        </div>
-
-                        <div className="flex justify-between items-end">
-                          <div>
-                            {/* 订单第四行：订单编号 */}
-                            <div>订单编号:{item.order_id}</div>
-
-                            {/* 订单第五行：下单时间 订单总价 */}
-                            <span>
-                              下单时间：
-                              {dayjs(item.order_time).format('YYYY-MM-DD')}
-                            </span>
-                          </div>
-                          <span className="text-right">
-                            支付金额：￥
-                            <span className="text-2xl mr-1">
-                              {item.total_price}
-                            </span>
-                            元
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 折叠面板：展示进度 */}
-                      <div>
-                        <Collapse
-                          size="small"
-                          bordered={false}
-                          items={[
-                            {
-                              key: '1',
-                              label: (
-                                <div className="flex justify-between">
-                                  <span />
-                                  <span>展开</span>
-                                </div>
-                              ),
-                              showArrow: false,
-                              children: (
-                                <Steps
-                                  orientation="vertical"
-                                  items={stepsItems}
-                                  current={stepsItems.findIndex(
-                                    (item) => item.status === 'process',
-                                  )}
-                                  size="small"
-                                />
-                              ),
-                            },
-                          ]}
-                        />
-                      </div>
-                    </Badge.Ribbon>
-                  </div>
-
-                  {/* 按钮部分 */}
-                  <div className="flex flex-col gap-4 h-40 justify-center">
-                    {actionsStyle.map((item) => {
-                      if (item.status !== currentStatus) return;
-                      if (isFree && item.key === 4) return;
-
-                      return (
-                        <Button
-                          key={item.key}
-                          color={item.color}
-                          variant="solid"
-                          onClick={() =>
-                            handleOrderActions(
-                              item.key,
-                              orderId,
-                              totalPrice,
-                              currentType,
-                              businessId,
-                            )
-                          }
+                        <div
+                          className={`w-full border border-olive-300 rounded-lg px-4 py-2 ${item.business_type === 1 ? 'order-bgimage1' : 'order-bgimage2'}`}
                         >
-                          {item.text}
-                        </Button>
-                      );
-                    })}
+                          {/* 订单第一行：业务类型+ 项目名称     订单状态 */}
+                          <div className="mb-2">
+                            <Tag
+                              color={currentType === 1 ? '#87d068' : '#2db7f5'}
+                              variant="solid"
+                            >
+                              {currentType === 1 ? '景点' : '非遗'}
+                            </Tag>
+                            <span className="ml-2 text-lg font-semibold opacity-85">
+                              {item.item_name}
+                            </span>
+                          </div>
+
+                          {/* 订单第二行：单人价格  预约时间 + 预约时段 */}
+                          <div className="flex justify-between">
+                            <span>
+                              {currentType === 1 ? '门票' : '非遗体验'}
+                              价格：
+                              {item.single_price > 0
+                                ? `￥${item.single_price}元/人`
+                                : '免费'}
+                            </span>
+                            <div>
+                              预约时间：
+                              <span className="mr-2">{item.reserve_time}</span>
+                              <span>{item.reserve_period}</span>
+                            </div>
+                          </div>
+
+                          {/* 订单第三行：联系人 + 联系电话 + 预约人数 */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-base py-2">
+                              <span className="mr-2">
+                                {item.contact_people}
+                              </span>
+                              <span>{item.contact_phone}</span>
+                            </span>
+                            {item.business_type === 2 && (
+                              <span>预约人数：{item.people_num}</span>
+                            )}
+                          </div>
+
+                          <div className="flex justify-between items-end">
+                            <div>
+                              {/* 订单第四行：订单编号 */}
+                              <div>订单编号:{item.order_id}</div>
+
+                              {/* 订单第五行：下单时间 订单总价 */}
+                              <span>
+                                下单时间：
+                                {dayjs(item.order_time).format('YYYY-MM-DD')}
+                              </span>
+                            </div>
+                            <span className="text-right">
+                              支付金额：￥
+                              <span className="text-2xl mr-1">
+                                {item.total_price}
+                              </span>
+                              元
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 折叠面板：展示进度 */}
+                        <div>
+                          <Collapse
+                            size="small"
+                            bordered={false}
+                            items={[
+                              {
+                                key: '1',
+                                label: (
+                                  <div className="flex justify-between">
+                                    <span />
+                                    <span>展开</span>
+                                  </div>
+                                ),
+                                showArrow: false,
+                                children: (
+                                  <Steps
+                                    orientation="vertical"
+                                    items={stepsItems}
+                                    current={stepsItems.findIndex(
+                                      (item) => item.status === 'process',
+                                    )}
+                                    size="small"
+                                  />
+                                ),
+                              },
+                            ]}
+                          />
+                        </div>
+                      </Badge.Ribbon>
+                    </div>
+
+                    {/* 按钮部分 */}
+                    <div className="flex flex-col gap-4 h-40 justify-center">
+                      {actionsStyle.map((item) => {
+                        if (item.status !== currentStatus) return;
+                        if (isFree && item.key === 4) return;
+
+                        return (
+                          <Button
+                            key={item.key}
+                            color={item.color}
+                            variant="solid"
+                            onClick={() =>
+                              handleOrderActions(
+                                item.key,
+                                orderId,
+                                totalPrice,
+                                currentType,
+                                businessId,
+                              )
+                            }
+                          >
+                            {item.text}
+                          </Button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         ) : (
-          <Loading />
+          <NoData />
         )}
+
+        {/* 分页组件 */}
+        <div>
+          <Pagination
+            defaultCurrent={1}
+            current={currentPage}
+            pageSize={5}
+            total={total}
+            align="end"
+            onChange={(page) => setCurrentPage(page)}
+            size="large"
+          />
+        </div>
       </div>
 
       {/* 弹窗 */}

@@ -1,9 +1,9 @@
 import { Table, Button, Tooltip, message } from 'antd';
 import { SearchOutlined, FormOutlined, CloseOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { DialogCommon } from '@/components';
+import { DialogCommon, SearchAndFilter } from '@/components';
 import { deepEqual, getDetailActivityItems, isTimeBeforeToday } from '@/utils';
-import { useAddActivityForm } from '@/hook';
+import { useAddActivityForm, usePageList } from '@/hook';
 import { useOutletContext } from 'react-router-dom';
 import {
   deleteActivityAPI,
@@ -48,6 +48,10 @@ const ActivityManage = () => {
   // 新增弹窗单独打开
   const [isShowAddDialog, setIsShowAddDialog] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const [inputValue, setInputValue] = useState('');
+  // 多选值状态
+  const [selectedValues, setSelectedValues] = useState([]);
 
   // 活动新增弹窗的表单
   const { form: addForm, formFields: addFormFields } = useAddActivityForm({
@@ -384,13 +388,68 @@ const ActivityManage = () => {
     }
   };
 
+  // 搜索和筛选
+  const {
+    currentPage,
+    total,
+    currentData,
+    changeFilter,
+    setSearchText,
+    setCurrentPage,
+  } = usePageList(activitiesData, 10, ['activity_name']);
+
+  // 切换筛选框选中状态
+  const handleFilter = (value) => {
+    // console.log('当前选中的值：', value);
+    setSelectedValues(value);
+    changeFilter('relate_name', value); // 筛选 type 字段
+  };
+
+  // 处理关联名称数据
+  const options = [
+    ...[...scenicSpotsOptions].map((item) => ({
+      value: item.label,
+      label: item.label,
+    })),
+    ...[...intangibleHeritageOptions].map((item) => ({
+      value: item.label,
+      label: item.label,
+    })),
+  ];
+
+  // 下拉菜单 / 搜索框配置
+  const activityConfig = {
+    select: {
+      width: 360,
+      optionsItem: options,
+      placeholder: '选择活动关联名称...',
+      showSearch: true,
+      mode: 'multiple',
+      value: selectedValues,
+      onChange: handleFilter,
+    },
+    search: {
+      placeholder: '搜索活动名称...',
+      width: 360,
+      value: inputValue,
+      onChange: (e) => setInputValue(e.target.value),
+      onSearch: (value) => setSearchText(value),
+      onClear: () => {
+        setInputValue('');
+        setSearchText('');
+      },
+    },
+  };
+
   return (
     <div>
       <div className="text-xl font-semibold">活动管理</div>
       {contextHolder}
       <div className="flex justify-between py-4">
         {/* 搜索框和筛选框 */}
-        <div></div>
+        <div>
+          <SearchAndFilter fieldConfig={activityConfig} />
+        </div>
 
         <div className="w-22">
           <button
@@ -408,7 +467,19 @@ const ActivityManage = () => {
 
       {/* 活动列表 */}
       <div className="mr-4">
-        <Table columns={activityColumns} dataSource={activitiesData} />
+        <Table
+          columns={activityColumns}
+          dataSource={currentData.sort((a, b) => b.activity_id - a.activity_id)}
+          pagination={{
+            pageSize: 10,
+            // showSizeChanger: true, // 显示下拉框，允许用户切换每页数量
+            // pageSizeOptions: ['10', '20', '30', '50'], // 可选的每页条数
+            showTotal: (total) => `共 ${total} 条`,
+            current: currentPage,
+            total: total,
+            onChange: (page) => setCurrentPage(page),
+          }}
+        />
       </div>
 
       {/* 弹窗：详情和编辑 */}

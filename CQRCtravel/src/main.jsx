@@ -6,7 +6,7 @@ import './variables.less';
 import { Provider } from 'react-redux';
 import store from './store';
 import { ConfigProvider, App } from 'antd';
-import { zhCN } from 'antd/locale';
+import { zhCN } from 'antd/locale/zh_CN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import '@/assets/fonts/iconfont.css';

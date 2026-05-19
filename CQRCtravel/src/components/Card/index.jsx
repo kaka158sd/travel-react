@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import CardIcon from './CardIcon';
 import CardScore from './CardScore';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { DialogCommon, Loading } from '@/components';
 import {
   useReservationForm,
@@ -69,6 +69,7 @@ const Card = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isTourist = useIsTourist();
+  const timerRef = useRef(null);
 
   // 预约弹窗传参数据
   const { form, formFields, initialValues } = useReservationForm(
@@ -119,6 +120,11 @@ const Card = ({
 
   // 处理删除按钮点击事件
   const handleBtnDelete = async () => {
+    // 先清理之前的定时器，防止重复调用
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
     if (!deleteData.id) {
       messageApi.error('未获取需要删除的卡片，请重试！');
       return;
@@ -127,36 +133,53 @@ const Card = ({
     try {
       const confirm = window.confirm('是否要删除点击的传承项目？');
 
-      // 删除非遗
-      if (deleteData.type === 1 && confirm) {
-        try {
-          await deleteIntangibleHeritageAPI(deleteData.id);
-          const res = await getIntangibleHeritageAPI();
-          dispatch(setHeritage(res.data));
+      if (confirm) {
+        messageApi.open({
+          type: 'loading',
+          content: '正在删除中..',
+          duration: 0,
+        });
+        timerRef.current = setTimeout(() => {
+          messageApi.destroy();
+          timerRef.current = null; // 执行后清空引用
+        }, 2000);
 
-          messageApi.success('删除成功！');
-        } catch (error) {
-          console.error('删除非遗请求失败！', error);
-          messageApi.error('删除非遗请求失败！');
+        // 删除非遗
+        if (deleteData.type === 1 && confirm) {
+          try {
+            await deleteIntangibleHeritageAPI(deleteData.id);
+            const res = await getIntangibleHeritageAPI();
+            dispatch(setHeritage(res.data));
+
+            messageApi.success('删除成功！');
+          } catch (error) {
+            console.error('删除非遗请求失败！', error);
+            messageApi.error('删除非遗请求失败！');
+          }
         }
-      }
 
-      // 删除景点
-      if (deleteData.type === 2 && confirm) {
-        try {
-          await deleteScenicSpotAPI(deleteData.id);
-          const res = await getScenicSpotsAPI();
-          dispatch(setSpotList(res.data));
+        // 删除景点
+        if (deleteData.type === 2 && confirm) {
+          try {
+            await deleteScenicSpotAPI(deleteData.id);
+            const res = await getScenicSpotsAPI();
+            dispatch(setSpotList(res.data));
 
-          messageApi.success('删除成功！');
-        } catch (error) {
-          console.error('删除景点请求失败！', error);
-          messageApi.error('删除景点请求失败！');
+            messageApi.success('删除成功！');
+          } catch (error) {
+            console.error('删除景点请求失败！', error);
+            messageApi.error('删除景点请求失败！');
+          }
         }
       }
     } catch (error) {
       console.error('删除失败！', error);
       messageApi.error('删除失败！');
+    } finally {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        messageApi.destroy(); // 同时销毁消息实例
+      }
     }
   };
 
@@ -408,10 +431,14 @@ const Card = ({
             className={`flex flex-col ${cardData.iconType === 1 && 'items-center'} ${boxStyle.gap ? boxStyle.gap : ''}`}
           >
             <h3 className="titie-card my-1 line-clamp-1">{cardData.title}</h3>
-            {cardData.iconType === 1 && cardData.data <= 0 ? (
-              <></>
+            {cardData.data ? (
+              cardData.iconType === 1 && cardData.data <= 0 ? (
+                <></>
+              ) : (
+                <span className="titie-card">{cardData.data}</span>
+              )
             ) : (
-              <span className="titie-card">{cardData.data}</span>
+              <Spin />
             )}
           </div>
         </div>
