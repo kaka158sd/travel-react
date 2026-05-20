@@ -14,6 +14,7 @@ import { useEditConfirm } from './useEditConfirm';
 import { useAddItinerary } from './useAddItinerary';
 import { useIsTourist } from './useIsTourist';
 import { usePageList } from './usePageList';
+import { useForceUpdate } from './useForceUpdate';
 
 export {
   useFirstEnterNav,
@@ -31,4 +32,5 @@ export {
   useAddItinerary,
   useIsTourist,
   usePageList,
+  useForceUpdate,
 };

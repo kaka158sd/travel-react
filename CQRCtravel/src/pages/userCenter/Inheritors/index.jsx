@@ -162,17 +162,21 @@ const InheritorCenter = () => {
     getheritageList();
   }, [dispatch]);
 
-  const heritageTypeOptions = heritageType
+  const allHeritageType = [...heritageType].map((item) => ({
+    value: item.type_name,
+    label: item.type_name,
+  }));
+  const heritageTypeOptions = [...heritageType]
     ?.filter((item) => userPrivacyData?.field?.includes?.(item.type_name))
     .map((item) => ({
       value: item.type_name,
       label: item.type_name,
     }));
-  const heritageTagsOptions = heritageTags?.map((item) => ({
+  const heritageTagsOptions = [...heritageTags]?.map((item) => ({
     value: item.tag_name,
     label: item.tag_name,
   }));
-  const humanStoriesOptions = humanStories?.map((item) => ({
+  const humanStoriesOptions = [...humanStories]?.map((item) => ({
     value: item.story_id,
     label: item.story_title,
   }));
@@ -275,6 +279,7 @@ const InheritorCenter = () => {
               userPrivacyData,
               heritage,
               getIntangibleHeritageList,
+              allHeritageType,
             }}
           />
         </div>

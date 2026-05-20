@@ -2,17 +2,20 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import './index.less';
 import '@/assets/fonts/iconfont.css';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Dropdown, Avatar } from 'antd';
+import { Dropdown, Avatar, message } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import logo from '../../assets/logo.svg';
 import {
-  getNavActiveKey,
   getUserStorage,
   clearLocalStorage,
-  setNavActiveKey,
+  setSession,
+  getSession,
 } from '@/utils';
 import { clearUser, defaultAvatar, setCurrentUser } from '@/store';
 import { useDispatch, useSelector } from 'react-redux';
+
+// 导航存储字段名
+const NAVKEY = 'NAVSTORAGE_homeNav';
 
 // 顶部导航列表
 const tabs = [
@@ -42,7 +45,11 @@ const LogoutIcon = (
 const Layout = () => {
   const dispatch = useDispatch();
   // 获取当前用户
-  const { currentUser = null } = useSelector((state) => state.user);
+  const currentUser = useSelector((state) => {
+    const user = state.user.currentUser;
+    if (!user || Object.keys(user).length === 0) return null;
+    return user;
+  });
   const navigate = useNavigate();
   const location = useLocation(); // 获取当前路由路径
 
@@ -65,12 +72,16 @@ const Layout = () => {
   const [text, setText] = useState(() => {
     // 1. 初始化 text：优先从 localStorage 读取 → 其次匹配路由 → 最后默认“首页”
     // 步骤1：读取本地存储的 text
-    const savedText = getNavActiveKey('homeNav', '首页');
+    const savedText = getSession(NAVKEY, '首页');
     if (savedText) return savedText;
 
     // 步骤2：无存储则匹配当前路由路径
     return matchRouteToText(location.pathname, '首页');
   });
+
+  // 订阅邮箱输入框绑定
+  const [emailInput, setEmailInput] = useState('');
+  const [messageApi, contextHolder] = message.useMessage();
 
   // 用 ref 存储定时器 ID，确保能跨渲染周期访问
   const timerRef = useRef(null);
@@ -98,7 +109,7 @@ const Layout = () => {
 
   // 同步本地存储
   useEffect(() => {
-    if (text) setNavActiveKey('homeNav', text);
+    if (text) setSession(NAVKEY, text);
   }, [text]);
 
   // 点击顶部导航事件
@@ -140,7 +151,9 @@ const Layout = () => {
   // 用户登陆后悬停在顶部栏的头像显示的下拉菜单
   const userItems = useMemo(() => {
     // 用户未登录，不应该执行这里的逻辑，所以先判断
-    if (!currentUser || !currentUser.identity_type) return [];
+    if (!currentUser) return [];
+    if (typeof currentUser !== 'object' || !currentUser.identity_type)
+      return [];
 
     //  根据身份类型返回不同菜单
     switch (currentUser.identity_type) {
@@ -205,6 +218,24 @@ const Layout = () => {
         return [];
     }
   }, [currentUser, navigate, logout]);
+  // console.log('currentUserr', currentUser);
+
+  // 订阅按钮点击事件
+  const handleSubscribe = () => {
+    if (emailInput.length === 0) {
+      messageApi.error('请输入邮箱！');
+      return;
+    }
+    // 邮箱正则
+    const regEmail = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
+
+    if (!regEmail.test(emailInput)) {
+      messageApi.error('邮箱格式不正确，请重新填写！');
+      return;
+    }
+
+    messageApi.success('已订阅！');
+  };
 
   return (
     <div>
@@ -256,6 +287,7 @@ const Layout = () => {
       {/* 底部栏:登陆后不显示 */}
       {text !== '用户中心' && (
         <footer className="footer">
+          {contextHolder}
           <div className="footer-container">
             {/* 第一栏：品牌介绍 */}
             <div className="footer-col brand-col">
@@ -343,10 +375,14 @@ const Layout = () => {
               </p>
               <input
                 type="email"
+                value={emailInput}
                 placeholder="请输入您的邮箱"
                 className="subscribe-input"
+                onChange={(e) => setEmailInput(e.target.value)}
               />
-              <button className="subscribe-btn">订阅</button>
+              <button className="subscribe-btn" onClick={handleSubscribe}>
+                订阅
+              </button>
             </div>
           </div>
 

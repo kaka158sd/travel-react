@@ -54,7 +54,7 @@ const TouristCenter = () => {
         iconColor: 0,
         icon: 'icon-favorite',
         title: '我的收藏',
-        data: favoritesDataLength,
+        data: favoritesDataLength || 0,
       },
       onClick: () => navigate('/touristCenter/myFavorites'),
     },
@@ -74,7 +74,7 @@ const TouristCenter = () => {
         iconColor: 3,
         icon: 'icon-financial_fill',
         title: '我的钱包',
-        data: wallet,
+        data: wallet || 0,
       },
       onClick: () => {
         messageApi.open({
@@ -196,7 +196,9 @@ const TouristCenter = () => {
           <div className="text-white ml-6">
             <div className="text-2xl mb-3">{currentUser.user_name}</div>
             <p className="line-clamp-2 opacity-85">
-              {currentTourist?.signature}
+              {currentTourist?.signature
+                ? currentTourist?.signature
+                : '暂无个性签名'}
             </p>
           </div>
 

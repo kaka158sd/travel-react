@@ -2,7 +2,7 @@
 // 在页面 内部切换 Tab → 才读取本地、持久化保存
 // basePath——页面根路径；defaultValue——默认值；navKey - 本地存储 key的字段
 
-import { getNavActiveKey, setNavActiveKey } from '@/utils';
+import { getSession, setSession } from '@/utils';
 import { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -10,10 +10,17 @@ export function useFirstEnterNav(basePath, defaultValue, navKey) {
   const location = useLocation();
   const initialRenderRef = useRef(true); // 标记是否首次渲染
   const lastPathRef = useRef(location.pathname); // 记录上一次路径
+  const NAVKEY = 'NAVSTORAGE' + navKey;
 
   // 初始化：永远优先读本地（刷新能保留）
   const [activeKey, setActiveKey] = useState(() => {
-    return getNavActiveKey(navKey, defaultValue);
+    try {
+      const item = getSession(NAVKEY);
+      return item ? item : defaultValue;
+    } catch (error) {
+      console.error(error);
+      return defaultValue;
+    }
   });
 
   // 只有从其他路由跳转过来时才重置，刷新不重置
@@ -37,7 +44,7 @@ export function useFirstEnterNav(basePath, defaultValue, navKey) {
     if (isFromOutside) {
       timer = setTimeout(() => {
         setActiveKey(defaultValue);
-        setNavActiveKey(navKey, defaultValue);
+        setSession(NAVKEY, defaultValue);
       }, 0);
     }
 
@@ -45,12 +52,12 @@ export function useFirstEnterNav(basePath, defaultValue, navKey) {
     lastPathRef.current = currentPath;
 
     return () => clearTimeout(timer);
-  }, [defaultValue, navKey, basePath, location.pathname]);
+  }, [defaultValue, NAVKEY, basePath, location.pathname]);
 
   // 同步本地存储
   const setKeyStorage = (nav) => {
     setActiveKey(nav);
-    setNavActiveKey(navKey, nav);
+    setSession(NAVKEY, nav);
   };
 
   return [activeKey, setKeyStorage];

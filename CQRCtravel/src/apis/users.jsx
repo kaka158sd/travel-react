@@ -1,4 +1,5 @@
 // 封装和用户相关的接口函数
+import { supabase } from '@/lib/supabase';
 import { request } from '@/utils';
 
 // 获取用户列表
@@ -24,6 +25,18 @@ export function updateUserAPI(id, data) {
       Prefer: 'return=representation',
     },
   });
+}
+
+// 新增用户
+
+export async function postUserAPI(data) {
+  const { data: insertedData, error } = await supabase
+    .from('users')
+    .insert([data])
+    .select();
+
+  if (error) throw error;
+  return insertedData;
 }
 
 // 获取单位列表请求

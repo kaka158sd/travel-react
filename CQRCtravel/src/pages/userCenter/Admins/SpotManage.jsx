@@ -7,7 +7,7 @@ import {
   updateScenicSpotAPI,
 } from '@/apis/scenic_spots';
 import { CommonForm, Card, SearchAndFilter } from '@/components';
-import { useAddSpotForm, usePageList } from '@/hook';
+import { useAddSpotForm, useForceUpdate, usePageList } from '@/hook';
 import { deepEqual, delay } from '@/utils';
 import { message, Pagination } from 'antd';
 import dayjs from 'dayjs';
@@ -29,7 +29,7 @@ const SpotManage = () => {
   // 判断模式:有id，则为编辑模式
   const isEdit = !!id;
   const [editItem, setEditItem] = useState(null);
-  console.log('页面路由的id:', id);
+  console.log('editItem', editItem);
 
   const [spotType, setSpotType] = useState([]);
   const [spotTags, setSpotTags] = useState([]);
@@ -38,6 +38,8 @@ const SpotManage = () => {
   // 多选值状态
   const [selectedValues, setSelectedValues] = useState([]);
   const timerRef = useRef(null);
+  // 强制刷新
+  const forceUpdate = useForceUpdate();
 
   useEffect(() => {
     const getSpotType = async () => {
@@ -93,7 +95,12 @@ const SpotManage = () => {
 
   // 编辑模式需要回显数据
   useEffect(() => {
-    if (!isEdit) return;
+    // 从列表到新增需要清除回显的数据
+    if (!isEdit || (!id && adminNav === 'spotAdd')) {
+      setEditItem(null);
+      form.resetFields();
+      return;
+    }
 
     const getDetail = async () => {
       const res = await getScenicSpotDetailAPI(id);
@@ -108,7 +115,7 @@ const SpotManage = () => {
     };
 
     getDetail();
-  }, [id, form, isEdit]);
+  }, [id, form, isEdit, adminNav]);
 
   // 监听editItem的变化，更新表单
   useEffect(() => {
@@ -258,7 +265,7 @@ const SpotManage = () => {
         navigate('/adminCenter/spotManage');
         setEditItem(null);
         // 刷新页面
-        window.location.reload();
+        forceUpdate();
         await delay(1000);
       } catch (error) {
         console.error('编辑景点失败！', error);

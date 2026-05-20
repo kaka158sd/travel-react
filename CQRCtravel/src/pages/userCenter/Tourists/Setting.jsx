@@ -79,8 +79,19 @@ const Setting = () => {
   };
 
   // 通知设置于隐私设置单独赋予值给一个常量
-  const notify_settings = user.tourists.notify_settings;
-  const privacy_settings = user.tourists.privacy_settings;
+  const notify_settings = userPrivacyData.notify_settings;
+  const privacy_settings = userPrivacyData.privacy_settings;
+  // 通知设置的数组
+  const [notifySettings, setNotifySettings] = useState(
+    notify_settings || {
+      system: true,
+      order: true,
+      activity: true,
+      comment: true,
+    },
+  );
+  // 隐私设置中的公开评论单选框
+  const [privacyComment, setPrivacyComment] = useState(privacy_settings);
 
   // 修改表单
   // 手机号
@@ -152,16 +163,6 @@ const Setting = () => {
   // 游客的个人信息中的邮箱是否已经填写（是否有初始值）
   const touristsEmail = user.tourists.email;
   const [confirmLoading, setConfirmLoading] = useState(false);
-
-  // 通知设置的数组
-  const [notifySettings, setNotifySettings] = useState(
-    notify_settings || {
-      system: true,
-      order: true,
-      activity: true,
-      comment: true,
-    },
-  );
 
   // 个人信息修改弹窗数据
   const dialogData = useMemo(() => {
@@ -235,11 +236,30 @@ const Setting = () => {
     messageApi,
   );
   // 保存个人信息表单
-  const handleSaveForm = () => {
+  const handleSaveForm = async () => {
+    const loadingKey = 'tourist-loading';
+    let isLoadingOpened = false;
+
     try {
-      handleUserConfirm();
+      messageApi.open({
+        key: loadingKey, // 固定 key，避免重复创建
+        type: 'loading',
+        content: '正在保存中...',
+        duration: 0,
+      });
+      isLoadingOpened = true;
+
+      await handleUserConfirm();
+
+      // 删除加载状态的全局消息
+      messageApi.destroy(loadingKey);
+      isLoadingOpened = false;
     } catch (error) {
       console.error('保存个人信息失败！请重试！', error);
+    } finally {
+      if (isLoadingOpened) {
+        messageApi.destroy(loadingKey);
+      }
     }
   };
 
@@ -259,11 +279,6 @@ const Setting = () => {
       console.error('修改游客数据的方法调用失败！', error);
     }
   }
-
-  // 隐私设置中的公开评论单选框
-  const [privacyComment, setPrivacyComment] = useState(
-    privacy_settings || true,
-  );
 
   // 弹窗关闭事件
   const handleCancel = () => {
@@ -302,8 +317,16 @@ const Setting = () => {
         try {
           setConfirmLoading(true);
           // console.log(formValue);
+          // 邮箱正则
+          const regEmail = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
 
           const oldEmail = userPrivacyData.email;
+
+          // 验证邮箱格式
+          if (!regEmail.test(formValue)) {
+            messageApi.error('邮箱格式不正确，请重新填写！');
+            return;
+          }
 
           // 新的邮箱不能与旧的相同
           if (formValue === oldEmail) {
@@ -459,7 +482,6 @@ const Setting = () => {
                 size="large"
                 value={privacyComment}
                 onChange={handlePrivacyConfirm}
-                defaultValue={true}
                 options={[
                   { value: true, label: '所有人可见' },
                   { value: false, label: '仅自己可见' },

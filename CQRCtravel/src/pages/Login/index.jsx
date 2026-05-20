@@ -1,4 +1,4 @@
-import { rulesParse } from '@/utils';
+import { delay, rulesParse } from '@/utils';
 import { Carousel, Typography, Button, Form, Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { HomeOutlined } from '@ant-design/icons';
@@ -130,6 +130,12 @@ const Login = () => {
       dispatch(setToken(token));
       dispatch(setCurrentUser(user));
 
+      // 强制触发 storage 同步
+      window.dispatchEvent(new Event('userStorageChange'));
+
+      // 加安全判断 → 防止数组找不到导致报错
+      let isRoleFound = false;
+
       // 获取游客ID
       if (user?.identity_type === 1) {
         const touristItem = tourists.find(
@@ -139,10 +145,7 @@ const Login = () => {
           dispatch(setTouristId(touristItem.tourist_id));
           dispatch(setUserPrivacyData(touristItem));
           dispatch(setWallet(touristItem.wallet));
-        } else {
-          console.error('❌ 未找到对应的游客数据:', user.user_id);
-          messageApi.error('游客信息异常，请联系管理员');
-          return; // 终止流程，不跳转
+          isRoleFound = true;
         }
       }
       // 获取传承人ID
@@ -153,10 +156,7 @@ const Login = () => {
         if (inheritorItem) {
           dispatch(setInheritorId(inheritorItem.inheritor_id));
           dispatch(setUserPrivacyData(inheritorItem));
-        } else {
-          console.error('❌ 未找到对应的传承人数据:', user.user_id);
-          messageApi.error('传承人信息异常，请联系管理员');
-          return; // 终止流程，不跳转
+          isRoleFound = true;
         }
       }
       // 获取管理员ID
@@ -165,16 +165,19 @@ const Login = () => {
         if (adminItem) {
           dispatch(setAdminId(adminItem.admin_id));
           dispatch(setUserPrivacyData(adminItem));
-        } else {
-          console.error('❌ 未找到对应的管理员数据:', user.user_id);
-          messageApi.error('管理员信息异常，请联系文旅局系统管理员！');
-          return; // 终止流程，不跳转
+          isRoleFound = true;
         }
-      } else {
-        messageApi.error('当前用户身份异常！请联系客服或者重试！');
+      }
+
+      if (!isRoleFound) {
+        console.error('❌ 用户身份数据不存在', user);
+        messageApi.error('登录信息异常，请重试');
+        return;
       }
 
       messageApi.success('登录成功');
+
+      await delay(100);
 
       const matchedNav = navCenter.find(
         (item) => item.type === user?.identity_type,
@@ -232,6 +235,7 @@ const Login = () => {
               labelAlign="right"
               onFinish={handleLogin}
               labelCol={{ span: 6 }} // 设置label的宽度
+              autoComplete="off"
             >
               <Form.Item
                 key={loginFormFields.formItems[0].name}
@@ -256,6 +260,7 @@ const Login = () => {
                   style={{
                     width: loginFormFields.formItems[0].formConfig.width,
                   }}
+                  autoComplete="off"
                 />
               </Form.Item>
               <Form.Item
@@ -281,6 +286,7 @@ const Login = () => {
                   style={{
                     width: loginFormFields.formItems[1].formConfig.width,
                   }}
+                  autoComplete="new-password"
                 />
               </Form.Item>
               <Form.Item>

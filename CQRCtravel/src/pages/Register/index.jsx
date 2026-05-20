@@ -1,9 +1,21 @@
-import { getNavActiveKey, rulesParse, setNavActiveKey } from '@/utils';
-import { Form, Radio, Input } from 'antd';
-import { useState, useEffect } from 'react';
+import {
+  delay,
+  getSession,
+  removeSession,
+  rulesParse,
+  setSession,
+} from '@/utils';
+import { Form, Radio, Input, message, Alert } from 'antd';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BorderBox11 from '@jiaminghi/data-view-react/es/borderBox11';
 import './index.less';
+import { getUsersAPI, postUserAPI } from '@/apis/users';
+
+// 注册页面的字段名
+const PAGE_KEY = 'register_pageLayout';
+// 存储身份的字段名
+const IDENTITY_TYPE = 'register_identity';
 
 // 三种身份的图标、文字样式
 const userStyle = [
@@ -31,7 +43,7 @@ const registerFormFields = {
     {
       label: '用户名',
       name: 'username',
-      rules: 'required string',
+      rules: 'required',
       formConfig: {
         width: 350,
         placeholder: '请输入用户名',
@@ -67,55 +79,169 @@ const registerFormFields = {
   ],
 };
 
-// 读取本地存储页面布局变量的函数
-// const getInitialPageLayout = () => {
-//   const saved = localStorage.getItem('pageLayout');
-//   // 如果本地存储中有值则返回值，否则默认是1
-//   return saved ? parseInt(saved, 10) : 1;
-// };
-
 const Register = () => {
   const navigate = useNavigate();
+  // 获取注册身份
+  const [identityType, setIdentityType] = useState(
+    getSession(IDENTITY_TYPE) || null,
+  );
+
+  const [messageApi, contextHolder] = message.useMessage();
+  const [users, setUsers] = useState([]);
 
   // 注册表单
   const [registerForm] = Form.useForm();
 
   // 控制选择身份 / 注册信息填写的显隐;初始化，从本地获取
-  const [pageLayout, setpageLayout] = useState(() =>
-    getNavActiveKey('registerPageLayout', 1),
-  );
+  const [pageLayout, setpageLayout] = useState(() => {
+    const nav = getSession(PAGE_KEY);
+    if (!nav || nav.length === 0) {
+      setSession(PAGE_KEY, 1);
+      return 1;
+    }
+    return nav;
+  });
+
+  useEffect(() => {
+    const getUsersList = async () => {
+      try {
+        const res = await getUsersAPI();
+        setUsers(res.data);
+      } catch (error) {
+        console.error('获取用户列表失败!', error);
+      }
+    };
+
+    getUsersList();
+  }, []);
 
   // pageLayout每次更新都同步到本地中
   const setPageLayoutLocation = (value) => {
     setpageLayout(value);
-    setNavActiveKey('registerPageLayout', value);
+    setSession(PAGE_KEY, value);
   };
 
-  // 每次进入页面（即页面开始渲染）时，重置pageLayout为1
-  // 为避免在组件挂载时，同步直接调用了 setState，使用定时器
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPageLayoutLocation(1);
-    }, 0);
-
-    return () => clearTimeout(timer); //组件卸载时清除定时器
-  }, []);
+  // 身份选择单选框群的change事件
+  const handleSelectIdentity = (e) => {
+    const value = e.target.value;
+    // console.log(e.target.value);
+    setIdentityType(value);
+    setSession(IDENTITY_TYPE, value);
+  };
 
   // 完成注册回调
-  const handleFinally = () => {
-    navigate('/login');
+  const handleFinally = async () => {
+    const loadingKey = 'register-loading';
+    let isLoadingOpened = false;
+
+    try {
+      const values = await registerForm.validateFields();
+      console.log('表单的值：', values);
+      const { username, phone, password, confirmPaw } = values;
+
+      // 获取身份类型
+      const identity_type =
+        identityType === '游客' ? 1 : identityType === '文化传承人' ? 2 : 3;
+      const identityList = users.filter(
+        (item) => item.identity_type === identity_type,
+      );
+
+      // 不同身份可以同名但相同身份不可以
+      const isNameExisted = identityList.some(
+        (item) => item.user_name === username,
+      );
+      if (isNameExisted) {
+        messageApi.error('当前名称已注册！');
+        return;
+      }
+
+      // 手机号是否已经存在
+      const isPhoneExisted = identityList.some((item) => item.phone === phone);
+      if (isPhoneExisted) {
+        messageApi.error('当前手机号已被注册！');
+        return;
+      }
+
+      // 确认密码是否与密码相同
+      if (confirmPaw !== password) {
+        messageApi.error('两次输入的密码不一致，请重新输入！');
+        return;
+      }
+
+      messageApi.open({
+        key: loadingKey, // 固定 key，避免重复创建
+        type: 'loading',
+        content: '正在注册中，请稍候...',
+        duration: 0,
+      });
+      isLoadingOpened = true;
+
+      // 新增数据处理
+      const processData = {
+        identity_type,
+        user_name: username,
+        phone,
+        password,
+      };
+      console.log('用户请求接口数据：', processData);
+
+      // 新增用户接口请求
+      await postUserAPI(processData);
+
+      // 删除加载状态的全局消息
+      messageApi.destroy(loadingKey);
+      isLoadingOpened = false;
+
+      messageApi.success('注册成功！');
+
+      // 延时跳转
+      await delay(1000);
+      navigate('/login');
+      // 跳转登陆时需要清除本地存储的注册页面的导航字段
+      removeSession(IDENTITY_TYPE);
+      removeSession(PAGE_KEY);
+    } catch (error) {
+      console.error('注册失败，请重试！', error);
+      messageApi.error('注册失败，请重试！');
+    } finally {
+      if (isLoadingOpened) {
+        messageApi.destroy(loadingKey);
+      }
+    }
   };
 
   return (
-    <div className="w-full h-screen flex items-center justify-center relative">
+    <div className="w-full h-screen flex flex-col items-center justify-center relative">
       {/* 返回登陆按钮 */}
       <div className="absolute top-5 left-5 w-12">
-        <button className="btn2" onClick={() => navigate('/login')}>
+        <button
+          className="btn2"
+          onClick={() => {
+            navigate('/login');
+            removeSession(PAGE_KEY);
+            removeSession(IDENTITY_TYPE);
+          }}
+        >
           ＜
         </button>
       </div>
 
+      {/* 用户名不可修改警告框 */}
+      {pageLayout === 2 &&
+      (identityType === '文化传承人' || identityType === '文旅局管理员') ? (
+        <Alert
+          type="warning"
+          title="请确认当前用户名，一经注册，则不可随意修改用户名，若需修改请联系管理员！"
+          style={{ margin: 24, fontSize: 16 }}
+          variant="filled"
+          showIcon
+        />
+      ) : (
+        <div className="w-full h-22.5"></div>
+      )}
+
       <div className="w-300 h-120 bg-[#fef9f5] border border-orange-400 rounded-2xl shadow-lg shadow-orange-100">
+        {contextHolder}
         {/* 选择注册身份页面 */}
         {pageLayout === 1 && (
           <div className="flex flex-col items-center">
@@ -127,6 +253,8 @@ const Register = () => {
             <div className="w-3/4">
               <Radio.Group
                 name="identity-radio"
+                value={identityType}
+                onChange={handleSelectIdentity}
                 vertical="true"
                 options={userStyle.map((item) => ({
                   value: item.identity,
@@ -150,7 +278,17 @@ const Register = () => {
 
             {/* 下一步 */}
             <div className="w-30 py-1 ml-220">
-              <button className="btn2" onClick={() => setPageLayoutLocation(2)}>
+              <button
+                className="btn2"
+                onClick={() => {
+                  // 验证是否选择了身份
+                  if (!identityType || identityType.length === 0) {
+                    messageApi.error('请先选择身份再进行下一步注册！');
+                    return;
+                  }
+                  setPageLayoutLocation(2);
+                }}
+              >
                 下一步
               </button>
             </div>
@@ -173,6 +311,7 @@ const Register = () => {
                   layout="horizontal"
                   labelAlign="right"
                   labelCol={{ span: 8 }}
+                  autoComplete="off"
                 >
                   {registerFormFields.formItems.map((item, index) => (
                     <Form.Item
@@ -187,6 +326,7 @@ const Register = () => {
                           style={{
                             width: item.formConfig.width,
                           }}
+                          autoComplete="off"
                         />
                       ) : (
                         <Input.Password
@@ -194,6 +334,7 @@ const Register = () => {
                           style={{
                             width: item.formConfig.width,
                           }}
+                          autoComplete="new-password"
                         />
                       )}
                     </Form.Item>
@@ -215,7 +356,7 @@ const Register = () => {
                       animation: 'gradientFlow 3s linear infinite',
                     }}
                   >
-                    游客
+                    {identityType ? identityType : '暂未选择身份信息'}
                   </div>
                 </BorderBox11>
               </div>

@@ -1,10 +1,10 @@
 import { NoData, Title } from '@/components';
 import {
   generateItinerary,
-  getItineraryStorage,
+  getSession,
   isFirstVisitToday,
   rulesParse,
-  setItineraryStorage,
+  setSession,
 } from '@/utils';
 import {
   Checkbox,
@@ -34,6 +34,8 @@ import { useWatch } from 'antd/es/form/Form';
 import { getScenicSpotsAPI } from '@/apis/scenic_spots';
 import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
 
+// 行程规划存储字段名
+const STORAGE_KEY = 'itineraryPlan';
 // 标题数据
 const titleData = {
   title: '规划行程',
@@ -68,11 +70,11 @@ const MyTrips = () => {
       console.log('今天第一次进入页面->清空行程');
       timer = setTimeout(() => {
         setGeneratedItinerary(null);
-        setItineraryStorage('');
+        setSession(STORAGE_KEY, '');
       }, 0);
     } else {
       console.log('读取本地存储');
-      const localData = getItineraryStorage();
+      const localData = getSession(STORAGE_KEY);
       if (localData) {
         timer = setTimeout(() => {
           setGeneratedItinerary(localData);
@@ -85,7 +87,7 @@ const MyTrips = () => {
   // 监听方案变化，从本地中读取
   useEffect(() => {
     let timer;
-    const item = getItineraryStorage();
+    const item = getSession(STORAGE_KEY);
     if (generatedItinerary !== item) {
       timer = setTimeout(() => {
         setGeneratedItinerary(item);
@@ -242,7 +244,7 @@ const MyTrips = () => {
       if (itinerary) {
         // console.log('最终行程：', itinerary);
         setGeneratedItinerary(itinerary);
-        setItineraryStorage(itinerary);
+        setSession(STORAGE_KEY, itinerary);
         messageApi.success('生成行程成功！');
       }
     } catch (error) {
@@ -282,7 +284,7 @@ const MyTrips = () => {
       icon: <DeleteOutlined />,
       onClick: () => {
         setGeneratedItinerary(null);
-        setItineraryStorage(null);
+        setSession(STORAGE_KEY);
       },
     },
   ];
@@ -490,7 +492,8 @@ const MyTrips = () => {
             <div className="w-full h-100 border rounded-lg bg-neutral-50 p-4 mt-4 overflow-y-auto">
               {/* 打印行程方案 */}
               {/* 预览区 */}
-              {generatedItinerary ? (
+              {generatedItinerary &&
+              generatedItinerary.business_items?.length > 0 ? (
                 <div className="space-y-4">
                   {/* 行程标题 */}
                   <div className="text-center border-b pb-3">

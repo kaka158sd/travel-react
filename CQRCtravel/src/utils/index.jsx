@@ -1,6 +1,5 @@
 import { request } from './api/request';
 import { rulesParse } from './rulesParse';
-import { setNavActiveKey, getNavActiveKey } from './localStorage/navStorage';
 import {
   getDetailOrderItems,
   getDetailActivityItems,
@@ -42,22 +41,21 @@ import {
   isTimeBeforeToday,
 } from './isExpired';
 import { buildItinerary, generateItinerary } from './buildItinerary';
-import {
-  setItineraryStorage,
-  getItineraryStorage,
-  removeItineraryStorage,
-} from './localStorage/itineraryStorage';
 import { isFirstVisitToday } from './isFirstVisitToday';
 import { strToArray, arrayToStr } from './format';
 import { compareHeritageLevel } from './compareHeritageLevel';
 import { delay } from './delay';
 import { deepEqual } from './deepEqual';
+import {
+  setSession,
+  getSession,
+  removeSession,
+  clearSession,
+} from './sessionStorage';
 
 export {
   request,
   rulesParse,
-  setNavActiveKey,
-  getNavActiveKey,
   getDetailOrderItems,
   getDetailActivityItems,
   getDetailNewItems,
@@ -83,9 +81,6 @@ export {
   isReserveFeasible,
   buildItinerary,
   generateItinerary,
-  setItineraryStorage,
-  getItineraryStorage,
-  removeItineraryStorage,
   isFirstVisitToday,
   setInheritorIdStorage,
   getInheritorIdStorage,
@@ -99,4 +94,8 @@ export {
   isTimeBeforeToday,
   delay,
   deepEqual,
+  setSession,
+  getSession,
+  removeSession,
+  clearSession,
 };

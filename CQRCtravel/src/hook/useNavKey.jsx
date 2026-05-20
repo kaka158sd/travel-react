@@ -1,6 +1,6 @@
 // 通用导航逻辑封装
 
-import { getNavActiveKey, setNavActiveKey } from '@/utils';
+import { getSession, setSession } from '@/utils';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -10,6 +10,7 @@ export function useNavKey(
   defaultNav = '',
 ) {
   const location = useLocation();
+  const NAVKEY = 'NAVSTORAGE' + storageKey;
 
   // 路由匹配逻辑
   const matchRouteToNav = useCallback(
@@ -39,7 +40,7 @@ export function useNavKey(
 
   // 初始化状态：本地存储 > 路由匹配
   const [activeNav, setActiveNav] = useState(() => {
-    const savedNav = getNavActiveKey(storageKey, defaultNav);
+    const savedNav = getSession(NAVKEY, defaultNav);
     if (savedNav) return savedNav;
     return matchRouteToNav(location.pathname, defaultNav);
   });
@@ -58,8 +59,8 @@ export function useNavKey(
 
   // 同步本地存储
   useEffect(() => {
-    setNavActiveKey(storageKey, activeNav);
-  }, [activeNav, storageKey]);
+    setSession(NAVKEY, activeNav);
+  }, [activeNav, NAVKEY]);
 
   // 手动更新
   const updateActiveNav = (nav) => {

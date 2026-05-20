@@ -3,7 +3,7 @@
 import {
   removeAdminIdStorage,
   removeInheritorIdStorage,
-  removeItineraryStorage,
+  removeSession,
   removeToken,
   removeTouristIdStorage,
   removeUserPrivacyData,
@@ -19,6 +19,6 @@ export function clearLocalStorage() {
   removeUserPrivacyData();
   removeInheritorIdStorage();
   removeAdminIdStorage();
-  removeItineraryStorage();
+  removeSession('itineraryPlan');
   window.dispatchEvent(new Event('userStorageChange'));
 }

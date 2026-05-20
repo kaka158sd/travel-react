@@ -30,7 +30,6 @@ export const useUserConfirm = (
       const newPrivacyOne = privacyData?.[0] ?? '';
       const newPrivacyTwo = privacyData?.[1] ?? '';
       const newPrivacyThree = privacyData?.[2] ?? [];
-      // console.log('newPrivacyOne', newPrivacyOne);
       // console.log('newPrivacyTwo', newPrivacyTwo);
 
       // 判断是否有更改
@@ -64,6 +63,7 @@ export const useUserConfirm = (
           : false;
       // console.log('isPrivacyOneChanged', isPrivacyOneChanged);
       // console.log('isPrivacyTwoChanged', isPrivacyTwoChanged);
+      // console.log('isPrivacyThreeChanged', isPrivacyThreeChanged);
 
       const hasChange =
         isAvatarChanged ||
@@ -151,7 +151,7 @@ export const useUserConfirm = (
       }
 
       messageApi.success('保存成功！');
-      console.log('保存个人信息:', updateData);
+      // console.log('保存个人信息:', updateData);
     } catch (error) {
       console.error('保存用户信息失败！', error);
       // 打印 Supabase 返回的详细错误信息

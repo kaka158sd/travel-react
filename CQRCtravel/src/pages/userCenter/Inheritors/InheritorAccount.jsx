@@ -13,7 +13,7 @@ import { useOutletContext } from 'react-router-dom';
 const InheritorAccount = () => {
   const {
     user = {},
-    heritageTypeOptions = [],
+    allHeritageType = [],
     currentUser = {},
     inheritorId = 0,
     userPrivacyData = {},
@@ -45,7 +45,8 @@ const InheritorAccount = () => {
     form: userForm,
     formFields: userFormFields = [],
     initialValues: userInitialValues,
-  } = useUserForm({ user, heritageTypeOptions });
+  } = useUserForm({ user, heritageTypeOptions: allHeritageType });
+  // console.log(allHeritageType);
   // 组件挂载后，强制设置表单初始值
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -184,11 +185,30 @@ const InheritorAccount = () => {
     messageApi,
   );
   // 保存个人信息表单
-  const handleSaveForm = () => {
+  const handleSaveForm = async () => {
+    const loadingKey = 'tourist-loading';
+    let isLoadingOpened = false;
+
     try {
-      handleUserConfirm();
+      messageApi.open({
+        key: loadingKey, // 固定 key，避免重复创建
+        type: 'loading',
+        content: '正在保存中...',
+        duration: 0,
+      });
+      isLoadingOpened = true;
+
+      await handleUserConfirm();
+
+      // 删除加载状态的全局消息
+      messageApi.destroy(loadingKey);
+      isLoadingOpened = false;
     } catch (error) {
       console.error('保存个人信息失败！请重试！', error);
+    } finally {
+      if (isLoadingOpened) {
+        messageApi.destroy(loadingKey);
+      }
     }
   };
 

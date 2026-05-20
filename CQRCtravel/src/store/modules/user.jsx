@@ -23,8 +23,8 @@ const userStore = createSlice({
     touristId: getTouristIdStorage() || '', // 游客ID（全局可用）
     inheritorId: getInheritorIdStorage() || '', //传承人ID
     adminId: getAdminIdStorage() || '', //管理员ID
-    currentUser: getUserStorage() || {},
-    userPrivacyData: getUserPrivacyData() || {},
+    currentUser: getUserStorage() || null,
+    userPrivacyData: getUserPrivacyData() || null,
   }),
   // 同步修改方法
   reducers: {
@@ -60,8 +60,8 @@ const userStore = createSlice({
         (state.touristId = ''),
         (state.inheritorId = ''),
         (state.adminId = ''),
-        (state.currentUser = {}),
-        (state.userPrivacyData = {}));
+        (state.currentUser = null),
+        (state.userPrivacyData = null));
     },
   },
 });

@@ -4,7 +4,7 @@ import {
   updateIntangibleHeritageAPI,
 } from '@/apis/intangible_heritage';
 import { Card, CommonForm, NoData, SearchAndFilter } from '@/components';
-import { useAddHeritageForm, usePageList } from '@/hook';
+import { useAddHeritageForm, useForceUpdate, usePageList } from '@/hook';
 import { compareHeritageLevel, deepEqual, delay } from '@/utils';
 import { message, Pagination } from 'antd';
 import { useEffect, useRef, useState } from 'react';
@@ -39,6 +39,7 @@ const HeritageManage = () => {
   // 多选值状态
   const [selectedValues, setSelectedValues] = useState([]);
   const timerRef = useRef(null);
+  const forceUpdate = useForceUpdate();
 
   // 传承项目表单
   const { form, formFields, initialValues } = useAddHeritageForm({
@@ -50,7 +51,16 @@ const HeritageManage = () => {
 
   // 如果是编辑 → 请求详情回显
   useEffect(() => {
-    if (!isEdit) return; // 新增模式直接跳过
+    // 新增模式直接跳过
+    // 从列表到新增需要清除回显的数据
+    if (
+      !isEdit ||
+      (!id && inheritorNav === '/inheritorCenter/heritageManage/heritageAdd')
+    ) {
+      setEditItem(null);
+      form.resetFields();
+      return;
+    }
 
     const getDetail = async () => {
       // 请求详情接口
@@ -62,7 +72,7 @@ const HeritageManage = () => {
     };
 
     getDetail();
-  }, [id, isEdit, form]);
+  }, [id, isEdit, form, inheritorNav]);
 
   // 监听 editItem 变化，更新表单
   useEffect(() => {
@@ -213,7 +223,7 @@ const HeritageManage = () => {
         navigate('/inheritorCenter/heritageManage');
         setEditItem(null);
         // 刷新页面
-        window.location.reload();
+        forceUpdate();
       } catch (error) {
         console.error('编辑传承项目失败！', error);
         messageApi.error('编辑传承项目失败！请重试！');

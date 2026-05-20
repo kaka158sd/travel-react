@@ -431,7 +431,7 @@ const Card = ({
             className={`flex flex-col ${cardData.iconType === 1 && 'items-center'} ${boxStyle.gap ? boxStyle.gap : ''}`}
           >
             <h3 className="titie-card my-1 line-clamp-1">{cardData.title}</h3>
-            {cardData.data ? (
+            {cardData.data || cardData.data === 0 ? (
               cardData.iconType === 1 && cardData.data <= 0 ? (
                 <></>
               ) : (
