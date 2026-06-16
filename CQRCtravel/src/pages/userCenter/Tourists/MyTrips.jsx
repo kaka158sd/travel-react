@@ -48,6 +48,8 @@ const MyTrips = () => {
   const dispatch = useDispatch();
   // 获取规划行程相关的数据
   const { customItem = [] } = useSelector((state) => state.customItem);
+  const { touristId } = useSelector((state) => state.user);
+
   // 选择的人群类型，控制人数的输入禁止与否
   const crowdType = useWatch('crowd_type', tripForm);
   // 判断是否为单人模式
@@ -150,7 +152,10 @@ const MyTrips = () => {
       items: Array.isArray(customItem)
         ? customItem
             .filter(
-              (item) => item.business_type === 1 && item.is_added_to_custom,
+              (item) =>
+                item.business_type === 1 &&
+                item.is_added_to_custom &&
+                item.tourist_id === touristId,
             )
             .map((item) => ({ ...item, key: item.custom_item_id }))
         : [],
@@ -161,7 +166,10 @@ const MyTrips = () => {
       items: Array.isArray(customItem)
         ? customItem
             .filter(
-              (item) => item.business_type === 2 && item.is_added_to_custom,
+              (item) =>
+                item.business_type === 2 &&
+                item.is_added_to_custom &&
+                item.tourist_id === touristId,
             )
             .map((item) => ({ ...item, key: item.custom_item_id }))
         : [],

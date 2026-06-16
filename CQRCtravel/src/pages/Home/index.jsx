@@ -82,7 +82,7 @@ const Home = () => {
 
       <div className="px-28 mb-20">
         <div className="titie1">荣昌核心亮点</div>
-        <Flex justify="space-between">
+        <Flex justify="space-between" gap="large">
           {cardList.map((cardData, index) => (
             <Card
               key={index}
