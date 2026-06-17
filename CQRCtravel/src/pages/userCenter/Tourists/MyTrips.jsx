@@ -240,7 +240,7 @@ const MyTrips = () => {
   });
   const systemData = [...spotData, ...heritageData];
 
-  // 生成生成点击事件:获取生成行程表单数据
+  // 生成行程点击事件:获取生成行程表单数据
   const handleGenerateIhinerary = async () => {
     try {
       const values = await tripForm.validateFields();

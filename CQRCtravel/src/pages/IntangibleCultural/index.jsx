@@ -49,7 +49,7 @@ const IntangibleCultural = () => {
   }
 
   return (
-    <div className="max-w-350 m-auto">
+    <div className="max-w-330 m-auto">
       <Title titleData={titleData} />
       <LookMore path="/intangibleHeritage_Page" />
 

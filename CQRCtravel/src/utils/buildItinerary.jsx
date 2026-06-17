@@ -191,7 +191,7 @@ export async function generateItinerary(values, customItem, allSystemItems) {
         }
       } else {
         // 情况3：刚好合适
-        finalItems == [...customItems];
+        finalItems = [...customItems];
       }
     }
 

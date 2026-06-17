@@ -93,7 +93,7 @@ const planList = [
 
 const ItineraryPlanning = () => {
   return (
-    <div className="max-w-350 m-auto">
+    <div className="max-w-330 m-auto">
       <Title titleData={titleData} />
       <div className="w-full mx-auto grid grid-cols-3 gap-25 justify-content-stretch mb-25">
         {planList.map((item) => {

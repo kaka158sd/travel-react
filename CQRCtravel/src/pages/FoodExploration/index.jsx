@@ -47,14 +47,14 @@ const FoodExploration = () => {
   }
 
   return (
-    <div className="max-w-350 m-auto">
+    <div className="max-w-330 m-auto">
       <Title titleData={titleData} />
       <LookMore path="/foods_Page" />
 
       <div className="w-full mx-auto grid grid-cols-3 gap-10 justify-content-stretch mb-25">
         {foodsThreeList.map((item) => {
           const boxStyle = {
-            width: 'w-[440px]',
+            width: 'w-[400px]',
             imgHeight: 'h-[240px]',
           };
 

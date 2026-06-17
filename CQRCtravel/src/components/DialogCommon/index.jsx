@@ -33,7 +33,7 @@ const DialogCommon = ({
   return (
     <div>
       {/* 有表单的弹窗 */}
-      {dialogData.type === 1 && (
+      {dialogData?.type === 1 && (
         <Modal
           title={dialogData.title}
           open={isShowDialog}

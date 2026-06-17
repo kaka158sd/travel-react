@@ -79,7 +79,7 @@ const AncientTown = () => {
   }
 
   return (
-    <div className="max-w-350 m-auto">
+    <div className="max-w-330 m-auto">
       <Title titleData={titleData} />
 
       {/* 查看更多-跳转至景点页面 */}

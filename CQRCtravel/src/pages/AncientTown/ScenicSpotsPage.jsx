@@ -134,7 +134,7 @@ const ScenicSpotsPage = () => {
             .map((item) => {
               // 组装Card组件需要的数据
               const boxStyle = {
-                width: 'w-[400px]',
+                width: 'w-[346px]',
                 height: 'h-[450px]',
                 imgHeight: 'h-[200px]',
               };
