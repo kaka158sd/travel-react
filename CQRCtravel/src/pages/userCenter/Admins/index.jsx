@@ -65,6 +65,26 @@ const inlineNavItems = [
   },
   { type: 'divider' },
   {
+    key: '/adminCenter/platformWalletManage',
+    label: '平台资金管理',
+    icon: <i className="iconfont icon-slice" style={{ fontSize: 20 }} />,
+    children: [
+      {
+        key: '/adminCenter/platformWalletManage/platformDataShow',
+        label: '平台数据看板',
+      },
+      {
+        key: '/adminCenter/platformWalletManage/touristWallet',
+        label: '钱包列表',
+      },
+      {
+        key: '/adminCenter/platformWalletManage/refundAudit',
+        label: '退款审核',
+      },
+    ],
+  },
+  { type: 'divider' },
+  {
     key: '/adminCenter/account',
     label: '个人资料',
     icon: <i className="iconfont icon-shenfen" style={{ fontSize: 20 }} />,
@@ -318,9 +338,9 @@ const AdminCenter = () => {
       {/* 侧边栏 */}
       <div className="w-full flex py-1">
         <Menu
-          selectedKeys={
-            adminNav === '/adminCenter/spotManage' ? spotNav : adminNav
-          }
+          selectedKeys={[
+            adminNav === '/adminCenter/spotManage' ? spotNav : adminNav,
+          ]}
           style={{ width: 240, fontSize: 16 }}
           mode="inline"
           items={inlineNavItems}

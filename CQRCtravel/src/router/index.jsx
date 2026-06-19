@@ -38,6 +38,10 @@ import IntangibleHeritageDetail from '@/pages/IntangibleCultural/IntangibleHerit
 import { AuthAdmin, AuthInheritor, AuthTourist } from '@/components';
 import TouristCenterLayout from '@/pages/userCenter/Tourists';
 import TouristCenter from '@/pages/userCenter/Tourists/TouristCenter';
+import PlatformWalletManage from '@/pages/userCenter/Admins/PlatformWallet/PlatformWalletManage';
+import TouristWallet from '@/pages/userCenter/Admins/PlatformWallet/TouristWallet';
+import RefundAudit from '@/pages/userCenter/Admins/PlatformWallet/RefundAudit';
+import PlatformDataShow from '@/pages/userCenter/Admins/PlatformWallet/PlatformDataShow';
 
 const router = createBrowserRouter([
   {
@@ -142,6 +146,15 @@ const router = createBrowserRouter([
       { path: 'activityManage', element: <ActivityManage /> },
       { path: 'newsManage', element: <NewsManage /> },
       { path: 'peopleManage', element: <PeopleManage /> },
+      {
+        path: 'platformWalletManage',
+        element: <PlatformWalletManage />,
+        children: [
+          { path: 'platformDataShow', element: <PlatformDataShow /> },
+          { path: 'touristWallet', element: <TouristWallet /> },
+          { path: 'refundAudit', element: <RefundAudit /> },
+        ],
+      },
       { path: 'account', element: <AdminsAccount /> },
     ],
   },

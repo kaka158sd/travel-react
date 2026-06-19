@@ -5,6 +5,8 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { statusStyle } from '@/store';
 import { isOrderExpired } from '@/utils';
 import { useSelector } from 'react-redux';
+import { postPlatformWalletFlowAPI, postWalletFlowAPI } from '@/apis/wallet';
+import { useState } from 'react';
 
 // 功能卡片配置
 const featureCardFields = [
@@ -46,6 +48,7 @@ const TouristCenter = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
   const { wallet = 0 } = useSelector((state) => state.wallet);
+  const [iconLoading, setIconLoading] = useState(false);
 
   // 数据卡片的配置
   const dataCardFields = [
@@ -97,14 +100,34 @@ const TouristCenter = () => {
       return;
     }
 
+    setIconLoading(true);
+
     const rechargeMoney = generateRandomRecharge();
     const totalmoney = wallet + rechargeMoney;
 
+    // 游客钱包流水和平台资金流水的数据处理
+    const walletData = {
+      tourist_id: touristId,
+      flow_type: 0,
+      amount: +rechargeMoney,
+      balance_after: totalmoney,
+    };
+    const platformData = {
+      fund_type: 0,
+      relation_id: touristId,
+      flow_desc: '游客充值',
+      change_amount: +rechargeMoney,
+    };
+
     try {
       await updateWalletData(totalmoney);
+      await postWalletFlowAPI(walletData);
+      await postPlatformWalletFlowAPI(platformData);
       messageApi.success(`充值金额：${rechargeMoney}，充值成功！`);
     } catch (error) {
       console.error('充值失败，请重试', error);
+    } finally {
+      setIconLoading(false);
     }
   };
 
@@ -239,7 +262,9 @@ const TouristCenter = () => {
 
           <span className="absolute right-0 w-0 h-0" />
           {/* 钱包充值按钮 */}
-          <Popover content="点击可充值 200-500 元哦！">
+          <Popover
+            content={iconLoading ? '充值中...' : '点击可充值 200-500 元哦！'}
+          >
             <i
               className="iconfont icon-icon1 text-yellow-400 absolute -top-5 right-10 cursor-pointer hover:scale-110"
               style={{ fontSize: 36 }}

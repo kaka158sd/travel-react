@@ -8,6 +8,7 @@ export const statusStyle = [
   { status: 3, color: 'grey', text: '已取消' },
   { status: 4, color: 'orange', text: '已过期' },
   { status: 5, color: 'red', text: '已退款' },
+  { status: 6, color: 'magenta', text: '审核中' },
 ];
 
 // 订单详情弹窗配置

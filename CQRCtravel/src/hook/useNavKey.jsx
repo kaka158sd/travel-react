@@ -15,23 +15,20 @@ export function useNavKey(
   // 路由匹配逻辑
   const matchRouteToNav = useCallback(
     (pathname, defaultNav) => {
-      // 精确匹配
+      // 先匹配子菜单（三级/二级子页面）
+      const allChildren = navItems.flatMap((item) => item.children || []);
+      const exactChild = allChildren.find((child) => child.key === pathname);
+      if (exactChild) return exactChild.key;
+
+      // 匹配一级菜单
       const found = navItems.find((item) => item.key === pathname);
       if (found) return found.key;
 
-      // 子路由匹配
+      // 匹配父级路由
       const parent = navItems.find(
         (item) => pathname.startsWith(item.key + '/') || pathname === item.key,
       );
       if (parent) return parent.key;
-
-      // 匹配子菜单（spotAdd / spotList）
-      const childItem = navItems
-        .flatMap((item) => item.children || [])
-        .find(
-          (child) => child.key === pathname || pathname.startsWith(child.key),
-        );
-      if (childItem) return childItem.key;
 
       return defaultNav;
     },

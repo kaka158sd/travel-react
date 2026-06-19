@@ -29,7 +29,7 @@ const SpotManage = () => {
   // 判断模式:有id，则为编辑模式
   const isEdit = !!id;
   const [editItem, setEditItem] = useState(null);
-  console.log('editItem', editItem);
+  // console.log('editItem', editItem);
 
   const [spotType, setSpotType] = useState([]);
   const [spotTags, setSpotTags] = useState([]);

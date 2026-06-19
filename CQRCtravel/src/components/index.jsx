@@ -7,6 +7,8 @@ export { default as DialogCommon } from './DialogCommon';
 export { default as HighlightKeywords } from './HighlightKeywords';
 export { default as CommentSection } from './Comment';
 export { default as SearchAndFilter } from './SearchAndFilter';
+export { default as ErrorBoundary } from './ErrorBoundary';
+export { default as SimpleBar } from './ECharts/SimpleBar';
 import {
   AuthRouter,
   AuthTourist,

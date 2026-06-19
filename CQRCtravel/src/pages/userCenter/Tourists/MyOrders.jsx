@@ -3,11 +3,17 @@ import dayjs from 'dayjs';
 import './index.less';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { statusStyle } from '@/store';
-import { DialogCommon, Loading, NoData, SearchAndFilter } from '@/components';
+import { DialogCommon, NoData, SearchAndFilter } from '@/components';
 import { useState } from 'react';
 import { isOrderExpired } from '@/utils';
 import { useSelector } from 'react-redux';
 import { usePageList } from '@/hook';
+import {
+  postPlatformWalletFlowAPI,
+  postWalletFlowAPI,
+  postWalletRefundAuditAPI,
+  updatePlatformWalletAPI,
+} from '@/apis/wallet';
 
 // 订单操作按钮样式
 const actionsStyle = [
@@ -105,9 +111,35 @@ const getOrderStepItems = (orderStatus, isFree) => {
         content: '已完成订单支付',
       },
       {
+        title: '退款审核中',
+        status: 'finish',
+        content: '退款申请已提交，等待后台审核处理',
+      },
+      {
         title: '已退款',
         status: 'error',
         content: '订单已申请退款，退款金额将原路退回',
+      },
+    ];
+  }
+
+  if (orderStatus === 6) {
+    // 申请退款
+    return [
+      {
+        title: '提交预约',
+        status: 'finish',
+        content: '预约信息提交成功',
+      },
+      {
+        title: '支付订单',
+        status: 'finish',
+        content: '已完成订单支付',
+      },
+      {
+        title: '退款审核中',
+        status: 'process',
+        content: '退款申请已提交，等待后台审核处理',
       },
     ];
   }
@@ -220,7 +252,7 @@ const MyOrders = () => {
           content: '是否确认已经完成了该笔订单？',
           onOk: () => {
             setConfirmLoading(true);
-            handleFinish(id);
+            handleFinish(id, price);
           },
         };
         break;
@@ -271,7 +303,29 @@ const MyOrders = () => {
       setIsOpenModal(false);
       return;
     }
+
+    // 新增游客钱包流水数据，新增平台流水数据，更新更新平台总资金的总资金和冻结资金
+    const walletFlowData = {
+      tourist_id: touristId,
+      order_id: id,
+      flow_type: 1,
+      amount: -price,
+      balance_after: newMoney,
+    };
+    const platformWalletFlowData = {
+      fund_type: 1,
+      relation_id: id,
+      flow_desc: '订单支付',
+      change_amount: +price,
+    };
+
     try {
+      await postWalletFlowAPI(walletFlowData);
+      await updatePlatformWalletAPI({
+        freeze_fund: +price,
+        available_fund: +0,
+      });
+      await postPlatformWalletFlowAPI(platformWalletFlowData);
       await updateWalletData(newMoney);
       messageApi.success('支付成功！');
       await updateOrderData(id, 1);
@@ -301,7 +355,7 @@ const MyOrders = () => {
     }
   };
   // 完成操作
-  const handleFinish = async (id) => {
+  const handleFinish = async (id, price) => {
     if (!touristId) {
       messageApi.error('未找到游客信息');
       setIsOpenModal(false);
@@ -309,6 +363,21 @@ const MyOrders = () => {
     }
 
     try {
+      // 更新平台总资金，新增平台流水数据
+      if (price > 0) {
+        const flatformData = {
+          fund_type: 2,
+          relation_id: id,
+          flow_desc: '订单完成',
+          change_amount: +price,
+        };
+
+        await updatePlatformWalletAPI({
+          freeze_fund: -price,
+          available_fund: +price,
+        });
+        await postPlatformWalletFlowAPI(flatformData);
+      }
       messageApi.success('订单已完成！');
       await updateOrderData(id, 2);
     } catch (error) {
@@ -327,10 +396,27 @@ const MyOrders = () => {
     }
 
     const newMoney = wallet + price;
+
+    // 新增游客钱包流水数据，新增平台流水数据，更新平台总资金数据，新增退款审核数据
+    const walletFlowData = {
+      tourist_id: touristId,
+      order_id: id,
+      flow_type: 2,
+      amount: +price,
+      balance_after: newMoney,
+      status: 1,
+    };
+    const refundAuditData = {
+      order_id: id,
+      tourist_id: touristId,
+      refund_amount: price,
+    };
+
     try {
-      await updateWalletData(newMoney);
-      messageApi.success('退款成功！');
-      await updateOrderData(id, 5);
+      await postWalletFlowAPI(walletFlowData);
+      await postWalletRefundAuditAPI(refundAuditData);
+      await updateOrderData(id, 6);
+      messageApi.info('已申请退款，请等待管理员审核！');
     } catch (error) {
       console.error('退款失败', error);
     } finally {
@@ -436,13 +522,10 @@ const MyOrders = () => {
                   item.reserve_time,
                   item.reserve_period,
                 );
-                if (isExpired) updateOrderData(item.order_id, 4);
+                if (isExpired) updateOrderData(orderId, 4);
 
                 return (
-                  <div
-                    className="flex justify-between gap-4"
-                    key={item.order_id}
-                  >
+                  <div className="flex justify-between gap-4" key={orderId}>
                     {/* 订单展示部分 */}
                     <div className="w-full">
                       <Badge.Ribbon
@@ -458,7 +541,7 @@ const MyOrders = () => {
                         }
                       >
                         <div
-                          className={`w-full border border-olive-300 rounded-lg px-4 py-2 ${item.business_type === 1 ? 'order-bgimage1' : 'order-bgimage2'}`}
+                          className={`w-full border border-olive-300 rounded-lg px-4 py-2 ${currentType === 1 ? 'order-bgimage1' : 'order-bgimage2'}`}
                         >
                           {/* 订单第一行：业务类型+ 项目名称     订单状态 */}
                           <div className="mb-2">
@@ -505,7 +588,7 @@ const MyOrders = () => {
                           <div className="flex justify-between items-end">
                             <div>
                               {/* 订单第四行：订单编号 */}
-                              <div>订单编号:{item.order_id}</div>
+                              <div>订单编号:{orderId}</div>
 
                               {/* 订单第五行：下单时间 订单总价 */}
                               <span>
@@ -516,7 +599,7 @@ const MyOrders = () => {
                             <span className="text-right">
                               支付金额：￥
                               <span className="text-2xl mr-1">
-                                {item.total_price}
+                                {totalPrice}
                               </span>
                               元
                             </span>
