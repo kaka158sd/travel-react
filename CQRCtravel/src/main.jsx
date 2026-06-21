@@ -86,6 +86,9 @@ createRoot(document.getElementById('root')).render(
             cellFontSize: 15,
             headerBg: SOFT_COLOR,
             rowHoverBg: '#fffdfa',
+            fixedHeaderSortActiveBg: LIGHT_COLOR,
+            headerSortActiveBg: LIGHT_COLOR,
+            headerSortHoverBg: LIGHT_COLOR,
           },
           Tooltip: {
             colorBgSpotlight: '#fff',

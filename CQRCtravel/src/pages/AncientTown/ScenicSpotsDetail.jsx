@@ -444,7 +444,7 @@ const ScenicSpotsDetail = () => {
 
       {/* 按钮 */}
       {isTourist && (
-        <div className="absolute top-70 -left-40 flex flex-col gap-8">
+        <div className="absolute top-70 -left-20 flex flex-col gap-8">
           {btnConfig.map((item) => (
             <Tooltip title={item.title} key={item.title}>
               {favLoading || customLoading ? (

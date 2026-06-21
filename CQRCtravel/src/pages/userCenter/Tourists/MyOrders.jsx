@@ -1,4 +1,13 @@
-import { Tag, Badge, Collapse, Steps, Button, message, Pagination } from 'antd';
+import {
+  Tag,
+  Badge,
+  Collapse,
+  Steps,
+  Button,
+  message,
+  Pagination,
+  Tooltip,
+} from 'antd';
 import dayjs from 'dayjs';
 import './index.less';
 import { useNavigate, useOutletContext } from 'react-router-dom';
@@ -140,6 +149,32 @@ const getOrderStepItems = (orderStatus, isFree) => {
         title: '退款审核中',
         status: 'process',
         content: '退款申请已提交，等待后台审核处理',
+      },
+    ];
+  }
+
+  if (orderStatus === 7) {
+    // 退款失败
+    return [
+      {
+        title: '提交预约',
+        status: 'finish',
+        content: '预约信息提交成功',
+      },
+      {
+        title: '支付订单',
+        status: 'finish',
+        content: '已完成订单支付',
+      },
+      {
+        title: '退款审核中',
+        status: 'finish',
+        content: '退款申请已提交，等待后台审核处理',
+      },
+      {
+        title: '审核驳回',
+        status: 'error',
+        content: '管理员驳回了退款请求，请前往查看驳回理由，如有问题可联系客服',
       },
     ];
   }
@@ -554,6 +589,11 @@ const MyOrders = () => {
                             <span className="ml-2 text-lg font-semibold opacity-85">
                               {item.item_name}
                             </span>
+                            {currentStatus === 7 && (
+                              <Tooltip title={item.audit_remark}>
+                                <i className="iconfont icon-delete-filling ml-2" />
+                              </Tooltip>
+                            )}
                           </div>
 
                           {/* 订单第二行：单人价格  预约时间 + 预约时段 */}

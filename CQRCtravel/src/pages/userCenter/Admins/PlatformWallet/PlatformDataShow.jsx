@@ -61,7 +61,7 @@ const PlatformDataShow = () => {
   }, [timeSlot, todayFlow, weekFlow, monthFlow]);
 
   return (
-    <div className="px-4 py-6">
+    <div>
       {/* 核心数据 */}
       <div className="flex justify-between gap-8 mr-30">
         {platformConfig.map((item) => (
@@ -74,6 +74,12 @@ const PlatformDataShow = () => {
               value={item.value}
               precision={2}
               suffix="/元"
+              loading={
+                (!platformData.total_fund ||
+                  !platformData.freeze_fund ||
+                  !platformData.available_fund) &&
+                true
+              }
             />
           </div>
         ))}

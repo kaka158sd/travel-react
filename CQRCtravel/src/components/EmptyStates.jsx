@@ -29,9 +29,15 @@ export const Loading = ({
 };
 
 // 2. 无数据组件
-export const NoData = ({ width }) => {
+export const NoData = ({ width, image }) => {
   return (
-    <Empty description="暂无数据" className={`${width ? width : 'my-75'}`} />
+    <Empty
+      description="暂无数据"
+      className={`${width ? width : 'my-75'}`}
+      image={
+        image ? Empty.PRESENTED_IMAGE_SIMPLE : Empty.PRESENTED_IMAGE_DEFAULT
+      }
+    />
   );
 };
 

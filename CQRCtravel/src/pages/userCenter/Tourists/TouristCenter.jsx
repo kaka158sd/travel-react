@@ -170,7 +170,8 @@ const TouristCenter = () => {
       dataIndex: 'order_status',
       key: 'order_status',
       render: (_, record) => {
-        const { order_status, reserve_time, reserve_period } = record;
+        const { order_status, reserve_time, reserve_period, audit_remark } =
+          record;
 
         const isExpired = isOrderExpired(reserve_time, reserve_period);
         if (isExpired) {
@@ -184,7 +185,7 @@ const TouristCenter = () => {
         }
 
         return (
-          <div>
+          <div className="flex items-center">
             <Tag
               color={
                 statusStyle.find((item) => item.status === order_status)
@@ -195,6 +196,11 @@ const TouristCenter = () => {
               {statusStyle.find((item) => item.status === order_status)?.text ||
                 '待支付'}
             </Tag>
+            {order_status === 7 && audit_remark && (
+              <Tooltip title={audit_remark}>
+                <i className="iconfont icon-tishi" />
+              </Tooltip>
+            )}
           </div>
         );
       },

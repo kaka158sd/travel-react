@@ -46,7 +46,7 @@ export function updateWalletFlowAPI(id, data) {
     method: 'PATCH',
     data,
     params: {
-      id: `eq.${id}`,
+      flow_id: `eq.${id}`,
     },
     headers: {
       Prefer: 'return=representation',
@@ -138,7 +138,7 @@ export function getWalletRefundAuditDetailAPI(id) {
     url: '/wallet_refund_audit',
     method: 'GET',
     params: {
-      flow_id: `eq.${id}`,
+      audit_id: `eq.${id}`,
     },
   });
 }
@@ -164,7 +164,7 @@ export function updateWalletRefundAuditAPI(id, data) {
     method: 'PATCH',
     data,
     params: {
-      id: `eq.${id}`,
+      audit_id: `eq.${id}`,
     },
     headers: {
       Prefer: 'return=representation',

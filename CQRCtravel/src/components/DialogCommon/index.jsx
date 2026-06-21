@@ -1,7 +1,11 @@
 import { Descriptions, Input, Modal, Select } from 'antd';
 import './index.less';
 import { useEffect, useState } from 'react';
-import { CommonForm } from '..';
+import { CommonForm, NoData, SearchAndFilter } from '..';
+import dayjs from 'dayjs';
+import { usePageList } from '@/hook';
+
+const { TextArea } = Input;
 
 const DialogCommon = ({
   dialogData,
@@ -10,9 +14,11 @@ const DialogCommon = ({
   onOk,
   initialValue,
   confirmLoading,
+  closable,
 }) => {
   // 绑定无表单需要修改数据的弹窗的内部值
   const [formValue, setFormValue] = useState(initialValue || null);
+  const [selectedValues, setSelectedValues] = useState([]);
 
   // 每一次弹窗打开时，同步表单中选择的表单项数据最新值给弹窗
   useEffect(() => {
@@ -29,6 +35,36 @@ const DialogCommon = ({
       if (timer) clearTimeout(timer);
     };
   }, [isShowDialog, initialValue]);
+
+  // 搜索和筛选获取
+  const { changeFilter, currentData } = usePageList(
+    dialogData.dataList || [],
+    1000,
+    [''],
+  );
+
+  // 切换筛选框选中状态
+  const handleFilter = (value) => {
+    setSelectedValues(value);
+    changeFilter('flow_type', value);
+  };
+  // 筛选列表
+  const options = [
+    { value: 0, label: '充值' },
+    { value: 1, label: '支付' },
+    { value: 2, label: '退款' },
+  ];
+  // 搜索和筛选配置
+  const fieldConfig = {
+    select: {
+      width: 200,
+      optionsItem: options,
+      placeholder: '选择收支类型...',
+      mode: 'multiple',
+      value: selectedValues,
+      onChange: handleFilter,
+    },
+  };
 
   return (
     <div>
@@ -117,13 +153,78 @@ const DialogCommon = ({
           footer={<></>}
           width={dialogData.width || 1000}
           className="dialogStyle"
+          closable={closable ? false : true}
         >
-          <Descriptions
-            title={dialogData.title}
-            bordered
-            items={dialogData.items}
-            column={dialogData.column || 3}
-          />
+          {dialogData.dataList ? (
+            <div className="min-h-40">
+              {dialogData.dataList.length > 0 ? (
+                <div className="max-h-120 overflow-auto table-scroll-wrap">
+                  {/* 搜索和筛选框 */}
+                  <div className="mt-4">
+                    <SearchAndFilter fieldConfig={fieldConfig} />
+                  </div>
+
+                  <div className="flex pl-3 py-2 mt-4">
+                    <div>订单编号</div>
+                    <div className="ml-3.75">收支类型</div>
+                    <div className="ml-11">变动金额</div>
+                    <div className="ml-7">资金状态</div>
+                    <div className="ml-19">创建时间</div>
+                  </div>
+                  <ul>
+                    {[...currentData]
+                      .sort((a, b) => {
+                        const t1 = a.create_time
+                          ? new Date(a.create_time).getTime()
+                          : 0;
+                        const t2 = b.create_time
+                          ? new Date(b.create_time).getTime()
+                          : 0;
+                        return t2 - t1;
+                      })
+                      .map((item) => (
+                        <li key={item.flow_id}>
+                          <div className="flex gap-6 pl-8 py-2">
+                            <div className="w-10">
+                              {item.order_id ? item.order_id : '-'}
+                            </div>
+                            <div className="w-10">
+                              {item.flow_type === 0
+                                ? '充值'
+                                : item.flow_type === 1
+                                  ? '支付'
+                                  : '退款'}
+                            </div>
+                            <div className="w-20 text-right mr-4">
+                              {item.amount.toFixed(2)}/元
+                            </div>
+                            <div
+                              className={`w-16 ${item.status === 1 && 'text-blue-400'}`}
+                            >
+                              {item.status === 0 ? '正常' : '审核中'}
+                            </div>
+                            <div>
+                              {dayjs(item.create_time).format(
+                                'YYYY-MM-DD HH:mm:ss',
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              ) : (
+                <NoData width={'pt-11'} image={true} />
+              )}
+            </div>
+          ) : (
+            <Descriptions
+              title={dialogData.title}
+              bordered
+              items={dialogData.items}
+              column={dialogData.column || 3}
+            />
+          )}
         </Modal>
       )}
 
@@ -140,6 +241,17 @@ const DialogCommon = ({
           style={{ maxWidth: 400 }}
         >
           <div className="py-4">{dialogData.content}</div>
+          {dialogData.inputConfig && (
+            <div className="mb-6">
+              <TextArea
+                placeholder={dialogData.inputConfig.placeholder}
+                value={dialogData.inputConfig.value}
+                onChange={(e) => {
+                  dialogData.inputConfig.onChange?.(e.target.value);
+                }}
+              />
+            </div>
+          )}
         </Modal>
       )}
     </div>

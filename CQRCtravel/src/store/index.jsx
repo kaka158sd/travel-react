@@ -33,6 +33,8 @@ import heritageReducer from './modules/heritage';
 import { setHeritage, setHeritageLoading } from './modules/heritage';
 import spotReducer from './modules/spot';
 import { setSpotList, setSpotLoading } from './modules/spot';
+import refundReducer from './modules/refund';
+import { setRefund } from './modules/refund';
 
 export default configureStore({
   reducer: {
@@ -42,6 +44,7 @@ export default configureStore({
     customItem: customItemReducer,
     heritage: heritageReducer,
     spot: spotReducer,
+    refund: refundReducer,
   },
 });
 
@@ -71,4 +74,5 @@ export {
   setHeritageLoading,
   setSpotList,
   setSpotLoading,
+  setRefund,
 };
