@@ -3,6 +3,7 @@ import {
   generateItinerary,
   getSession,
   isFirstVisitToday,
+  reassignItineraryAfterDrag,
   rulesParse,
   setSession,
 } from '@/utils';
@@ -33,6 +34,7 @@ import { setCustomItem } from '@/store';
 import { useWatch } from 'antd/es/form/Form';
 import { getScenicSpotsAPI } from '@/apis/scenic_spots';
 import { getIntangibleHeritageAPI } from '@/apis/intangible_heritage';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 // 行程规划存储字段名
 const STORAGE_KEY = 'itineraryPlan';
@@ -227,6 +229,10 @@ const MyTrips = () => {
       business_name: item.spot_name,
       price: item.ticket_price,
       is_custom_item: false,
+      time: {
+        open_time: item.open_time,
+        close_time: item.close_time,
+      },
     };
   });
   const heritageData = heritageList.map((item) => {
@@ -236,6 +242,7 @@ const MyTrips = () => {
       business_name: item.heritage_name,
       price: item.price,
       is_custom_item: false,
+      suitable_people: item.suitable_people,
     };
   });
   const systemData = [...spotData, ...heritageData];
@@ -363,6 +370,71 @@ const MyTrips = () => {
 
       messageApi.success(`清空${title}自定义项目成功！`);
     }
+  };
+
+  // 拖拽完成回调
+  const handleDragEnd = (result) => {
+    const { destination, source } = result;
+    // 取消拖拽/原地放下直接返回
+    if (!destination) return;
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    )
+      return;
+
+    // 复制原始行程项目数据
+    const itineraryData = generatedItinerary || {};
+    const originRaw = itineraryData?.business_items || [];
+    if (originRaw.length === 0) return;
+    const originList = [...originRaw];
+    // 解析来源天、目标天
+    const sourceDay = source.droppableId.replace('day-', '');
+    const targetDay = destination.droppableId.replace('day-', '');
+    // 按天分组原始数据
+    const groupByDay = (list) => {
+      const map = {};
+      list.forEach((item) => {
+        if (!map[item.trip_day]) map[item.trip_day] = [];
+        map[item.trip_day].push(item);
+      });
+      return map;
+    };
+    const dayGroup = groupByDay(originList);
+
+    // 取出来源天数组，删除拖拽项
+    const sourceArr = dayGroup[sourceDay];
+    const dragItem = sourceArr.splice(source.index, 1)[0];
+    dayGroup[sourceDay] = sourceArr;
+
+    // 插入到目标天对应位置
+    const targetArr = dayGroup[targetDay] || [];
+    targetArr.splice(destination.index, 0, dragItem);
+    dayGroup[targetDay] = targetArr;
+
+    // 把分组数据平铺为全局有序数组（按天数升序）
+    let flatNewList = [];
+    Object.keys(dayGroup)
+      .sort((a, b) => Number(a) - Number(b))
+      .forEach((day) => {
+        flatNewList = [...flatNewList, ...dayGroup[day]];
+      });
+
+    // 获取行程总天数，用于重新分配日期时段
+    const travelDays = itineraryData.travel_days;
+    // 调用拖拽函数
+    const newSortedItems = reassignItineraryAfterDrag(flatNewList, travelDays);
+
+    // 更新全局行程状态
+    setGeneratedItinerary((prev) => {
+      const newData = {
+        ...prev,
+        business_items: newSortedItems,
+      };
+      // 在set回调内同步存储，使用最新prev数据
+      setSession(STORAGE_KEY, newData);
+      return newData;
+    });
   };
 
   return (
@@ -499,100 +571,139 @@ const MyTrips = () => {
             {/* 预览区 */}
             <div className="w-full h-100 border rounded-lg bg-neutral-50 p-4 mt-4 overflow-y-auto">
               {/* 打印行程方案 */}
-              {/* 预览区 */}
+              {/* 预览区+拖拽一体化 */}
               {generatedItinerary &&
+              Array.isArray(generatedItinerary.business_items) &&
               generatedItinerary.business_items?.length > 0 ? (
-                <div className="space-y-4">
-                  {/* 行程标题 */}
-                  <div className="text-center border-b pb-3">
-                    <h2 className="text-xl font-bold text-gray-800">
-                      {generatedItinerary.trip_name}
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      旅行时间：{generatedItinerary.trip_start_time} -{' '}
-                      {generatedItinerary.trip_end_time}
-                    </p>
-                  </div>
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <div className="space-y-4">
+                    {/* 行程标题 */}
+                    <div className="text-center border-b pb-3">
+                      <h2 className="text-xl font-bold text-gray-800">
+                        {generatedItinerary.trip_name}
+                      </h2>
+                      <p className="text-sm text-gray-500 mt-1">
+                        旅行时间：{generatedItinerary.trip_start_time} -{' '}
+                        {generatedItinerary.trip_end_time}
+                      </p>
+                      <p className="text-xs text-amber-600 mt-1">
+                        💡 拖动下方项目可调整行程顺序
+                      </p>
+                    </div>
 
-                  {/* 按天分组的行程列表 */}
-                  <div className="space-y-6">
-                    {
-                      // 先按 trip_day 分组
-                      Object.entries(
-                        generatedItinerary.business_items.reduce(
-                          (acc, item) => {
-                            if (!acc[item.trip_day]) acc[item.trip_day] = [];
-                            acc[item.trip_day].push(item);
-                            return acc;
-                          },
-                          {},
-                        ),
-                      ).map(([day, items]) => (
-                        <div key={day} className="space-y-2">
-                          {/* 第几天的标题 */}
-                          <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-                            <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-sm">
-                              第{day}天
-                            </span>
-                          </h3>
-                          {/* 当天项目列表 */}
-                          <div className="space-y-2 pl-4">
-                            {items.map((item) => (
-                              <div
-                                key={item.sort_num}
-                                className="flex justify-between items-center py-2 border-b border-gray-100"
-                              >
-                                <div className="flex items-center gap-3">
-                                  {/* 时间 + 项目名 */}
-                                  <span className="text-gray-600 text-sm">
-                                    📅 {item.item_time}
-                                  </span>
-                                  <span className="text-gray-800">
-                                    {item.item_name}
-                                    {item.is_custom_item && (
-                                      <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
-                                        自定义
-                                      </span>
-                                    )}
-                                  </span>
+                    {/* 按天分组的行程列表 */}
+                    <div className="space-y-6">
+                      {
+                        // 先按 trip_day 分组
+                        Object.entries(
+                          generatedItinerary.business_items.reduce(
+                            (acc, item) => {
+                              if (!acc[item.trip_day]) acc[item.trip_day] = [];
+                              acc[item.trip_day].push(item);
+                              return acc;
+                            },
+                            {},
+                          ),
+                        ).map(([day, items]) => (
+                          <div key={day} className="space-y-2">
+                            {/* 第几天的标题 */}
+                            <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                              <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-sm">
+                                第{day}天
+                              </span>
+                            </h3>
+                            {/* 当天项目列表 */}
+                            <Droppable
+                              droppableId={`day-${day}`}
+                              isDropDisabled={false}
+                              isCombineEnabled={false}
+                              ignoreContainerClipping={false}
+                            >
+                              {(dropProv) => (
+                                <div
+                                  ref={dropProv.innerRef}
+                                  {...dropProv.droppableProps}
+                                  className="space-y-2 pl-4"
+                                >
+                                  {items.map((item, idx) => (
+                                    <Draggable
+                                      key={item.sort_num}
+                                      draggableId={String(item.sort_num)}
+                                      index={idx}
+                                    >
+                                      {(dragProv) => (
+                                        <div
+                                          ref={dragProv.innerRef}
+                                          {...dragProv.draggableProps}
+                                          style={dragProv.draggableProps.style}
+                                          className="flex justify-between items-center py-2 border-b border-gray-100"
+                                        >
+                                          <div className="flex items-center">
+                                            {/* 拖拽手柄图标 */}
+                                            <span
+                                              {...dragProv.dragHandleProps}
+                                              className="mr-4 text-gray-400 cursor-grab print:hidden"
+                                            >
+                                              ⋮⋮
+                                            </span>
+                                            {/* 时间 + 项目名 */}
+                                            <div className="flex items-center gap-3">
+                                              <span className="text-gray-600 text-sm">
+                                                📅 {item.item_time}
+                                              </span>
+                                              <span className="text-gray-800">
+                                                {item.item_name}
+                                                {item.is_custom_item && (
+                                                  <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                                                    自定义
+                                                  </span>
+                                                )}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          {/* 价格 */}
+                                          {item.price > 0 ? (
+                                            <span className="text-gray-600 text-sm">
+                                              ￥{item.price}/人
+                                            </span>
+                                          ) : (
+                                            <span className="text-gray-600 text-sm">
+                                              免费
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                  {dropProv.placeholder}
                                 </div>
-                                {/* 价格 */}
-                                {item.price > 0 ? (
-                                  <span className="text-gray-600 text-sm">
-                                    ￥{item.price}/人
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-600 text-sm">
-                                    免费
-                                  </span>
-                                )}
-                              </div>
-                            ))}
+                              )}
+                            </Droppable>
                           </div>
-                        </div>
-                      ))
-                    }
-                  </div>
+                        ))
+                      }
+                    </div>
 
-                  {/* 总价区域 */}
-                  <div className="pt-4 border-t mt-4">
-                    <div className="flex justify-between items-center text-gray-700">
-                      <span className="font-medium">
-                        行程项目总价：
-                        {generatedItinerary.business_items
-                          .map((item) => `${item.item_name} ¥${item.price}`)
-                          .join(' + ')}
-                        {'  '}x
-                        <span className="text-base text-blue-400 ml-2">
-                          {generatedItinerary.people_count} 人
+                    {/* 总价区域 */}
+                    <div className="pt-4 border-t mt-4">
+                      <div className="flex justify-between items-center text-gray-700">
+                        <span className="font-medium">
+                          行程项目总价：
+                          {generatedItinerary.business_items
+                            .map((item) => `${item.item_name} ¥${item.price}`)
+                            .join(' + ')}
+                          {'  '}x
+                          <span className="text-base text-blue-400 ml-2">
+                            {generatedItinerary.people_count} 人
+                          </span>
                         </span>
-                      </span>
-                      <span className="font-bold text-lg text-amber-700">
-                        = ￥{generatedItinerary.totalPrice}
-                      </span>
+                        <span className="font-bold text-lg text-amber-700">
+                          = ￥{generatedItinerary.totalPrice}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </DragDropContext>
               ) : (
                 <div className="w-full h-full text-gray-400 flex justify-center items-center text-base">
                   请点击「生成行程」按钮预览行程方案

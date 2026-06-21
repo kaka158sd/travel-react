@@ -553,11 +553,13 @@ const MyOrders = () => {
                 const businessId = item.business_id;
 
                 // 判断是否过期
-                const isExpired = isOrderExpired(
-                  item.reserve_time,
-                  item.reserve_period,
-                );
-                if (isExpired) updateOrderData(orderId, 4);
+                if (currentStatus === 0 || currentStatus === 1) {
+                  const isExpired = isOrderExpired(
+                    item.reserve_time,
+                    item.reserve_period,
+                  );
+                  if (isExpired) updateOrderData(orderId, 4);
+                }
 
                 return (
                   <div className="flex justify-between gap-4" key={orderId}>

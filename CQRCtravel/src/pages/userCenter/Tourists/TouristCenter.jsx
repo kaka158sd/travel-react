@@ -173,15 +173,17 @@ const TouristCenter = () => {
         const { order_status, reserve_time, reserve_period, audit_remark } =
           record;
 
-        const isExpired = isOrderExpired(reserve_time, reserve_period);
-        if (isExpired) {
-          return (
-            <div>
-              <Tag color="orange" variant="filled">
-                已过期
-              </Tag>
-            </div>
-          );
+        if (order_status === 0 || order_status === 1) {
+          const isExpired = isOrderExpired(reserve_time, reserve_period);
+          if (isExpired) {
+            return (
+              <div>
+                <Tag color="orange" variant="filled">
+                  已过期
+                </Tag>
+              </div>
+            );
+          }
         }
 
         return (

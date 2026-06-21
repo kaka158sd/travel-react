@@ -1,5 +1,38 @@
 // 构建行程方案方法
 
+// 根据当天的项目数量返回时间段
+function getTimeSlots(projectCount) {
+  // 一整天取一个
+  if (projectCount === 1) {
+    return ['8:00-17:00'];
+  }
+  // 分为上午、下午
+  if (projectCount === 2) {
+    return ['8:00-12:00', '13:00-17:00'];
+  }
+  // 标准三段
+  if (projectCount === 3) {
+    return ['8:00-11:00', '14:00-17:00', '19:00-21:00'];
+  }
+  // 项目>3，紧凑模式
+  return [
+    '8:00-10:00',
+    '10:30-12:30',
+    '14:00-16:00',
+    '16:30-18:30',
+    '19:00-21:00',
+  ];
+}
+
+const crowdMap = {
+  1: '亲子',
+  2: '情侣',
+  3: '朋友',
+  4: '成人',
+  5: '研学',
+  6: '老少皆宜',
+};
+
 // items：生成行程所需的item；params：生成行程表单的参数
 export function buildItinerary(items, params) {
   const {
@@ -12,33 +45,6 @@ export function buildItinerary(items, params) {
   const startDate = new Date(planned_departure_time);
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + travel_days - 1);
-
-  // 根据当天的项目数量返回时间段
-  function getTimeSlots(projectCount) {
-    // 一整天取一个
-    if (projectCount === 1) {
-      return ['8:00-17:00'];
-    }
-
-    // 分为上午、下午
-    if (projectCount === 2) {
-      return ['8:00-12:00', '13:00-17:00'];
-    }
-
-    // 标准三段
-    if (projectCount === 3) {
-      return ['8:00-11:00', '14:00-17:00', '19:00-21:00'];
-    }
-
-    // 项目>3，紧凑模式
-    return [
-      '8:00-10:00',
-      '10:30-12:30',
-      '14:00-16:00',
-      '16:30-18:30',
-      '19:00-21:00',
-    ];
-  }
 
   // 随机打乱项目顺序
   const shuffledItems = [...items].sort(() => Math.random() - 0.5);
@@ -101,6 +107,7 @@ export function buildItinerary(items, params) {
     trip_name,
     totalPrice,
     people_count,
+    travel_days,
   };
 }
 
@@ -113,7 +120,7 @@ export async function generateItinerary(values, customItem, allSystemItems) {
     // 获取表单参数
     const {
       travel_days,
-      interest_preferences,
+      interest_preferences = [],
       crowd_type,
       planned_departure_time,
       people_count,
@@ -121,6 +128,8 @@ export async function generateItinerary(values, customItem, allSystemItems) {
 
     // 日期格式化
     const planTime = planned_departure_time.format('YYYY-MM-DD');
+    // 人群类型映射
+    const targetCrowdText = crowdMap[crowd_type];
 
     // 筛选数据
     const customItems = customItem.filter(
@@ -132,23 +141,63 @@ export async function generateItinerary(values, customItem, allSystemItems) {
     const MAX_SLOTS_PRE_DAY = 3; //每天最多3个正常项目
     const totalAvailableSlots = travel_days * MAX_SLOTS_PRE_DAY;
 
+    // 贪心加权打分函数
+    function calcItemScore(item) {
+      let score = 0;
+      // 兴趣偏好分 0~5
+      const typeMatch = (interest_preferences || []).includes(
+        item.business_type,
+      );
+      score += typeMatch ? 5 : 0;
+
+      // 人群适配分 0~5(景点无人群类型，直接5)
+      const suitText = item.suitable_people || '';
+      let crowdScore = 5;
+      if (suitText.includes(targetCrowdText)) crowdScore = 5;
+      else if (suitText.includes('成人') || suitText.includes('游客'))
+        crowdScore = 2;
+      score += crowdScore;
+
+      // 开放时长分 0~5（非遗无时间，直接满分5）
+      let timeScore = 5;
+      // 仅景点计算营业时间
+      if (
+        item.business_type === 1 &&
+        item.time?.open_time &&
+        item.time?.close_time
+      ) {
+        const [openH, openM] = item.time.open_time.split(':').map(Number);
+        const [closeH, closeM] = item.time.close_time.split(':').map(Number);
+        const openMin = openH * 60 + openM;
+        const closeMin = closeH * 60 + closeM;
+        const totalMin = closeMin - openMin;
+        if (totalMin >= 720) timeScore = 5;
+        else if (totalMin >= 600) timeScore = 4;
+        else if (totalMin >= 480) timeScore = 3;
+        else if (totalMin >= 360) timeScore = 2;
+        else timeScore = 1;
+      }
+      score += timeScore;
+      return score;
+    }
+
     // 算法分支
     let finalItems = [];
 
     if (totalCustomCount === 0) {
-      // 没有自定义项目时：系统推荐
-      const recommended =
-        interest_preferences && interest_preferences.length > 0
-          ? allSystemItems
-              .filter((item) =>
-                interest_preferences.includes(item.business_type),
-              )
-              .slice(0, totalAvailableSlots)
-          : allSystemItems.slice(0, totalAvailableSlots);
+      // 无自定义项目：系统项目按加权分数降序排序
+      const scoredList = allSystemItems.map((item) => ({
+        ...item,
+        _score: calcItemScore(item),
+      }));
+      // 贪心：分数从高到低取可用容量
+      const recommended = scoredList
+        .sort((a, b) => b._score - a._score)
+        .slice(0, totalAvailableSlots);
+      // 移除临时打分字段
       finalItems = recommended;
     } else {
       // 有自定义项目
-
       // 情况1：项目太多
       if (totalCustomCount > totalAvailableSlots) {
         const confirm = window.confirm(
@@ -168,22 +217,24 @@ export async function generateItinerary(values, customItem, allSystemItems) {
 
         if (addRecommend) {
           const needCount = totalAvailableSlots - totalCustomCount;
-          const filterDate =
-            interest_preferences && interest_preferences.length > 0
-              ? allSystemItems.filter((item) =>
-                  interest_preferences.includes(item.business_type),
-                )
-              : allSystemItems;
-          const supplement = filterDate
-            .filter(
-              (item) =>
-                !customItems.some(
-                  (c) =>
-                    c.business_type === item.business_type &&
-                    c.business_id === item.business_id,
-                ),
-            )
-            .slice(0, needCount);
+          // 过滤同类型重复项目
+          const filterDate = allSystemItems.filter(
+            (item) =>
+              !customItems.some(
+                (c) =>
+                  c.business_type === item.business_type &&
+                  c.business_id === item.business_id,
+              ),
+          );
+          // 贪心加权打分排序
+          const scoredList = filterDate
+            .map((item) => ({
+              ...item,
+              _score: calcItemScore(item),
+            }))
+            .sort((a, b) => b._score - a._score);
+
+          const supplement = scoredList.slice(0, needCount);
 
           finalItems = [...customItems, ...supplement];
         } else {
@@ -204,10 +255,40 @@ export async function generateItinerary(values, customItem, allSystemItems) {
       people_count,
     });
 
-    console.log('生成成功，行程方案：', itinerary);
+    // console.log('生成成功，行程方案：', itinerary);
     return itinerary;
   } catch (error) {
     console.error('生成行程方案失败！', error);
     return null;
   }
+}
+
+// 拖拽重排函数
+/**
+ * 拖拽排序后重新分配天数、时段、sort_num，复用原有分配规则
+ * sortedDragList 拖拽交换顺序后的 business_items 数组
+ * travelDays 行程总天数 travel_days
+ */
+export function reassignItineraryAfterDrag(sortedDragList, travelDays) {
+  const totalItems = sortedDragList.length;
+  const itemsPerDay = Math.ceil(totalItems / travelDays);
+  const newBusinessItems = [];
+  let itemIndex = 0;
+
+  for (let day = 1; day <= travelDays && itemIndex < totalItems; day++) {
+    const todayCount = Math.min(itemsPerDay, totalItems - itemIndex);
+    const timeSlots = getTimeSlots(todayCount);
+
+    for (let i = 0; i < todayCount && itemIndex < totalItems; i++) {
+      const originItem = sortedDragList[itemIndex];
+      newBusinessItems.push({
+        ...originItem,
+        sort_num: itemIndex + 1,
+        trip_day: day,
+        item_time: timeSlots[i % timeSlots.length],
+      });
+      itemIndex++;
+    }
+  }
+  return newBusinessItems;
 }

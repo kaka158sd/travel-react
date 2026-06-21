@@ -40,7 +40,11 @@ import {
   isReserveFeasible,
   isTimeBeforeToday,
 } from './isExpired';
-import { buildItinerary, generateItinerary } from './buildItinerary';
+import {
+  buildItinerary,
+  generateItinerary,
+  reassignItineraryAfterDrag,
+} from './buildItinerary';
 import { isFirstVisitToday } from './isFirstVisitToday';
 import { strToArray, arrayToStr } from './format';
 import { compareHeritageLevel } from './compareHeritageLevel';
@@ -98,4 +102,5 @@ export {
   getSession,
   removeSession,
   clearSession,
+  reassignItineraryAfterDrag,
 };
