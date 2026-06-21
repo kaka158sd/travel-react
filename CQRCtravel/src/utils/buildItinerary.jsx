@@ -80,20 +80,11 @@ export function buildItinerary(items, params) {
     }
   }
 
-  // 生成行程名称
-  const crowdTypeMap = {
-    1: '亲子',
-    2: '情侣',
-    3: '朋友',
-    4: '个人',
-    5: '研学',
-    6: '老少皆宜',
-  };
   const interestNames =
     interest_preferences && interest_preferences.length > 0
       ? interest_preferences.map((id) => (id === 1 ? '古镇' : '非遗')).join('+')
       : '特色体验';
-  const trip_name = `${travel_days} 天${crowdTypeMap[crowd_type]}游: ${interestNames} (含${customItems.length}个自定义项目)`;
+  const trip_name = `${travel_days} 天${crowdMap[crowd_type]}游: ${interestNames} (含${customItems.length}个自定义项目)`;
 
   // 计算总价
   const totalPrice =
