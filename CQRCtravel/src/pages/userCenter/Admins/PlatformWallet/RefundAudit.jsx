@@ -6,6 +6,7 @@ import {
   updateWalletRefundAuditAPI,
 } from '@/apis/wallet';
 import { DialogCommon } from '@/components';
+import { isAfterThreeDays } from '@/utils';
 import { Flex, Table, Button, Alert, message, Tooltip } from 'antd';
 import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
@@ -98,6 +99,37 @@ const RefundAudit = () => {
     },
   };
 
+  // 审核通过异步函数
+  async function auditConfirm(id) {
+    if (!id) return;
+    await updateWalletRefundAuditAPI(id, {
+      status: 2,
+      admin_id: adminId,
+      audit_remark: inputValue,
+    });
+    const item = refundList.find((item) => item.audit_id === id);
+    if (item) {
+      await updateOrderstAPI(item.order_id, { order_status: 7 });
+      const flow = walletFlow.find(
+        (i) =>
+          i.tourist_id === item.tourist_id &&
+          i.order_id === item.order_id &&
+          i.flow_type === 2,
+      );
+      if (flow) await updateWalletFlowAPI(flow.flow_id, { status: 0 });
+    }
+    await updatePlatformWalletAPI({
+      freeze_fund: -item.refund_amount,
+      available_fund: +item.refund_amount,
+    });
+    await postPlatformWalletFlowAPI({
+      fund_type: 2,
+      relation_id: item.order_id,
+      flow_desc: '订单支付',
+      change_amount: +item.refund_amount,
+    });
+  }
+
   // 审核驳回点击事件
   const handleCancel = () => {
     setDialogType(1);
@@ -115,32 +147,7 @@ const RefundAudit = () => {
               messageApi.error('获取输入失败！');
               return;
             }
-            await updateWalletRefundAuditAPI(id, {
-              status: 2,
-              admin_id: adminId,
-              audit_remark: inputValue,
-            });
-            const item = refundList.find((item) => item.audit_id === id);
-            if (item) {
-              await updateOrderstAPI(item.order_id, { order_status: 7 });
-              const flow = walletFlow.find(
-                (i) =>
-                  i.tourist_id === item.tourist_id &&
-                  i.order_id === item.order_id &&
-                  i.flow_type === 2,
-              );
-              if (flow) await updateWalletFlowAPI(flow.flow_id, { status: 0 });
-            }
-            await updatePlatformWalletAPI({
-              freeze_fund: -item.refund_amount,
-              available_fund: +item.refund_amount,
-            });
-            await postPlatformWalletFlowAPI({
-              fund_type: 2,
-              relation_id: item.order_id,
-              flow_desc: '订单支付',
-              change_amount: +item.refund_amount,
-            });
+            auditConfirm(id);
           }
           messageApi.info(`已驳回 ${selectedRowKeys.length}个 申请！`);
           refreshRefund();
@@ -214,6 +221,15 @@ const RefundAudit = () => {
       title: '审核提交时间',
       dataIndex: 'audit_time',
       key: 'audit_time',
+      render: (_, record) => {
+        const { audit_time, status, audit_id } = record;
+        if (status === 0) {
+          const isAfter = isAfterThreeDays(audit_time);
+          if (isAfter) {
+            auditConfirm(audit_id);
+          }
+        }
+      },
     },
   ];
 

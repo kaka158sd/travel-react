@@ -56,6 +56,7 @@ import {
   removeSession,
   clearSession,
 } from './sessionStorage';
+import { isAfterThreeDays } from './isAfterThreeDay';
 
 export {
   request,
@@ -103,4 +104,5 @@ export {
   removeSession,
   clearSession,
   reassignItineraryAfterDrag,
+  isAfterThreeDays,
 };
