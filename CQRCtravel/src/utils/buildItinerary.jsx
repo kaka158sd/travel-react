@@ -140,7 +140,6 @@ export async function generateItinerary(values, customItem, allSystemItems) {
         item.business_type,
       );
       score += typeMatch ? 5 : 0;
-
       // 人群适配分 0~5(景点无人群类型，直接5)
       const suitText = item.suitable_people || '';
       let crowdScore = 5;
@@ -148,7 +147,6 @@ export async function generateItinerary(values, customItem, allSystemItems) {
       else if (suitText.includes('成人') || suitText.includes('游客'))
         crowdScore = 2;
       score += crowdScore;
-
       // 开放时长分 0~5（非遗无时间，直接满分5）
       let timeScore = 5;
       // 仅景点计算营业时间
